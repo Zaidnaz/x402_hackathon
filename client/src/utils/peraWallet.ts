@@ -10,12 +10,13 @@ if (typeof window !== 'undefined' && !(window as any).Buffer) {
 export const TESTNET_ALGOD_SERVER = 'https://testnet-api.algonode.cloud';
 export const TESTNET_INDEXER_SERVER = 'https://testnet-idx.algonode.cloud';
 export const TESTNET_DISPENSER_URL = 'https://bank.testnet.algorand.network/';
+export const GOPLAUSIBLE_FACILITATOR_URL = 'https://facilitator.goplausible.xyz';
 
 export const algodClient = new algosdk.Algodv2('', TESTNET_ALGOD_SERVER, '');
 
 // Initialize Pera Wallet Connect instance (ChainId 416002 = TestNet)
 export const peraWallet = new PeraWalletConnect({
-  chainId: 416002, // TestNet (Must match Pera Mobile Network Setting)
+  chainId: 416002, // TestNet
   shouldShowSignTxnToast: true,
   compactMode: false
 });
@@ -25,7 +26,6 @@ export const peraWallet = new PeraWalletConnect({
  */
 export async function connectPeraWallet(): Promise<string> {
   try {
-    // If there is a hanging session, disconnect first to ensure clean modal launch
     if (peraWallet.isConnected) {
       await peraWallet.disconnect().catch(() => {});
     }
@@ -33,7 +33,7 @@ export async function connectPeraWallet(): Promise<string> {
     const accounts = await peraWallet.connect();
     
     peraWallet.connector?.on('disconnect', () => {
-      console.log('Pera wallet disconnected by user/session');
+      console.log('Pera wallet disconnected');
     });
 
     if (!accounts || accounts.length === 0) {
@@ -97,6 +97,7 @@ export async function fetchLiveTestnetBalance(address: string): Promise<number> 
 
 /**
  * Signs and submits a real on-chain transaction on Algorand TestNet via Pera Wallet!
+ * Provides direct verification URLs for both Lora Explorer (lora.algokit.io) and Pera Explorer.
  */
 export async function sendPeraTestnetPayment({
   senderAddress,
@@ -108,7 +109,7 @@ export async function sendPeraTestnetPayment({
   receiverAddress: string;
   amountAlgo: number;
   noteText: string;
-}): Promise<{ txId: string; round: number; explorerUrl: string }> {
+}): Promise<{ txId: string; round: number; explorerUrl: string; loraUrl: string }> {
   try {
     // 1. Get live suggested parameters from TestNet Algod node
     const suggestedParams = await algodClient.getTransactionParams().do();
@@ -139,11 +140,13 @@ export async function sendPeraTestnetPayment({
     const confirmedRound = Number(confirmedTxn.confirmedRound || confirmedTxn['confirmed-round'] || 0);
 
     const explorerUrl = `https://testnet.explorer.perawallet.app/tx/${txId}`;
+    const loraUrl = `https://lora.algokit.io/testnet/transaction/${txId}`;
 
     return {
       txId,
       round: confirmedRound,
-      explorerUrl
+      explorerUrl,
+      loraUrl
     };
   } catch (error: any) {
     console.error('Pera transaction error:', error);

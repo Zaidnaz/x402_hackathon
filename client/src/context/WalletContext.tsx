@@ -19,7 +19,7 @@ interface WalletContextType {
     receiverAddress: string, 
     amountAlgo: number, 
     noteText: string
-  ) => Promise<{ txId: string; round: number; explorerUrl: string }>;
+  ) => Promise<{ txId: string; round: number; explorerUrl: string; loraUrl: string }>;
 }
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
@@ -39,7 +39,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   useEffect(() => {
-    // Attempt automatic reconnect on load
     reconnectPeraSession().then((addr) => {
       if (addr) {
         setWalletAddress(addr);
@@ -89,7 +88,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       amountAlgo,
       noteText
     });
-    // Refresh balance after payment
     await refreshBalance();
     return result;
   };

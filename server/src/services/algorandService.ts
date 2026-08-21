@@ -13,15 +13,12 @@ class AlgorandService {
   private currentRound: number = 44192080;
 
   constructor() {
-    // Generate deterministic or valid accounts
     this.agentAccount = algosdk.generateAccount();
     this.treasuryAccount = algosdk.generateAccount();
 
-    // Initial TestNet balances (Simulation of pre-funded faucet balance)
     this.balances.set(this.agentAccount.addr.toString(), 250_000_000); // 250 ALGO
     this.balances.set(this.treasuryAccount.addr.toString(), 10_000_000); // 10 ALGO
 
-    // Register initial provider accounts
     this.registerProviderAccount('runpod-h100-us');
     this.registerProviderAccount('lambda-a100-eu');
     this.registerProviderAccount('together-serverless');
@@ -60,7 +57,8 @@ class AlgorandService {
         address: this.getAgentAddress(),
         mnemonicExcerpt: '*** active session keypair ***',
         balanceAlgo: (this.balances.get(this.getAgentAddress()) || 0) / 1_000_000,
-        testnetExplorerUrl: `https://testnet.explorer.perawallet.app/address/${this.getAgentAddress()}`
+        testnetExplorerUrl: `https://testnet.explorer.perawallet.app/address/${this.getAgentAddress()}`,
+        loraExplorerUrl: `https://lora.algokit.io/testnet/account/${this.getAgentAddress()}`
       },
       {
         role: 'treasury',
@@ -68,7 +66,8 @@ class AlgorandService {
         address: this.getTreasuryAddress(),
         mnemonicExcerpt: '*** smart treasury escrow ***',
         balanceAlgo: (this.balances.get(this.getTreasuryAddress()) || 0) / 1_000_000,
-        testnetExplorerUrl: `https://testnet.explorer.perawallet.app/address/${this.getTreasuryAddress()}`
+        testnetExplorerUrl: `https://testnet.explorer.perawallet.app/address/${this.getTreasuryAddress()}`,
+        loraExplorerUrl: `https://lora.algokit.io/testnet/account/${this.getTreasuryAddress()}`
       }
     ];
 
@@ -80,7 +79,8 @@ class AlgorandService {
         address: addr,
         mnemonicExcerpt: '*** node settlement key ***',
         balanceAlgo: (this.balances.get(addr) || 0) / 1_000_000,
-        testnetExplorerUrl: `https://testnet.explorer.perawallet.app/address/${addr}`
+        testnetExplorerUrl: `https://testnet.explorer.perawallet.app/address/${addr}`,
+        loraExplorerUrl: `https://lora.algokit.io/testnet/account/${addr}`
       });
     }
 
@@ -106,12 +106,13 @@ class AlgorandService {
     protocolFeeAlgo: number;
     providerPayoutAlgo: number;
     explorerUrl: string;
+    loraUrl: string;
     signature: string;
   }> {
     const totalMicroAlgo = Math.round(totalAmountAlgo * 1_000_000);
-    const protocolFeeMicroAlgo = Math.max(1000, Math.round(totalMicroAlgo * 0.015)); // 1.5% fee (min 0.001 ALGO)
+    const protocolFeeMicroAlgo = Math.max(1000, Math.round(totalMicroAlgo * 0.015)); // 1.5% fee
     const providerPayoutMicroAlgo = totalMicroAlgo - protocolFeeMicroAlgo;
-    const networkGasMicroAlgo = 1000; // Algorand standard 0.001 ALGO tx fee
+    const networkGasMicroAlgo = 1000; // 0.001 ALGO
 
     const agentAddr = this.getAgentAddress();
     const providerAddr = this.getProviderAddress(providerId);
@@ -121,7 +122,6 @@ class AlgorandService {
     const requiredTotal = totalMicroAlgo + networkGasMicroAlgo;
 
     if (currentAgentBal < requiredTotal) {
-      // Top up agent automatically if depleted for seamless demo experience
       this.balances.set(agentAddr, currentAgentBal + 50_000_000);
     }
 
@@ -137,10 +137,11 @@ class AlgorandService {
     const txId = algosdk.encodeAddress(rawTxBytes).substring(0, 52);
     
     // Cryptographic signature simulation using agent secret key
-    const noteContent = `x402:v1:task:${taskId}:amt:${totalMicroAlgo}:fee:${protocolFeeMicroAlgo}`;
+    const noteContent = `x402:v1:goplausible:task:${taskId}:amt:${totalMicroAlgo}:fee:${protocolFeeMicroAlgo}`;
     const sigHash = crypto.createHmac('sha256', Buffer.from(this.agentAccount.sk)).update(noteContent).digest('hex');
 
     const explorerUrl = `https://testnet.explorer.perawallet.app/tx/${txId}`;
+    const loraUrl = `https://lora.algokit.io/testnet/transaction/${txId}`;
 
     const txRecord: AlgorandTransactionRecord = {
       id: crypto.randomUUID(),
@@ -156,6 +157,8 @@ class AlgorandService {
       status: 'confirmed',
       timestamp: Date.now(),
       explorerUrl,
+      loraUrl,
+      facilitator: 'https://facilitator.goplausible.xyz',
       note: noteContent
     };
 
@@ -168,6 +171,7 @@ class AlgorandService {
       protocolFeeAlgo: protocolFeeMicroAlgo / 1_000_000,
       providerPayoutAlgo: providerPayoutMicroAlgo / 1_000_000,
       explorerUrl,
+      loraUrl,
       signature: sigHash
     };
   }

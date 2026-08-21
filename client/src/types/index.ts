@@ -99,6 +99,8 @@ export interface X402PaymentChallenge {
   destinationAddress: string;
   treasuryAddress: string;
   tokenNonce: string;
+  facilitatorUrl?: string;
+  scheme?: string;
   expiresAt: number;
   headers: {
     'WWW-Authenticate': string;
@@ -107,6 +109,8 @@ export interface X402PaymentChallenge {
     'X-402-Currency': string;
     'X-402-Network': string;
     'X-402-Nonce': string;
+    'X-402-Facilitator'?: string;
+    'X-402-Scheme'?: string;
   };
 }
 
@@ -121,6 +125,7 @@ export interface X402PaymentProof {
   paymentToken: string;
   verified: boolean;
   verifiedAt: number;
+  facilitator?: string;
 }
 
 export interface AlgorandAccountInfo {
@@ -130,6 +135,7 @@ export interface AlgorandAccountInfo {
   mnemonicExcerpt: string;
   balanceAlgo: number;
   testnetExplorerUrl: string;
+  loraExplorerUrl?: string;
 }
 
 export interface AlgorandTransactionRecord {
@@ -146,6 +152,8 @@ export interface AlgorandTransactionRecord {
   status: 'confirmed' | 'pending' | 'failed';
   timestamp: number;
   explorerUrl: string;
+  loraUrl?: string;
+  facilitator?: string;
   note: string;
 }
 

@@ -7,12 +7,15 @@ import {
 import { algorandService } from './algorandService.js';
 import { providerRegistry } from './providerRegistry.js';
 
+export const GOPLAUSIBLE_FACILITATOR_URL = 'https://facilitator.goplausible.xyz';
+
 export class X402ProtocolService {
   private activeChallenges: Map<string, X402PaymentChallenge> = new Map();
   private verifiedTokens: Map<string, X402PaymentProof> = new Map();
 
   /**
    * Generates a standard HTTP 402 Payment Challenge for an inferenced resource
+   * compliant with GoPlausible x402 AVM exact scheme.
    */
   public generatePaymentChallenge(
     taskId: string,
@@ -30,6 +33,7 @@ export class X402ProtocolService {
     const challengeId = `x402_chal_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
     const tokenNonce = crypto.randomBytes(16).toString('hex');
     const resourceUri = `/api/v1/workload/execute/${taskId}`;
+    const scheme = 'avm:exact';
 
     const challenge: X402PaymentChallenge = {
       challengeId,
@@ -44,14 +48,18 @@ export class X402ProtocolService {
       destinationAddress,
       treasuryAddress,
       tokenNonce,
+      facilitatorUrl: GOPLAUSIBLE_FACILITATOR_URL,
+      scheme,
       expiresAt: Date.now() + (5 * 60 * 1000), // 5 minutes TTL
       headers: {
-        'WWW-Authenticate': `x402-algorand realm="AgentGrid-Marketplace", resource="${resourceUri}", nonce="${tokenNonce}"`,
+        'WWW-Authenticate': `x402-algorand realm="AgentGrid-Marketplace", resource="${resourceUri}", nonce="${tokenNonce}", facilitator="${GOPLAUSIBLE_FACILITATOR_URL}", scheme="${scheme}"`,
         'X-402-Payment-Address': destinationAddress,
         'X-402-Amount': amountMicroAlgo.toString(),
         'X-402-Currency': 'ALGO-micro',
         'X-402-Network': 'Algorand-TestNet',
-        'X-402-Nonce': tokenNonce
+        'X-402-Nonce': tokenNonce,
+        'X-402-Facilitator': GOPLAUSIBLE_FACILITATOR_URL,
+        'X-402-Scheme': scheme
       }
     };
 
@@ -85,7 +93,8 @@ export class X402ProtocolService {
       signature,
       paymentToken,
       verified: true,
-      verifiedAt: Date.now()
+      verifiedAt: Date.now(),
+      facilitator: GOPLAUSIBLE_FACILITATOR_URL
     };
 
     this.verifiedTokens.set(paymentToken, proof);

@@ -9,7 +9,8 @@ import {
   Check, 
   ArrowUpRight, 
   RefreshCw,
-  Wallet
+  Wallet,
+  Search
 } from 'lucide-react';
 import { AlgorandAccountInfo, AlgorandTransactionRecord } from '../types';
 import { fetchAccounts, fetchTransactions } from '../utils/api';
@@ -46,26 +47,26 @@ export const AlgorandLedger: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-grid-900 border border-grid-800 rounded-xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="bg-black/75 border border-white/[0.08] rounded-xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 backdrop-blur-md shadow-sm">
         <div>
           <div className="flex items-center space-x-2 mb-1">
-            <span className="w-2 h-2 rounded-full bg-signal-emerald animate-pulse" />
-            <span className="text-xs font-mono uppercase tracking-widest text-signal-emerald font-semibold">Algorand Settlement Layer</span>
+            <span className="w-2 h-2 rounded-full bg-brand-emerald animate-pulse" />
+            <span className="text-xs font-mono uppercase tracking-widest text-brand-emerald font-semibold">Algorand TestNet Settlement Layer</span>
           </div>
-          <h2 className="text-xl font-bold font-mono text-grid-100">
-            x402 Micropayments & On-Chain Settlement Hub
+          <h2 className="text-xl font-bold font-mono text-white">
+            x402 Micropayments & GoPlausible Facilitator Ledger
           </h2>
-          <p className="text-xs font-mono text-grid-400 mt-1 max-w-2xl">
-            Autonomous agent wallets pay compute providers on a per-task basis. AgentGrid smart escrow enforces atomic settlements with a <span className="text-grid-200 font-semibold">1.5% protocol fee</span> routed to treasury.
+          <p className="text-xs font-mono text-grid-300 mt-1 max-w-2xl">
+            Autonomous agent wallets pay compute providers on a per-task basis. AgentGrid smart escrow enforces atomic settlements with a <span className="text-white font-semibold">1.5% protocol fee</span> routed to treasury.
           </p>
         </div>
 
         <button
           onClick={loadData}
           disabled={loading}
-          className="p-2.5 rounded-lg bg-grid-950 border border-grid-800 hover:border-grid-700 text-grid-400 hover:text-grid-200 text-xs font-mono flex items-center space-x-1.5 transition-all"
+          className="p-2.5 rounded-lg bg-black/60 border border-white/[0.08] hover:border-white/[0.2] text-grid-300 hover:text-white text-xs font-mono flex items-center space-x-1.5 transition-all"
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-brand-emerald' : ''}`} />
           <span>Sync Ledger</span>
         </button>
       </div>
@@ -73,7 +74,7 @@ export const AlgorandLedger: React.FC = () => {
       {/* Account Balances Grid */}
       <div className="space-y-3">
         <div className="text-xs font-mono font-semibold uppercase tracking-wider text-grid-400 flex items-center space-x-2">
-          <Wallet className="w-3.5 h-3.5 text-signal-amber" />
+          <Wallet className="w-3.5 h-3.5 text-brand-emerald" />
           <span>Network Participant Accounts (Algorand TestNet)</span>
         </div>
 
@@ -81,46 +82,57 @@ export const AlgorandLedger: React.FC = () => {
           {accounts.map((acc, idx) => (
             <div
               key={idx}
-              className="bg-grid-900 border border-grid-800 rounded-xl p-4 space-y-3 hover:border-grid-700 transition-all"
+              className="bg-black/60 border border-white/[0.08] rounded-xl p-4 space-y-3 hover:border-brand-emerald/40 transition-all shadow-sm"
             >
               <div className="flex items-center justify-between">
                 <span className={`px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-tight ${
                   acc.role === 'agent'
-                    ? 'bg-signal-amberDim text-signal-amber border border-signal-amber/30'
+                    ? 'bg-brand-emerald/15 text-brand-emerald border border-brand-emerald/30'
                     : acc.role === 'treasury'
-                    ? 'bg-signal-cyanDim text-signal-cyan border border-signal-cyan/30'
-                    : 'bg-grid-800 text-grid-300'
+                    ? 'bg-white/[0.1] text-white border border-white/[0.2]'
+                    : 'bg-black text-grid-300 border border-white/[0.06]'
                 }`}>
                   {acc.role.toUpperCase()}
                 </span>
-                <span className="text-sm font-bold font-mono text-signal-emerald">
+                <span className="text-sm font-bold font-mono text-brand-emerald">
                   {acc.balanceAlgo.toFixed(3)} ALGO
                 </span>
               </div>
 
               <div>
-                <div className="text-xs font-semibold text-grid-200 truncate">{acc.label}</div>
-                <div className="flex items-center justify-between mt-1 text-[11px] font-mono text-grid-500 bg-grid-950 p-2 rounded border border-grid-850">
+                <div className="text-xs font-semibold text-white truncate">{acc.label}</div>
+                <div className="flex items-center justify-between mt-1 text-[11px] font-mono text-grid-400 bg-black p-2 rounded border border-white/[0.08]">
                   <span className="truncate max-w-[200px]">{acc.address}</span>
                   <button
                     onClick={() => copyAddress(acc.address)}
-                    className="text-grid-400 hover:text-grid-200 ml-1"
+                    className="text-grid-400 hover:text-white ml-1"
                     title="Copy Address"
                   >
-                    {copiedAddress === acc.address ? <Check className="w-3 h-3 text-signal-emerald" /> : <Copy className="w-3 h-3" />}
+                    {copiedAddress === acc.address ? <Check className="w-3 h-3 text-brand-emerald" /> : <Copy className="w-3 h-3" />}
                   </button>
                 </div>
               </div>
 
-              <div className="pt-1 flex items-center justify-between text-[10px] font-mono text-grid-500">
+              <div className="pt-1 flex items-center justify-between text-[10px] font-mono text-grid-400">
+                <a
+                  href={`https://lora.algokit.io/testnet/account/${acc.address}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-brand-emerald hover:underline flex items-center space-x-1"
+                >
+                  <Search className="w-3 h-3" />
+                  <span>Inspect on Lora</span>
+                  <ExternalLink className="w-2.5 h-2.5" />
+                </a>
+
                 <a
                   href={acc.testnetExplorerUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-signal-amber hover:underline flex items-center space-x-1"
+                  className="text-grid-400 hover:text-white flex items-center space-x-1"
                 >
-                  <span>View on Pera / AlgoScan</span>
-                  <ExternalLink className="w-3 h-3" />
+                  <span>Pera Explorer</span>
+                  <ExternalLink className="w-2.5 h-2.5" />
                 </a>
               </div>
             </div>
@@ -129,81 +141,87 @@ export const AlgorandLedger: React.FC = () => {
       </div>
 
       {/* Transaction History Table */}
-      <div className="bg-grid-900 border border-grid-800 rounded-xl overflow-hidden">
-        <div className="p-4 bg-grid-950 border-b border-grid-800 flex items-center justify-between">
-          <div className="text-xs font-mono font-semibold uppercase tracking-wider text-grid-200 flex items-center space-x-2">
-            <Coins className="w-3.5 h-3.5 text-signal-emerald" />
+      <div className="bg-black/75 border border-white/[0.08] rounded-xl overflow-hidden shadow-sm">
+        <div className="p-4 bg-black border-b border-white/[0.08] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="text-xs font-mono font-semibold uppercase tracking-wider text-white flex items-center space-x-2">
+            <Coins className="w-3.5 h-3.5 text-brand-emerald" />
             <span>On-Chain Settlement History ({transactions.length} Transactions)</span>
           </div>
-          <div className="text-[11px] font-mono text-grid-500">
-            Algorand Genesis: <code className="text-grid-300 font-semibold">testnet-v1.0</code>
+          <div className="flex items-center space-x-2 text-[11px] font-mono">
+            <span className="text-brand-emerald font-semibold">Facilitator: GoPlausible</span>
+            <span className="text-grid-600">•</span>
+            <span className="text-grid-400">Network: TestNet</span>
           </div>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left font-mono text-xs">
-            <thead className="bg-grid-950/60 text-grid-400 text-[10px] uppercase border-b border-grid-800">
+            <thead className="bg-black/80 text-grid-400 text-[10px] uppercase border-b border-white/[0.08]">
               <tr>
                 <th className="py-3 px-4">Tx ID</th>
                 <th className="py-3 px-4">Round</th>
                 <th className="py-3 px-4">Amount</th>
-                <th className="py-3 px-4">Protocol Fee (1.5%)</th>
+                <th className="py-3 px-4">Protocol Fee</th>
                 <th className="py-3 px-4">Status</th>
                 <th className="py-3 px-4">Timestamp</th>
-                <th className="py-3 px-4 text-right">Explorer</th>
+                <th className="py-3 px-4 text-right">Lora Explorer</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-grid-800/60">
-              {transactions.map((tx) => (
-                <tr key={tx.id} className="hover:bg-grid-850/50 transition-all">
-                  <td className="py-3 px-4">
-                    <span className="font-semibold text-grid-200 truncate max-w-[160px] block">
-                      {tx.txId}
-                    </span>
-                  </td>
+            <tbody className="divide-y divide-white/[0.06]">
+              {transactions.map((tx) => {
+                const loraUrl = tx.loraUrl || `https://lora.algokit.io/testnet/transaction/${tx.txId}`;
+                return (
+                  <tr key={tx.id} className="hover:bg-white/[0.02] transition-all">
+                    <td className="py-3 px-4">
+                      <span className="font-semibold text-white truncate max-w-[160px] block">
+                        {tx.txId}
+                      </span>
+                    </td>
 
-                  <td className="py-3 px-4">
-                    <span className="text-grid-400">#{tx.round}</span>
-                  </td>
+                    <td className="py-3 px-4">
+                      <span className="text-grid-400">#{tx.round}</span>
+                    </td>
 
-                  <td className="py-3 px-4">
-                    <span className="text-signal-emerald font-semibold">{tx.amountAlgo.toFixed(6)} ALGO</span>
-                    <span className="text-[10px] text-grid-500 block">({Math.round(tx.amountAlgo * 1_000_000)} µALGO)</span>
-                  </td>
+                    <td className="py-3 px-4">
+                      <span className="text-brand-emerald font-semibold">{tx.amountAlgo.toFixed(6)} ALGO</span>
+                      <span className="text-[10px] text-grid-400 block">({Math.round(tx.amountAlgo * 1_000_000)} µALGO)</span>
+                    </td>
 
-                  <td className="py-3 px-4">
-                    <span className="text-grid-300">{tx.protocolFeeAlgo.toFixed(6)} ALGO</span>
-                  </td>
+                    <td className="py-3 px-4">
+                      <span className="text-grid-300">{tx.protocolFeeAlgo.toFixed(6)} ALGO</span>
+                    </td>
 
-                  <td className="py-3 px-4">
-                    <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-signal-emeraldDim text-signal-emerald border border-signal-emerald/30">
-                      CONFIRMED
-                    </span>
-                  </td>
+                    <td className="py-3 px-4">
+                      <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-brand-emerald/15 text-brand-emerald border border-brand-emerald/30">
+                        CONFIRMED
+                      </span>
+                    </td>
 
-                  <td className="py-3 px-4">
-                    <span className="text-grid-400 text-[11px]">
-                      {new Date(tx.timestamp).toLocaleTimeString()}
-                    </span>
-                  </td>
+                    <td className="py-3 px-4">
+                      <span className="text-grid-400 text-[11px]">
+                        {new Date(tx.timestamp).toLocaleTimeString()}
+                      </span>
+                    </td>
 
-                  <td className="py-3 px-4 text-right">
-                    <a
-                      href={tx.explorerUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-signal-amber hover:underline inline-flex items-center space-x-1"
-                    >
-                      <span>Explore</span>
-                      <ArrowUpRight className="w-3 h-3" />
-                    </a>
-                  </td>
-                </tr>
-              ))}
+                    <td className="py-3 px-4 text-right">
+                      <a
+                        href={loraUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-2.5 py-1 rounded bg-brand-emerald/15 hover:bg-brand-emerald/25 border border-brand-emerald/30 text-brand-emerald text-[11px] inline-flex items-center space-x-1 shadow-sm transition-all"
+                      >
+                        <Search className="w-3 h-3" />
+                        <span>Lora</span>
+                        <ArrowUpRight className="w-3 h-3" />
+                      </a>
+                    </td>
+                  </tr>
+                );
+              })}
               {transactions.length === 0 && (
                 <tr>
                   <td colSpan={7} className="py-8 text-center text-grid-500 font-mono">
-                    No transactions settled on Algorand yet. Execute a task to trigger automatic on-chain settlement!
+                    No transactions settled on Algorand yet. Execute a task in the Console to trigger automatic on-chain settlement!
                   </td>
                 </tr>
               )}
@@ -214,3 +232,5 @@ export const AlgorandLedger: React.FC = () => {
     </div>
   );
 };
+
+export default AlgorandLedger;

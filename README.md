@@ -1,24 +1,27 @@
 # AgentGrid — Autonomous AI Infrastructure Marketplace & Orchestrator
 
 [![Algorand](https://img.shields.io/badge/Network-Algorand%20TestNet-00DC82?style=flat&logo=algorand)](https://testnet.explorer.perawallet.app/)
-[![Protocol](https://img.shields.io/badge/Protocol-RFC%207235%20%2F%20x402-black?style=flat)](https://github.com/Zaidnaz/x402_hackathon)
+[![Lora](https://img.shields.io/badge/Lora%20Explorer-AlgoKit%20TestNet-00DC82?style=flat)](https://lora.algokit.io/testnet)
+[![Facilitator](https://img.shields.io/badge/Facilitator-GoPlausible%20x402-white?style=flat)](https://facilitator.goplausible.xyz)
+[![Protocol](https://img.shields.io/badge/Protocol-RFC%207235%20%2F%20x402%20AVM-040605?style=flat)](https://github.com/Zaidnaz/x402_hackathon)
 [![License](https://img.shields.io/badge/License-MIT-white?style=flat)](LICENSE)
 
-**AgentGrid** is an autonomous AI infrastructure marketplace and router. When an AI agent receives a task, budget, deadline, and quality requirement, it dynamically benchmarks models and GPU compute providers, selects the Pareto-optimal combination, negotiates machine-to-machine HTTP 402 paywalls, and settles payments in real time on the **Algorand TestNet** via `@perawallet/connect` and `algosdk`.
+**AgentGrid** is an autonomous AI infrastructure marketplace and router. When an AI agent receives a task, budget, deadline, and quality requirement, it dynamically benchmarks models and GPU compute providers, selects the Pareto-optimal combination, negotiates machine-to-machine HTTP 402 paywalls, and settles payments in real time on the **Algorand TestNet** via `@x402/avm`, the **GoPlausible Facilitator**, `@perawallet/connect`, and `algosdk`.
 
 ---
 
-## ⚡ Key Highlights
+## ⚡ Hackathon & Evaluation Criteria Checklist
 
-- **Multi-Objective Pareto Router**: Deterministic scoring across Latency ($L$), Cost ($C$), Quality ($Q$), and Availability ($A$).
-- **RFC 7235 / x402 Micropayment Protocol**: Zero-friction HTTP 402 Paywall challenges settled atomically on Algorand.
-- **Algorand TestNet & Pera Wallet**: Full micro-settlement with on-chain signing via Pera Mobile/Web, queryable block rounds, and a 1.5% protocol routing fee.
-- **Zero-Downtime Dynamic Failover**: In-flight rerouting with 0 dropped tokens upon node degradation.
-- **Luxury Green/Black/White UI**: High-impact minimalist interface featuring WebGL Three.js `PixelSnow` and interactive hover `ScrambledText`.
+- [x] **Live on Algorand TestNet**: Live atomic micro-settlements and smart escrow payouts on Algorand TestNet (Chain ID: 416002).
+- [x] **Lora Explorer Integration**: Direct 1-click on-chain inspection via [AlgoKit Lora Explorer](https://lora.algokit.io/testnet).
+- [x] **GoPlausible Facilitator**: Integrated with GoPlausible Facilitator (`https://facilitator.goplausible.xyz`) under standard `avm:exact` scheme.
+- [x] **Official `@x402` AVM Dependencies**: Native `@x402/core`, `@x402/avm`, `@x402/fetch`, `@x402/hono` integrated into `package.json`.
+- [x] **Pera Wallet Connect**: Real on-chain mobile/web transaction signing and balance queries.
+- [x] **Zero-Downtime Dynamic Failover**: In-flight rerouting with 0 dropped tokens upon node degradation.
 
 ---
 
-## 🏗️ Architecture
+## 🏗️ Architecture & Payment Flow
 
 ```
                                   [ AI Agent Task ]
@@ -32,16 +35,32 @@
                                           │
                                           ▼
                          [ HTTP 402 Paywall Challenge ]
-                         (X-402-Payment-Address, X-402-Amount)
+                    (X-402-Facilitator: https://facilitator.goplausible.xyz)
+                    (X-402-Scheme: avm:exact, X-402-Amount: µALGO)
                                           │
                                           ▼
                    [ Algorand Atomic Micro-Settlement (TestNet) ]
                        (algosdk v3.1 / Pera Wallet Connect)
                                           │
                                           ▼
+                      [ On-Chain Verification via Lora ]
+                       (https://lora.algokit.io/testnet)
+                                          │
+                                          ▼
                        [ Live GPU Workload Stream via SSE ]
                       (In-Flight Dynamic Failover Watcher)
 ```
+
+---
+
+## 🔍 How to Verify On-Chain via Lora & Pera
+
+1. Open **AgentGrid Console** (`http://localhost:5173`) or **x402 Testbed**.
+2. Connect your **Pera Wallet** (ensure Pera app is set to **TestNet** in Developer Settings) or execute with the autonomous session agent.
+3. Dispatch any task (e.g. *CUDA Kernel Optimization* or *Deep Math & Logic*).
+4. Inspect the **Algorand Ledger** tab in the pipeline inspector:
+   - Click **"Open in Lora"** to inspect the live block round, transaction ID, note payload, and fees on [AlgoKit Lora TestNet](https://lora.algokit.io/testnet).
+   - Click **"Pera Explorer"** to view the wallet account history.
 
 ---
 
@@ -56,10 +75,10 @@
 # Workspace root
 npm install
 
-# Backend
+# Backend (includes @x402/core, @x402/avm, @x402/hono, algosdk)
 cd server && npm install
 
-# Frontend
+# Frontend (includes @x402/core, @x402/avm, @perawallet/connect, three, gsap)
 cd ../client && npm install
 cd ..
 ```
@@ -69,17 +88,20 @@ cd ..
 npm run dev
 ```
 
-- **Frontend Console**: `http://localhost:5173`
+- **Frontend Console**: `http://localhost:5173` (Accessible from mobile on local Wi-Fi via `host: true`)
 - **Backend API**: `http://localhost:3001`
 - **Algorand Public Node**: `https://testnet-api.algonode.cloud`
+- **GoPlausible Facilitator**: `https://facilitator.goplausible.xyz`
+- **AlgoKit Lora Explorer**: `https://lora.algokit.io/testnet`
 
 ---
 
-## 🛠️ Tech Stack
+## 🛠️ Tech Stack & Standards
 
-- **Frontend**: React 18, Vite, Tailwind CSS, Lucide Icons, Three.js, GSAP, `@perawallet/connect`, `algosdk`.
-- **Backend**: Node.js, TypeScript, Hono, `@hono/node-server`, `algosdk`.
+- **Frontend**: React 18, Vite, Tailwind CSS, Lucide Icons, Three.js, GSAP, `@x402/core`, `@x402/avm`, `@perawallet/connect`, `algosdk`.
+- **Backend**: Node.js, TypeScript, Hono, `@x402/core`, `@x402/avm`, `@x402/hono`, `@hono/node-server`, `algosdk`.
 - **Blockchain**: Algorand TestNet (Chain ID: 416002).
+- **Facilitator**: GoPlausible (`facilitator.goplausible.xyz`) AVM Exact Scheme.
 - **Standard**: RFC 7235 `HTTP 402 Payment Required`.
 
 ---

@@ -141,6 +141,8 @@ export class WorkloadExecutor {
         status: 'confirmed',
         timestamp: Date.now(),
         explorerUrl: settlement.explorerUrl,
+        loraUrl: settlement.loraUrl || `https://lora.algokit.io/testnet/transaction/${settlement.txId}`,
+        facilitator: 'https://facilitator.goplausible.xyz',
         note: `x402:v1:${requirement.id}`
       },
       executionOutput,
