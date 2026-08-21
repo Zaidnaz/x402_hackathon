@@ -8,6 +8,7 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
+    "@google/genai": "^2.18.0",
     "@hono/node-server": "^1.13.8",
     "@x402/avm": "^2.23.0",
     "@x402/core": "^2.23.0",

@@ -9,6 +9,7 @@ import { RouterEngine } from './routerEngine.js';
 import { x402Protocol } from './x402Protocol.js';
 import { algorandService } from './algorandService.js';
 import { storage } from '../db/storage.js';
+import { GoogleGenAI } from '@google/genai';
 
 export interface ExecuteOptions {
   prompt: string;
@@ -29,18 +30,18 @@ export class WorkloadExecutor {
 
     // Stage 1: Intent Analysis
     emit('analyzing_intent', 'Deconstructing prompt into compute constraints and modality requirements...');
-    await delay(350);
+    await delay(300);
     const requirement = AIAnalyzer.analyzeTask(options.prompt, options.overrides);
     emit('analyzing_intent', `Decomposition complete: ${requirement.modality.toUpperCase()} workload, est. ${requirement.estimatedInputTokens + requirement.estimatedOutputTokens} tokens, SLA: ${requirement.deadlineMs}ms.`, { requirement });
 
     // Stage 2: Grid Discovery
-    await delay(250);
+    await delay(200);
     emit('discovering_grid', 'Probing active model endpoints and GPU clusters for live telemetry, spot pricing, and interconnect bandwidth...');
-    await delay(350);
+    await delay(300);
 
     // Stage 3: Pareto Optimization
     emit('optimizing_pareto', 'Executing deterministic multi-objective Pareto scoring across cost, latency, and quality dimensions...');
-    await delay(400);
+    await delay(350);
     const routing = RouterEngine.evaluateGrid(requirement);
     emit('optimizing_pareto', `Optimal route determined: [${routing.selectedCandidate.modelName}] on [${routing.selectedCandidate.computeName}] (Score: ${routing.selectedCandidate.compositeScore}).`, { routing });
 
@@ -49,21 +50,21 @@ export class WorkloadExecutor {
     let failoverDetails: CompletedTask['failoverDetails'] | undefined = undefined;
 
     // Stage 4: x402 Challenge Generation
-    await delay(250);
-    emit('x402_challenging', `Issuing standardized HTTP 402 Payment Challenge for compute resource [${activeCandidate.computeName}]...`);
+    await delay(200);
+    emit('x402_challenging', `Issuing standardized HTTP 402 Payment Challenge for compute resource [${activeCandidate.computeName}] via GoPlausible Facilitator...`);
     const challenge = x402Protocol.generatePaymentChallenge(requirement.id, activeCandidate);
-    await delay(300);
-    emit('x402_challenging', `HTTP 402 Challenge active: ${challenge.amountAlgo} ALGO (${challenge.amountMicroAlgo} µALGO) required.`, { challenge });
+    await delay(250);
+    emit('x402_challenging', `HTTP 402 Challenge active: ${challenge.amountAlgo} ALGO (${challenge.amountMicroAlgo} µALGO) required under scheme avm:exact.`, { challenge });
 
     // Stage 5: Algorand TestNet Settlement
-    await delay(250);
+    await delay(200);
     emit('settling_algorand', `Signing atomic micro-settlement on Algorand TestNet (Fee: ${challenge.agentGridFeeAlgo} ALGO, Payout: ${challenge.providerPayoutAlgo} ALGO)...`);
     const settlement = await algorandService.executeSettlement(
       requirement.id, 
       activeCandidate.computeId, 
       challenge.amountAlgo
     );
-    await delay(350);
+    await delay(300);
 
     const paymentProof = x402Protocol.verifyPaymentProof(
       challenge.challengeId,
@@ -74,51 +75,78 @@ export class WorkloadExecutor {
     emit('settling_algorand', `Settlement confirmed on-chain in Round #${settlement.round} (Tx: ${settlement.txId.substring(0, 16)}...). Payment token issued.`, { settlement, paymentProof });
 
     // Stage 6: Inference Execution & Live Streaming
-    await delay(250);
+    await delay(200);
     emit('executing_workload', `Authorizing workload on ${activeCandidate.gpuType} via ${activeCandidate.computeName}...`);
 
     let executionOutput = '';
-    const generatedSample = generateRealisticOutput(requirement.rawPrompt, requirement.modality, activeCandidate.modelName);
-    const words = generatedSample.split(' ');
+    const apiKey = process.env.GEMINI_API_KEY;
 
-    for (let i = 0; i < words.length; i++) {
-      const word = words[i] + ' ';
-      executionOutput += word;
-      if (options.onTokenChunk) {
-        options.onTokenChunk(word);
-      }
-
-      // Check if simulated failover is requested midway through token generation
-      if (options.simulateFailover && !failoverOccurred && i === Math.floor(words.length * 0.4)) {
-        emit('rerouting_failover', `CRITICAL: Primary node [${activeCandidate.computeName}] reported telemetry degradation / VRAM spike! Triggering zero-downtime failover...`, {
-          degradedNode: activeCandidate.computeName,
-          fallbackNode: routing.fallbackCandidate.computeName
+    if (apiKey) {
+      // Live Real-Time Gemini AI Inference Stream
+      try {
+        const ai = new GoogleGenAI({ apiKey });
+        const systemPrompt = `You are ${activeCandidate.modelName} executing on an autonomous decentralized compute grid node (${activeCandidate.computeName} with ${activeCandidate.gpuType}). Provide a high quality, comprehensive, and direct answer.`;
+        
+        const responseStream = await ai.models.generateContentStream({
+          model: 'gemini-1.5-flash',
+          contents: `${systemPrompt}\n\nTask: ${options.prompt}`
         });
-        await delay(500);
 
-        // Switch to fallback
-        failoverOccurred = true;
-        const previousCandidate = activeCandidate;
-        activeCandidate = routing.fallbackCandidate;
-
-        failoverDetails = {
-          originalProvider: `${previousCandidate.computeName} (${previousCandidate.gpuType})`,
-          reason: 'Simulated Node Heartbeat Drop / VRAM Latency Spike (980ms > SLA)',
-          newProvider: `${activeCandidate.computeName} (${activeCandidate.gpuType})`,
-          rerouteLatencyOverheadMs: 185
-        };
-
-        emit('rerouting_failover', `Rerouted seamlessly to [${activeCandidate.modelName}] on [${activeCandidate.computeName}]. Resuming token stream...`, { failoverDetails });
-        await delay(300);
+        for await (const chunk of responseStream) {
+          const textChunk = chunk.text || '';
+          executionOutput += textChunk;
+          if (options.onTokenChunk) {
+            options.onTokenChunk(textChunk);
+          }
+        }
+      } catch (err: any) {
+        console.warn('Gemini stream fallback to simulated tensor output:', err?.message);
+        executionOutput = '';
       }
+    }
 
-      await delay(25); // Realistic token stream speed
+    // Fallback or default deterministic stream
+    if (!executionOutput) {
+      const generatedSample = generateRealisticOutput(requirement.rawPrompt, requirement.modality, activeCandidate.modelName);
+      const words = generatedSample.split(' ');
+
+      for (let i = 0; i < words.length; i++) {
+        const word = words[i] + ' ';
+        executionOutput += word;
+        if (options.onTokenChunk) {
+          options.onTokenChunk(word);
+        }
+
+        if (options.simulateFailover && !failoverOccurred && i === Math.floor(words.length * 0.4)) {
+          emit('rerouting_failover', `CRITICAL: Primary node [${activeCandidate.computeName}] reported telemetry degradation / VRAM spike! Triggering zero-downtime failover...`, {
+            degradedNode: activeCandidate.computeName,
+            fallbackNode: routing.fallbackCandidate.computeName
+          });
+          await delay(500);
+
+          failoverOccurred = true;
+          const previousCandidate = activeCandidate;
+          activeCandidate = routing.fallbackCandidate;
+
+          failoverDetails = {
+            originalProvider: `${previousCandidate.computeName} (${previousCandidate.gpuType})`,
+            reason: 'Simulated Node Heartbeat Drop / VRAM Latency Spike (980ms > SLA)',
+            newProvider: `${activeCandidate.computeName} (${activeCandidate.gpuType})`,
+            rerouteLatencyOverheadMs: 185
+          };
+
+          emit('rerouting_failover', `Rerouted seamlessly to [${activeCandidate.modelName}] on [${activeCandidate.computeName}]. Resuming token stream...`, { failoverDetails });
+          await delay(300);
+        }
+
+        await delay(25);
+      }
     }
 
     // Stage 7: Telemetry Verification & Telemetry Log
     const actualDurationMs = Date.now() - startTime;
     emit('verifying_telemetry', 'Validating SLA adherence, output integrity, and finalizing ledger accounting...');
-    await delay(250);
+    await delay(200);
 
     const completedTask: CompletedTask = {
       id: requirement.id,
@@ -148,7 +176,7 @@ export class WorkloadExecutor {
       executionOutput,
       actualDurationMs,
       actualCostAlgo: challenge.amountAlgo,
-      tokensGenerated: words.length * 2,
+      tokensGenerated: executionOutput.split(/\s+/).length,
       status: failoverOccurred ? 'rerouted' : 'completed',
       failoverOccurred,
       failoverDetails,
@@ -157,7 +185,7 @@ export class WorkloadExecutor {
 
     storage.saveTask(completedTask);
 
-    emit('completed', `Task execution successfully finished in ${actualDurationMs}ms. Ledger settled.`, { task: completedTask });
+    emit('completed', `Task execution successfully finished in ${actualDurationMs}ms. Ledger settled via GoPlausible Facilitator.`, { task: completedTask });
 
     return completedTask;
   }
