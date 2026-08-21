@@ -50,19 +50,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp, onNavigate
           </div>
         </div>
 
-        {/* Hero Title with Shuffle Animation */}
+        {/* Hero Title with High-Energy Shuffle Animation */}
         <div className="space-y-4">
           <div className="text-5xl sm:text-7xl md:text-8xl font-mono font-extrabold tracking-tight text-white">
             <Shuffle
               text="AGENTGRID"
-              shuffleDirection="right"
-              duration={0.45}
-              animationMode="evenodd"
-              shuffleTimes={3}
-              ease="power3.out"
-              stagger={0.04}
-              triggerOnce={false}
+              duration={0.65}
+              stagger={0.06}
               triggerOnHover={true}
+              loop={true}
+              loopDelay={4}
               className="text-white hover:text-brand-emerald transition-colors"
             />
           </div>
@@ -70,10 +67,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp, onNavigate
           <div className="text-xs sm:text-sm md:text-base font-mono text-brand-emerald tracking-widest font-semibold uppercase">
             <Shuffle
               text="Autonomous AI Infrastructure Marketplace"
-              shuffleDirection="right"
-              duration={0.35}
-              animationMode="evenodd"
-              shuffleTimes={2}
+              duration={0.45}
               stagger={0.02}
               triggerOnHover={true}
               className="text-brand-emerald"
