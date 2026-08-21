@@ -43,6 +43,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp, onNavigate
         {/* Status Pill */}
         <div>
           <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-black/80 backdrop-blur-md border border-brand-emerald/30 text-xs font-mono text-brand-emerald shadow-glow-emerald">
+            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-brand-emerald text-black uppercase">Team LENA</span>
+            <span className="text-grid-600">•</span>
             <span className="w-2 h-2 rounded-full bg-brand-emerald animate-pulse" />
             <span>Algorand TestNet</span>
             <span className="text-grid-600">•</span>

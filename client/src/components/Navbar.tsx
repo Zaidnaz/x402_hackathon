@@ -44,10 +44,15 @@ export const Navbar: React.FC<NavbarProps> = ({
                 AG
               </div>
               <div className="flex flex-col text-left">
-                <span className="font-mono font-bold tracking-tight text-white text-base group-hover:text-brand-emerald transition-colors">
-                  AgentGrid
-                </span>
-                <span className="text-[10px] font-mono text-brand-emerald tracking-wider uppercase -mt-0.5">
+                <div className="flex items-center space-x-2">
+                  <span className="font-mono font-bold tracking-tight text-white text-base group-hover:text-brand-emerald transition-colors">
+                    AgentGrid
+                  </span>
+                  <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase bg-brand-emerald/15 text-brand-emerald border border-brand-emerald/30">
+                    Team LENA
+                  </span>
+                </div>
+                <span className="text-[10px] font-mono text-grid-400 tracking-wider uppercase -mt-0.5">
                   x402 // Algorand
                 </span>
               </div>

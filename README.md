@@ -1,12 +1,15 @@
 # AgentGrid — Autonomous AI Infrastructure Marketplace & Orchestrator
 
+### 👥 Developed by **Team LENA**
+
 [![Algorand](https://img.shields.io/badge/Network-Algorand%20TestNet-00DC82?style=flat&logo=algorand)](https://testnet.explorer.perawallet.app/)
 [![Lora](https://img.shields.io/badge/Lora%20Explorer-AlgoKit%20TestNet-00DC82?style=flat)](https://lora.algokit.io/testnet)
 [![Facilitator](https://img.shields.io/badge/Facilitator-GoPlausible%20x402-white?style=flat)](https://facilitator.goplausible.xyz)
+[![Team](https://img.shields.io/badge/Team-LENA-00DC82?style=flat)](https://github.com/Zaidnaz/x402_hackathon)
 [![Protocol](https://img.shields.io/badge/Protocol-RFC%207235%20%2F%20x402%20AVM-040605?style=flat)](https://github.com/Zaidnaz/x402_hackathon)
 [![License](https://img.shields.io/badge/License-MIT-white?style=flat)](LICENSE)
 
-**AgentGrid** is an autonomous AI infrastructure marketplace and router. When an AI agent receives a task, budget, deadline, and quality requirement, it dynamically benchmarks models and GPU compute providers, selects the Pareto-optimal combination, negotiates machine-to-machine HTTP 402 paywalls, and settles payments in real time on the **Algorand TestNet** via `@x402/avm`, the **GoPlausible Facilitator**, `@perawallet/connect`, and `algosdk`.
+**AgentGrid** (by **Team LENA**) is an autonomous AI infrastructure marketplace and router. When an AI agent receives a task, budget, deadline, and quality requirement, it dynamically benchmarks models and GPU compute providers, selects the Pareto-optimal combination, negotiates machine-to-machine HTTP 402 paywalls, and settles payments in real time on the **Algorand TestNet** via `@x402/avm`, the **GoPlausible Facilitator**, `@perawallet/connect`, and `algosdk`.
 
 ---
 
@@ -98,8 +101,9 @@ npm run dev
 
 ## 🛠️ Tech Stack & Standards
 
+- **Team**: **Team LENA**
 - **Frontend**: React 18, Vite, Tailwind CSS, Lucide Icons, Three.js, GSAP, `@x402/core`, `@x402/avm`, `@perawallet/connect`, `algosdk`.
-- **Backend**: Node.js, TypeScript, Hono, `@x402/core`, `@x402/avm`, `@x402/hono`, `@hono/node-server`, `algosdk`.
+- **Backend**: Node.js, TypeScript, Hono, `@x402/core`, `@x402/avm`, `@x402/hono`, `@hono/node-server`, `algosdk`, `@google/genai`.
 - **Blockchain**: Algorand TestNet (Chain ID: 416002).
 - **Facilitator**: GoPlausible (`facilitator.goplausible.xyz`) AVM Exact Scheme.
 - **Standard**: RFC 7235 `HTTP 402 Payment Required`.
@@ -107,4 +111,4 @@ npm run dev
 ---
 
 ## 📄 License
-MIT © 2026 AgentGrid Team
+MIT © 2026 Team LENA
