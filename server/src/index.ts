@@ -1,3 +1,16 @@
+import 'dotenv/config';
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Load from server/.env, server/src/.env, and root .env if present
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
+dotenv.config({ path: path.resolve(__dirname, './.env') });
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+
 import { Hono } from 'hono';
 import { serve } from '@hono/node-server';
 import { cors } from 'hono/cors';
@@ -20,7 +33,9 @@ app.use('*', cors({
     'X-402-Amount', 
     'X-402-Currency', 
     'X-402-Network', 
-    'X-402-Nonce'
+    'X-402-Nonce',
+    'X-402-Facilitator',
+    'X-402-Scheme'
   ],
   exposeHeaders: [
     'WWW-Authenticate', 
@@ -28,7 +43,9 @@ app.use('*', cors({
     'X-402-Amount', 
     'X-402-Currency', 
     'X-402-Network', 
-    'X-402-Nonce'
+    'X-402-Nonce',
+    'X-402-Facilitator',
+    'X-402-Scheme'
   ]
 }));
 
@@ -39,6 +56,7 @@ app.get('/', (c) => {
     version: '1.0.0',
     protocol: 'x402-algorand-v1',
     status: 'online',
+    geminiLiveEnabled: Boolean(process.env.GEMINI_API_KEY),
     timestamp: Date.now(),
     endpoints: {
       tasks: '/api/tasks',
@@ -62,6 +80,7 @@ console.log(`  ⚡ AgentGrid Autonomous Orchestrator Server Started`);
 console.log(`  🌐 Port: http://localhost:${PORT}`);
 console.log(`  ⛓️  Network: Algorand TestNet (algosdk v3.1)`);
 console.log(`  💳 Protocol: x402 HTTP Payment Standard`);
+console.log(`  🤖 Gemini AI Live Streaming: ${process.env.GEMINI_API_KEY ? 'ACTIVE ✅' : 'SIMULATED (No API key found)'}`);
 console.log(`======================================================\n`);
 
 serve({
