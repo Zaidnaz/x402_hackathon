@@ -7,6 +7,7 @@ export default defineConfig({
     global: 'globalThis',
   },
   server: {
+    host: true, // Exposes server to local network for mobile phone testing (e.g. http://192.168.x.x:5173)
     port: 5173,
     proxy: {
       '/api': {

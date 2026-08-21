@@ -9,13 +9,15 @@ if (typeof window !== 'undefined' && !(window as any).Buffer) {
 // Algorand TestNet Public Node (Algonode)
 export const TESTNET_ALGOD_SERVER = 'https://testnet-api.algonode.cloud';
 export const TESTNET_INDEXER_SERVER = 'https://testnet-idx.algonode.cloud';
+export const TESTNET_DISPENSER_URL = 'https://bank.testnet.algorand.network/';
 
 export const algodClient = new algosdk.Algodv2('', TESTNET_ALGOD_SERVER, '');
 
 // Initialize Pera Wallet Connect instance (ChainId 416002 = TestNet)
 export const peraWallet = new PeraWalletConnect({
-  chainId: 416002, // TestNet
-  shouldShowSignTxnToast: true
+  chainId: 416002, // TestNet (Must match Pera Mobile Network Setting)
+  shouldShowSignTxnToast: true,
+  compactMode: false
 });
 
 /**
@@ -23,15 +25,28 @@ export const peraWallet = new PeraWalletConnect({
  */
 export async function connectPeraWallet(): Promise<string> {
   try {
+    // If there is a hanging session, disconnect first to ensure clean modal launch
+    if (peraWallet.isConnected) {
+      await peraWallet.disconnect().catch(() => {});
+    }
+
     const accounts = await peraWallet.connect();
+    
     peraWallet.connector?.on('disconnect', () => {
-      console.log('Pera wallet disconnected');
+      console.log('Pera wallet disconnected by user/session');
     });
+
+    if (!accounts || accounts.length === 0) {
+      throw new Error('No accounts selected in Pera Wallet');
+    }
+
     return accounts[0];
   } catch (error: any) {
-    if (error?.data?.type !== 'CONNECT_MODAL_CLOSED') {
-      console.error('Pera Wallet connection error:', error);
+    if (error?.data?.type === 'CONNECT_MODAL_CLOSED') {
+      console.log('User closed Pera connection modal');
+      throw new Error('Pera connection modal closed');
     }
+    console.error('Pera Wallet connection error:', error);
     throw error;
   }
 }
@@ -50,7 +65,7 @@ export async function reconnectPeraSession(): Promise<string | null> {
     }
     return null;
   } catch (error) {
-    console.error('Reconnect session error:', error);
+    console.warn('Reconnect session notice:', error);
     return null;
   }
 }
