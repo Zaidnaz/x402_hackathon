@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@gsap/react": "^2.1.2",
     "@perawallet/connect": "^1.6.0",
     "@types/three": "^0.185.4",
     "algosdk": "^3.7.0",

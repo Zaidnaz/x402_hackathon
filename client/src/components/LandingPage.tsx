@@ -9,7 +9,7 @@ import {
   Layers,
   ChevronRight
 } from 'lucide-react';
-import ScrambledText from './ScrambledText';
+import Shuffle from './Shuffle';
 import PixelSnow from './PixelSnow';
 
 interface LandingPageProps {
@@ -21,14 +21,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp, onNavigate
   return (
     <>
       {/* Full-Screen WebGL PixelSnow Background covering the entire page */}
-      <div className="fixed inset-0 w-screen h-screen pointer-events-none z-0 overflow-hidden opacity-40">
+      <div className="fixed inset-0 w-screen h-screen pointer-events-none z-0 overflow-hidden opacity-35">
         <PixelSnow 
           color="#ffffff"
           flakeSize={0.035}
           minFlakeSize={1.8}
           pixelResolution={200}
           speed={1.15}
-          density={0.35}
+          density={0.32}
           direction={125}
           brightness={1.0}
           depthFade={8}
@@ -46,40 +46,45 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp, onNavigate
             <span className="w-2 h-2 rounded-full bg-brand-emerald animate-pulse" />
             <span>Algorand TestNet</span>
             <span className="text-grid-600">•</span>
-            <span className="text-white font-medium">x402 Protocol</span>
+            <span className="text-white font-medium">x402 Protocol Standard</span>
           </div>
         </div>
 
-        {/* Interactive Scrambled Text Hero Headline */}
+        {/* Hero Title with Shuffle Animation */}
         <div className="space-y-4">
-          <div className="text-4xl sm:text-6xl md:text-7xl font-bold tracking-tight text-white font-mono cursor-default">
-            <ScrambledText
-              radius={140}
-              duration={1.2}
-              speed={0.6}
-              scrambleChars=".:!<>-_/[]{}—=+*^?#01"
-              className="text-white"
-            >
-              AGENTGRID
-            </ScrambledText>
+          <div className="text-5xl sm:text-7xl md:text-8xl font-mono font-extrabold tracking-tight text-white">
+            <Shuffle
+              text="AGENTGRID"
+              shuffleDirection="right"
+              duration={0.45}
+              animationMode="evenodd"
+              shuffleTimes={3}
+              ease="power3.out"
+              stagger={0.04}
+              triggerOnce={false}
+              triggerOnHover={true}
+              className="text-white hover:text-brand-emerald transition-colors"
+            />
           </div>
 
-          <div className="text-sm sm:text-base md:text-lg font-mono text-brand-emerald tracking-wider font-semibold">
-            <ScrambledText
-              radius={90}
-              duration={0.9}
-              speed={0.5}
-              scrambleChars=".:"
-            >
-              AUTONOMOUS AI INFRASTRUCTURE MARKETPLACE
-            </ScrambledText>
+          <div className="text-xs sm:text-sm md:text-base font-mono text-brand-emerald tracking-widest font-semibold uppercase">
+            <Shuffle
+              text="Autonomous AI Infrastructure Marketplace"
+              shuffleDirection="right"
+              duration={0.35}
+              animationMode="evenodd"
+              shuffleTimes={2}
+              stagger={0.02}
+              triggerOnHover={true}
+              className="text-brand-emerald"
+            />
           </div>
         </div>
 
         {/* Crisp Subtitle */}
         <div className="max-w-2xl mx-auto space-y-3">
           <p className="text-sm sm:text-base text-grid-300 font-sans leading-relaxed">
-            AI agents pick the optimal model & GPU, negotiate <strong className="text-brand-emerald font-mono font-medium">x402 micropayments</strong>, and settle on <strong className="text-white font-mono font-medium">Algorand</strong> in real time.
+            AI agents shouldn&apos;t be locked into static API keys. AgentGrid dynamically selects the optimal model & GPU, negotiates <strong className="text-brand-emerald font-mono font-medium">x402 micropayments</strong>, and settles on <strong className="text-white font-mono font-medium">Algorand</strong> in real time.
           </p>
         </div>
 
