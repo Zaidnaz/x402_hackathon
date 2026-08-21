@@ -87,16 +87,28 @@ export class WorkloadExecutor {
         const ai = new GoogleGenAI({ apiKey });
         const systemPrompt = `You are ${activeCandidate.modelName} executing on an autonomous decentralized compute grid node (${activeCandidate.computeName} with ${activeCandidate.gpuType}). Provide a high quality, comprehensive, and direct answer.`;
         
-        const responseStream = await ai.models.generateContentStream({
-          model: 'gemini-1.5-flash',
-          contents: `${systemPrompt}\n\nTask: ${options.prompt}`
-        });
+        // Priority order: Gemini Flash-Lite / 2.0 Flash / 1.5 Flash
+        const targetModels = ['gemini-2.0-flash-lite', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+        let streamSuccess = false;
 
-        for await (const chunk of responseStream) {
-          const textChunk = chunk.text || '';
-          executionOutput += textChunk;
-          if (options.onTokenChunk) {
-            options.onTokenChunk(textChunk);
+        for (const modelName of targetModels) {
+          try {
+            const responseStream = await ai.models.generateContentStream({
+              model: modelName,
+              contents: `${systemPrompt}\n\nTask: ${options.prompt}`
+            });
+
+            for await (const chunk of responseStream) {
+              const textChunk = chunk.text || '';
+              executionOutput += textChunk;
+              if (options.onTokenChunk) {
+                options.onTokenChunk(textChunk);
+              }
+            }
+            streamSuccess = true;
+            break;
+          } catch (modelErr: any) {
+            console.warn(`Attempt with ${modelName} encountered: ${modelErr?.message}, trying fallback...`);
           }
         }
       } catch (err: any) {

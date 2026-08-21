@@ -12,6 +12,20 @@ class ProviderRegistry {
   private seedDefaultProviders() {
     const defaultModels: ModelProvider[] = [
       {
+        id: 'gemini-3-7-flash-lite',
+        name: 'Gemini 3.7 Flash-Lite',
+        family: 'Google',
+        contextWindow: 1048576,
+        qualityBenchmark: 94.2,
+        costPer1kInputTokensUsd: 0.00007,
+        costPer1kOutputTokensUsd: 0.00030,
+        typicalTps: 180,
+        reliabilityScore: 0.999,
+        supportedModalities: ['code', 'general', 'fast-chat', 'vision', 'batch-summary', 'reasoning'],
+        providerOrg: 'Google DeepMind',
+        status: 'online'
+      },
+      {
         id: 'deepseek-v3',
         name: 'DeepSeek V3 (MoE 671B)',
         family: 'DeepSeek',
@@ -51,20 +65,6 @@ class ProviderRegistry {
         reliabilityScore: 0.992,
         supportedModalities: ['code', 'general', 'fast-chat', 'batch-summary'],
         providerOrg: 'Meta AI / Open Source',
-        status: 'online'
-      },
-      {
-        id: 'gemini-2-flash',
-        name: 'Gemini 2.0 Flash',
-        family: 'Google',
-        contextWindow: 1048576,
-        qualityBenchmark: 90.2,
-        costPer1kInputTokensUsd: 0.00010,
-        costPer1kOutputTokensUsd: 0.00040,
-        typicalTps: 145,
-        reliabilityScore: 0.999,
-        supportedModalities: ['code', 'general', 'fast-chat', 'vision', 'batch-summary'],
-        providerOrg: 'Google DeepMind',
         status: 'online'
       },
       {
