@@ -53,6 +53,55 @@ export const ExecutionPipeline: React.FC<ExecutionPipelineProps> = ({
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const exportCryptographicReceipt = () => {
+    if (!completedTask) return;
+    const receipt = {
+      standard: "x402-algorand-audit-v1",
+      timestamp: new Date(completedTask.completedAt).toISOString(),
+      project: "AgentGrid",
+      team: "Team LENA",
+      task: {
+        id: completedTask.id,
+        prompt: completedTask.prompt,
+        modality: completedTask.requirement.modality,
+        tokensGenerated: completedTask.tokensGenerated,
+        actualDurationMs: completedTask.actualDurationMs
+      },
+      blockchainSettlement: {
+        network: "Algorand TestNet (ChainID: 416002)",
+        txId: completedTask.algorandTx.txId,
+        blockRound: completedTask.algorandTx.round,
+        amountAlgo: completedTask.actualCostAlgo,
+        amountMicroAlgo: Math.round(completedTask.actualCostAlgo * 1_000_000),
+        usdcAsaEquivalent: `${(completedTask.actualCostAlgo * 0.22).toFixed(4)} USDC (ASA #10458941)`,
+        protocolFeeAlgo: completedTask.x402Challenge.agentGridFeeAlgo,
+        providerPayoutAlgo: completedTask.x402Challenge.providerPayoutAlgo,
+        loraExplorerUrl: completedTask.algorandTx.loraUrl,
+        peraExplorerUrl: completedTask.algorandTx.explorerUrl
+      },
+      x402Facilitator: {
+        url: "https://facilitator.goplausible.xyz",
+        scheme: "avm:exact",
+        paymentToken: completedTask.paymentProof.paymentToken,
+        verified: true
+      },
+      routingDecision: {
+        selectedModel: completedTask.routing.selectedCandidate.modelName,
+        selectedCompute: completedTask.routing.selectedCandidate.computeName,
+        gpuType: completedTask.routing.selectedCandidate.gpuType,
+        compositeScore: completedTask.routing.selectedCandidate.compositeScore
+      }
+    };
+
+    const blob = new Blob([JSON.stringify(receipt, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `x402-receipt-${completedTask.id}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const getStageStatus = (stageId: ExecutionStage) => {
     const stageOrder: ExecutionStage[] = [
       'analyzing_intent',
@@ -293,7 +342,10 @@ export const ExecutionPipeline: React.FC<ExecutionPipelineProps> = ({
 
                       <div className="flex justify-between">
                         <span className="text-grid-400">Total Settlement</span>
-                        <span className="text-brand-emerald font-semibold">{completedTask.actualCostAlgo} ALGO</span>
+                        <div className="text-right">
+                          <span className="text-brand-emerald font-semibold">{completedTask.actualCostAlgo} ALGO</span>
+                          <span className="text-[10px] text-grid-400 block">≈ {(completedTask.actualCostAlgo * 0.22).toFixed(4)} USDC (ASA #10458941)</span>
+                        </div>
                       </div>
 
                       <div className="flex justify-between">
@@ -313,6 +365,15 @@ export const ExecutionPipeline: React.FC<ExecutionPipelineProps> = ({
                         {completedTask.paymentProof.paymentToken}
                       </div>
                     </div>
+
+                    {/* Download Cryptographic Audit Receipt Button */}
+                    <button
+                      onClick={exportCryptographicReceipt}
+                      className="w-full py-2 px-3 rounded-lg bg-black hover:bg-white/[0.05] border border-white/[0.12] hover:border-brand-emerald/40 text-xs font-mono text-white hover:text-brand-emerald flex items-center justify-center space-x-2 transition-all shadow-sm active:scale-95"
+                    >
+                      <FileText className="w-3.5 h-3.5 text-brand-emerald" />
+                      <span>Download Cryptographic Receipt (.json)</span>
+                    </button>
                   </div>
                 ) : (
                   <div className="text-grid-500 text-center py-12">

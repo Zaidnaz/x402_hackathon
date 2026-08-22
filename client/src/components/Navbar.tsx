@@ -88,6 +88,17 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
             )}
 
+            {/* Faucet Link Button */}
+            <a
+              href="https://bank.testnet.algorand.network/"
+              target="_blank"
+              rel="noreferrer"
+              title="Get free TestNet ALGO tokens"
+              className="hidden xl:flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-grid-300 hover:text-white text-xs font-mono transition-all"
+            >
+              <span>🚰 Faucet</span>
+            </a>
+
             {isConnected && walletAddress ? (
               <div className="flex items-center space-x-2 bg-black/60 border border-white/[0.10] rounded-full pl-3.5 pr-2 py-1.5 text-xs font-mono shadow-sm">
                 <span className="w-2 h-2 rounded-full bg-brand-emerald animate-pulse" />

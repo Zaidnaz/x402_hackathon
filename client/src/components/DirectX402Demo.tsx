@@ -286,6 +286,55 @@ export const DirectX402Demo: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Developer Integration Code Snippets Panel */}
+      <div className="bg-black/75 border border-white/[0.08] rounded-xl p-5 space-y-3 font-mono text-xs shadow-sm">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2 text-white font-semibold uppercase tracking-wider">
+            <Layers className="w-4 h-4 text-brand-emerald" />
+            <span>Developer Integration: How Other Autonomous Agents Call This Endpoint</span>
+          </div>
+          <span className="text-[10px] text-brand-emerald bg-brand-emerald/15 px-2 py-0.5 rounded border border-brand-emerald/30 font-bold">
+            @x402/fetch & cURL
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pt-1">
+          {/* TypeScript @x402/fetch */}
+          <div className="bg-black rounded-lg border border-white/[0.08] p-3.5 space-y-2">
+            <div className="flex items-center justify-between text-grid-400 text-[11px]">
+              <span>TypeScript (using @x402/fetch & @x402/avm)</span>
+            </div>
+            <pre className="text-[11px] text-brand-emerald overflow-x-auto leading-relaxed">
+{`import { wrapFetchWithX402 } from '@x402/fetch';
+import { AlgorandSigner } from '@x402/avm';
+
+const signer = new AlgorandSigner(agentPrivateKey);
+const x402Fetch = wrapFetchWithX402(fetch, signer);
+
+// Automatically handles 402 challenge, signs on Algorand,
+// settles via GoPlausible, and retries with payment token!
+const res = await x402Fetch('/api/x402/inference/direct-endpoint');
+const data = await res.json();`}
+            </pre>
+          </div>
+
+          {/* Raw cURL */}
+          <div className="bg-black rounded-lg border border-white/[0.08] p-3.5 space-y-2">
+            <div className="flex items-center justify-between text-grid-400 text-[11px]">
+              <span>Raw CLI / cURL</span>
+            </div>
+            <pre className="text-[11px] text-grid-300 overflow-x-auto leading-relaxed">
+{`# 1. Trigger HTTP 402 Challenge
+curl -i http://localhost:3001/api/x402/inference/direct-endpoint
+
+# 2. Re-send with verified x402 payment token
+curl http://localhost:3001/api/x402/inference/direct-endpoint \\
+  -H "Authorization: x402 <your_verified_payment_token>"`}
+            </pre>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
