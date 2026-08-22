@@ -107,7 +107,7 @@ function MainLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-grid-950 text-grid-100 flex flex-col font-sans grid-bg-pattern relative selection:bg-signal-amber/20 selection:text-signal-amber">
+    <div className="min-h-screen max-w-full overflow-x-hidden bg-grid-950 text-grid-100 flex flex-col font-sans grid-bg-pattern relative selection:bg-signal-amber/20 selection:text-signal-amber">
       {/* Floating Modern Pill Navbar */}
       <Navbar
         activeTab={activeTab}
@@ -116,7 +116,7 @@ function MainLayout() {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-6 relative z-10">
+      <main className="flex-1 max-w-5xl w-full mx-auto px-3 sm:px-6 py-6 relative z-10 overflow-x-hidden">
         {activeTab === 'landing' && (
           <LandingPage
             onEnterApp={() => setActiveTab('command')}
