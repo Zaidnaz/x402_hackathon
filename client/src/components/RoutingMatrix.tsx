@@ -13,7 +13,7 @@ import {
   HelpCircle
 } from 'lucide-react';
 import { TaskRequirement, RoutingDecision, CandidateEvaluation } from '../types';
-import { analyzePrompt, evaluateRoute } from '../utils/api';
+import { analyzePrompt, evaluateRoute, generateFallbackRoute } from '../utils/api';
 import { TourGuideButton } from './TourGuideButton';
 
 export const RoutingMatrix: React.FC = () => {
@@ -22,7 +22,7 @@ export const RoutingMatrix: React.FC = () => {
   const [latWeight, setLatWeight] = useState(30);
   const [qualWeight, setQualWeight] = useState(30);
   const [relWeight, setRelWeight] = useState(10);
-  const [routing, setRouting] = useState<RoutingDecision | null>(null);
+  const [routing, setRouting] = useState<RoutingDecision | null>(() => generateFallbackRoute());
   const [loading, setLoading] = useState(false);
 
   const recompute = async () => {

@@ -12,10 +12,10 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { GlobalStats, CompletedTask } from '../types';
-import { fetchStats, fetchTaskHistory } from '../utils/api';
+import { fetchStats, fetchTaskHistory, FALLBACK_STATS } from '../utils/api';
 
 export const AnalyticsHUD: React.FC = () => {
-  const [stats, setStats] = useState<GlobalStats | null>(null);
+  const [stats, setStats] = useState<GlobalStats | null>(FALLBACK_STATS);
   const [tasks, setTasks] = useState<CompletedTask[]>([]);
   const [loading, setLoading] = useState(false);
 

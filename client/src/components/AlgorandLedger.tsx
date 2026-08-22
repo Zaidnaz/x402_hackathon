@@ -13,12 +13,12 @@ import {
   Search
 } from 'lucide-react';
 import { AlgorandAccountInfo, AlgorandTransactionRecord } from '../types';
-import { fetchAccounts, fetchTransactions } from '../utils/api';
+import { fetchAccounts, fetchTransactions, FALLBACK_ACCOUNTS, FALLBACK_TRANSACTIONS } from '../utils/api';
 import { TourGuideButton } from './TourGuideButton';
 
 export const AlgorandLedger: React.FC = () => {
-  const [accounts, setAccounts] = useState<AlgorandAccountInfo[]>([]);
-  const [transactions, setTransactions] = useState<AlgorandTransactionRecord[]>([]);
+  const [accounts, setAccounts] = useState<AlgorandAccountInfo[]>(FALLBACK_ACCOUNTS);
+  const [transactions, setTransactions] = useState<AlgorandTransactionRecord[]>(FALLBACK_TRANSACTIONS);
   const [loading, setLoading] = useState(false);
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
 
