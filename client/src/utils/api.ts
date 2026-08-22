@@ -12,7 +12,7 @@ import {
 
 const API_BASE = ((import.meta as any).env?.VITE_API_BASE as string) || '/api';
 
-const FALLBACK_MODELS: ModelProvider[] = [
+export const FALLBACK_MODELS: ModelProvider[] = [
   {
     id: 'gemini-3-7-flash-lite',
     name: 'Gemini 3.7 Flash-Lite',
@@ -85,7 +85,7 @@ const FALLBACK_MODELS: ModelProvider[] = [
   }
 ];
 
-const FALLBACK_COMPUTES: ComputeProvider[] = [
+export const FALLBACK_COMPUTES: ComputeProvider[] = [
   {
     id: 'runpod-h100-us',
     name: 'RunPod Cloud Cluster',

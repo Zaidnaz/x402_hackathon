@@ -14,7 +14,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { ModelProvider, ComputeProvider } from '../types';
-import { toggleComputeStatus } from '../utils/api';
+import { toggleComputeStatus, FALLBACK_MODELS, FALLBACK_COMPUTES } from '../utils/api';
 import { TourGuideButton } from './TourGuideButton';
 
 interface MarketplaceGridProps {
@@ -25,11 +25,13 @@ interface MarketplaceGridProps {
 }
 
 export const MarketplaceGrid: React.FC<MarketplaceGridProps> = ({
-  models,
-  computes,
+  models = [],
+  computes = [],
   onOpenRegisterModal,
   onRefreshCatalog
 }) => {
+  const safeModels = models && models.length > 0 ? models : FALLBACK_MODELS;
+  const safeComputes = computes && computes.length > 0 ? computes : FALLBACK_COMPUTES;
   const [selectedTab, setSelectedTab] = useState<'all' | 'models' | 'computes'>('all');
   const [isUpdatingStatus, setIsUpdatingStatus] = useState<string | null>(null);
 
@@ -118,9 +120,9 @@ export const MarketplaceGrid: React.FC<MarketplaceGridProps> = ({
       {/* Tab Filter */}
       <div className="flex items-center space-x-1.5 sm:space-x-2 border-b border-grid-800 pb-3 overflow-x-auto no-scrollbar">
         {[
-          { id: 'all', label: `All (${models.length + computes.length})` },
-          { id: 'models', label: `Models (${models.length})` },
-          { id: 'computes', label: `GPU Fleet (${computes.length})` },
+          { id: 'all', label: `All (${safeModels.length + safeComputes.length})` },
+          { id: 'models', label: `Models (${safeModels.length})` },
+          { id: 'computes', label: `GPU Fleet (${safeComputes.length})` },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -148,7 +150,7 @@ export const MarketplaceGrid: React.FC<MarketplaceGridProps> = ({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {computes.map((comp) => (
+            {safeComputes.map((comp) => (
               <div
                 key={comp.id}
                 className={`bg-grid-900 border rounded-xl p-5 space-y-3 transition-all ${
@@ -224,7 +226,7 @@ export const MarketplaceGrid: React.FC<MarketplaceGridProps> = ({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {models.map((m) => (
+            {safeModels.map((m) => (
               <div
                 key={m.id}
                 className="bg-grid-900 border border-grid-800 hover:border-grid-700 rounded-xl p-5 space-y-3 transition-all"

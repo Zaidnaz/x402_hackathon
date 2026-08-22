@@ -22,13 +22,15 @@ import {
 import { 
   fetchCatalog, 
   fetchAccounts, 
-  subscribeTaskStream 
+  subscribeTaskStream,
+  FALLBACK_MODELS,
+  FALLBACK_COMPUTES
 } from './utils/api';
 
 function MainLayout() {
   const [activeTab, setActiveTab] = useState<'landing' | 'command' | 'grid' | 'routing' | 'ledger' | 'analytics' | 'x402-demo'>('landing');
-  const [models, setModels] = useState<ModelProvider[]>([]);
-  const [computes, setComputes] = useState<ComputeProvider[]>([]);
+  const [models, setModels] = useState<ModelProvider[]>(FALLBACK_MODELS);
+  const [computes, setComputes] = useState<ComputeProvider[]>(FALLBACK_COMPUTES);
   const [accounts, setAccounts] = useState<AlgorandAccountInfo[]>([]);
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
 
@@ -44,11 +46,11 @@ function MainLayout() {
   const loadInitialData = async () => {
     try {
       const [cat, accs] = await Promise.all([fetchCatalog(), fetchAccounts()]);
-      setModels(cat.models);
-      setComputes(cat.computes);
-      setAccounts(accs);
+      if (cat?.models?.length) setModels(cat.models);
+      if (cat?.computes?.length) setComputes(cat.computes);
+      if (accs?.length) setAccounts(accs);
     } catch (err) {
-      console.error('Failed to load initial data', err);
+      console.warn('Using local fallback seed data', err);
     }
   };
 

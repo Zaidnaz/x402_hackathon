@@ -116,7 +116,20 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
         const route = await evaluateRoute(req);
         if (active) {
           setPreviewRouting(route);
-          setSelectedCandidateIndex(0);
+          if (route?.paretoFrontier && route.paretoFrontier.length > 0) {
+            // Automatically find and select the lowest cost candidate by default
+            let cheapestIndex = 0;
+            let lowestCost = route.paretoFrontier[0].estimatedCostAlgo;
+            route.paretoFrontier.forEach((c, idx) => {
+              if (c.estimatedCostAlgo < lowestCost) {
+                lowestCost = c.estimatedCostAlgo;
+                cheapestIndex = idx;
+              }
+            });
+            setSelectedCandidateIndex(cheapestIndex);
+          } else {
+            setSelectedCandidateIndex(0);
+          }
         }
       } catch (err) {
         console.error('Preview error', err);
@@ -323,38 +336,43 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
               <div className="flex items-center justify-between text-xs text-grid-300 font-bold uppercase tracking-wider">
                 <span className="flex items-center space-x-1.5 text-brand-emerald">
                   <Sparkles className="w-3.5 h-3.5" />
-                  <span>Optimal Compute Matches Found (3 Options):</span>
+                  <span>Available Pareto Compute Matches:</span>
                 </span>
-                <span className="text-[10px] text-grid-400 font-normal">Click to select choice</span>
+                <span className="text-[10px] text-grid-400 font-normal">Auto-selected cheapest • Tap to switch</span>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                {previewRouting?.paretoFrontier && previewRouting.paretoFrontier.slice(0, 3).map((candidate, idx) => {
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {previewRouting?.paretoFrontier && previewRouting.paretoFrontier.map((candidate, idx) => {
                   const isCandidateSelected = selectedCandidateIndex === idx;
+                  const isLowestCost = candidate.estimatedCostAlgo === Math.min(...previewRouting.paretoFrontier.map(c => c.estimatedCostAlgo));
                   return (
                     <button
                       key={idx}
                       type="button"
                       onClick={() => setSelectedCandidateIndex(idx)}
-                      className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                      className={`p-2.5 sm:p-3 rounded-xl border text-left transition-all cursor-pointer ${
                         isCandidateSelected
                           ? 'bg-brand-emerald/20 border-brand-emerald shadow-glow-emerald ring-1 ring-brand-emerald'
                           : 'bg-black/70 border-white/[0.08] hover:border-white/[0.2] active:scale-[0.99]'
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold ${
-                          idx === 0 ? 'bg-brand-emerald text-black font-extrabold' : 'bg-white/[0.1] text-grid-300'
+                        <span className={`px-1.5 py-0.2 rounded text-[8px] sm:text-[9px] font-bold ${
+                          isLowestCost
+                            ? 'bg-brand-emerald text-black font-extrabold'
+                            : idx === 0
+                            ? 'bg-white/[0.15] text-white'
+                            : 'bg-white/[0.06] text-grid-400'
                         }`}>
-                          {idx === 0 ? '🏆 #1 Optimal' : idx === 1 ? '⚡ Ultra Fast' : '💰 Budget Saver'}
+                          {isLowestCost ? '💰 Best Price' : idx === 0 ? '🏆 Top Score' : `Option #${idx + 1}`}
                         </span>
-                        <span className="text-[11px] text-brand-emerald font-extrabold">
+                        <span className="text-[10px] sm:text-[11px] text-brand-emerald font-extrabold">
                           {candidate.estimatedCostAlgo} ALGO
                         </span>
                       </div>
-                      <div className="text-xs font-bold text-white truncate">{candidate.modelName}</div>
-                      <div className="text-[10px] text-grid-400 truncate">{candidate.computeName}</div>
-                      <div className="flex items-center justify-between text-[10px] text-grid-400 mt-1.5 pt-1.5 border-t border-white/[0.06]">
+                      <div className="text-[11px] sm:text-xs font-bold text-white truncate">{candidate.modelName}</div>
+                      <div className="text-[9px] sm:text-[10px] text-grid-400 truncate">{candidate.computeName}</div>
+                      <div className="flex items-center justify-between text-[9px] sm:text-[10px] text-grid-400 mt-1.5 pt-1.5 border-t border-white/[0.06]">
                         <span>{candidate.estimatedLatencyMs}ms</span>
                         <span className="text-signal-cyan font-bold">{candidate.projectedQualityScore}/100</span>
                       </div>
