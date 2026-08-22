@@ -3,13 +3,10 @@ import {
   Play, 
   Zap, 
   Cpu, 
-  Clock, 
   Coins, 
   Sparkles, 
-  Sliders, 
   AlertTriangle, 
   ArrowRight,
-  Gauge,
   Code2,
   FileText,
   BrainCircuit,
@@ -18,7 +15,10 @@ import {
   ChevronUp,
   Settings2,
   Wallet,
-  CheckCircle2
+  CheckCircle2,
+  Layers,
+  SlidersHorizontal,
+  ShieldCheck
 } from 'lucide-react';
 import { useWallet } from '../context/WalletContext';
 import { TaskRequirement, RoutingDecision, TaskModality } from '../types';
@@ -35,77 +35,41 @@ interface CommandCenterProps {
   isStreaming: boolean;
 }
 
-const PRESET_PROMPTS = [
+const SIMPLE_PRESETS = [
   {
-    id: 'cuda',
-    title: 'CUDA Tensor Kernel',
-    tag: 'Code & FLOPS',
-    desc: 'FP16 Warp Matrix Multiplication',
+    id: 'code',
+    title: '💻 Generate Smart Contract Code',
+    desc: 'Writes an optimized PyTeal contract with inner transaction verification.',
+    prompt: 'Write an optimized Algorand PyTeal smart contract for an atomic x402 payment escrow with 1.5% protocol fee routing.',
     modality: 'code' as TaskModality,
-    prompt: 'Write an optimized FP16 matrix multiplication kernel for NVIDIA H100 with shared memory tiling, double-buffering, and warp-level tensor core primitives.',
     priority: 'quality' as const,
-    budget: 0.85,
-    sla: 3500,
     icon: Code2
   },
   {
-    id: 'algorand',
-    title: 'Algorand Contract Audit',
-    tag: 'Smart Contract',
-    desc: 'PyTeal Reentrancy & Opcode Cost',
-    modality: 'reasoning' as TaskModality,
-    prompt: 'Audit this Algorand PyTeal smart contract for inner transaction reentrancy, re-keying vulnerabilities, minimum balance requirements, and maximum opcode budget consumption.',
-    priority: 'quality' as const,
-    budget: 1.20,
-    sla: 6000,
-    icon: BrainCircuit
-  },
-  {
     id: 'finance',
-    title: 'High-Freq Alpha Signal',
-    tag: 'Real-Time Finance',
-    desc: 'Implied Volatility Arbitrage',
+    title: '📈 Financial Market Alpha',
+    desc: 'Calculates continuous option arbitrage and delta-hedging bounds in real-time.',
+    prompt: 'Calculate implied volatility smile arbitrage conditions for continuous European call options with live delta hedging.',
     modality: 'fast-chat' as TaskModality,
-    prompt: 'Calculate implied volatility smile arbitrage conditions for continuous European call options with live delta hedging and Black-Scholes Greeks sensitivity bounds.',
     priority: 'speed' as const,
-    budget: 0.20,
-    sla: 1200,
     icon: MessageSquare
   },
   {
-    id: 'genomics',
-    title: 'Genomics Sequence Match',
-    tag: 'Bio & Scientific',
-    desc: 'CRISPR Target Cleavage Analysis',
-    modality: 'batch-summary' as TaskModality,
-    prompt: 'Analyze CRISPR-Cas9 off-target cleavage probabilities across a 3.2M base pair genomic FASTA sequence with PAM motif alignment and mismatch penalties.',
-    priority: 'cost' as const,
-    budget: 0.40,
-    sla: 8000,
-    icon: FileText
+    id: 'audit',
+    title: '🛡️ Deep Protocol Audit',
+    desc: 'Analyzes consensus safety bounds and Byzantine fault tolerance.',
+    prompt: 'Deduce formal safety bounds and worst-case execution latency for a multi-agent Raft consensus protocol across unstable network partitions.',
+    modality: 'reasoning' as TaskModality,
+    priority: 'quality' as const,
+    icon: BrainCircuit
   },
   {
-    id: 'swarm',
-    title: 'Multi-Agent Consensus',
-    tag: 'Agent Swarm',
-    desc: 'Raft Byzantine Fault Tolerance',
-    modality: 'fast-chat' as TaskModality,
-    prompt: 'Synthesize a fault-tolerant state-machine quorum for 12 autonomous trading agents handling asynchronous transaction ordering over high-latency networks.',
-    priority: 'speed' as const,
-    budget: 0.35,
-    sla: 1800,
-    icon: Zap
-  },
-  {
-    id: 'legal',
-    title: 'Legal Multi-Doc Synthesis',
-    tag: 'Enterprise NLP',
-    desc: 'Multi-Jurisdictional Cross-Ref',
+    id: 'summary',
+    title: '📄 Multi-Document Analysis',
+    desc: 'Synthesizes enterprise agreements to extract liability & compliance terms.',
+    prompt: 'Cross-reference enterprise SaaS master service agreements to extract indemnification liability caps and GDPR data sovereignty triggers.',
     modality: 'batch-summary' as TaskModality,
-    prompt: 'Cross-reference 15 enterprise SaaS master service agreements (MSAs) to extract indemnification liability caps, GDPR data sovereignty clauses, and termination triggers.',
     priority: 'cost' as const,
-    budget: 0.25,
-    sla: 9000,
     icon: FileText
   }
 ];
@@ -115,9 +79,10 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
   isStreaming
 }) => {
   const { isConnected, walletAddress, connectWallet, executePeraPayment } = useWallet();
-  const [prompt, setPrompt] = useState(PRESET_PROMPTS[0].prompt);
-  const [selectedPresetId, setSelectedPresetId] = useState(PRESET_PROMPTS[0].id);
-  const [modality, setModality] = useState<TaskModality>(PRESET_PROMPTS[0].modality);
+  const [viewMode, setViewMode] = useState<'simple' | 'pro'>('simple');
+  const [prompt, setPrompt] = useState(SIMPLE_PRESETS[0].prompt);
+  const [selectedPresetId, setSelectedPresetId] = useState(SIMPLE_PRESETS[0].id);
+  const [modality, setModality] = useState<TaskModality>(SIMPLE_PRESETS[0].modality);
   const [priority, setPriority] = useState<'balanced' | 'cost' | 'speed' | 'quality'>('quality');
   
   // Constraints
@@ -158,7 +123,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
       } finally {
         if (active) setIsEvaluating(false);
       }
-    }, 400);
+    }, 300);
 
     return () => {
       active = false;
@@ -166,13 +131,11 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
     };
   }, [prompt, modality, priority, maxBudgetAlgo, deadlineMs, minQualityScore]);
 
-  const handleApplyPreset = (preset: typeof PRESET_PROMPTS[0]) => {
+  const handleApplySimplePreset = (preset: typeof SIMPLE_PRESETS[0]) => {
     setSelectedPresetId(preset.id);
     setPrompt(preset.prompt);
     setModality(preset.modality);
     setPriority(preset.priority);
-    setMaxBudgetAlgo(preset.budget);
-    setDeadlineMs(preset.sla);
   };
 
   const activeCandidate = previewRouting?.paretoFrontier && previewRouting.paretoFrontier[selectedCandidateIndex]
@@ -216,335 +179,380 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
-      {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 pb-1">
-        <div className="text-left space-y-1">
-          <div className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full bg-brand-emerald/10 border border-brand-emerald/25 text-[10px] sm:text-xs font-mono text-brand-emerald">
-            <Sparkles className="w-3 h-3" />
-            <span>Autonomous AI Infrastructure Dispatcher</span>
+    <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6 font-mono">
+      {/* Top Header & Simple/Pro Mode Switcher */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-2 border-b border-white/[0.08]">
+        <div className="text-left space-y-0.5">
+          <div className="flex items-center space-x-2">
+            <span className="w-2 h-2 rounded-full bg-brand-emerald animate-pulse" />
+            <span className="text-xs uppercase tracking-widest text-brand-emerald font-bold">Autonomous AI Agent Console</span>
           </div>
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold font-mono text-white tracking-tight">
-            Agent Task Execution Console
+          <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+            Run Machine-to-Machine x402 Task
           </h1>
-          <p className="text-[11px] sm:text-xs text-grid-300 max-w-xl font-sans leading-relaxed">
-            Pick a workload preset or enter a custom prompt. AgentGrid dynamically benchmarks the compute fleet, settles x402 on Algorand, and streams live AI tokens.
+          <p className="text-xs text-grid-300 font-sans">
+            Pick a task, let AgentGrid find the cheapest GPU on Algorand, and stream results in seconds.
           </p>
         </div>
 
-        <TourGuideButton
-          tourId="console-tour"
-          buttonLabel="How It Works"
-          steps={[
-            {
-              targetSelector: '[data-tour="preset-archetypes"]',
-              title: "1. Workload Presets (6 Options)",
-              description: "Pick an AI workload preset (CUDA kernels, Smart Contract audits, Alpha signals, Genomics, Swarms) or enter your custom goal."
-            },
-            {
-              targetSelector: '[data-tour="prompt-input"]',
-              title: "2. Prompt & Token Estimator",
-              description: "AgentGrid automatically extracts intent, calculates estimated tokens, and establishes SLA constraints."
-            },
-            {
-              targetSelector: '[data-tour="priority-selector"]',
-              title: "3. Optimization Priority",
-              description: "Choose your primary goal: Max Quality, Ultra-Low Latency, Lowest Cost, or Balanced Pareto Frontier."
-            },
-            {
-              targetSelector: '[data-tour="pareto-preview"]',
-              title: "4. Multi-Option Pareto Alternatives",
-              description: "Compare the Top 3 Pareto-optimal Model + GPU cluster pairs and pick your preferred trade-off before dispatching!"
-            },
-            {
-              targetSelector: '[data-tour="wallet-status"]',
-              title: "5. Algorand Pera Wallet Settlement",
-              description: "Connect your mobile Pera Wallet to sign real on-chain transactions on TestNet, or let the autonomous agent wallet settle seamlessly."
-            },
-            {
-              targetSelector: '[data-tour="dispatch-btn"]',
-              title: "6. Dispatch & Settle",
-              description: "Click here to trigger the 6-stage autonomous pipeline, negotiate the x402 paywall, and stream live AI tokens."
-            }
-          ]}
-        />
-      </div>
-
-      {/* 1-Click Workload Archetype Selector (6 High-Tech Cards) */}
-      <div data-tour="preset-archetypes" className="space-y-1.5">
-        <div className="text-[11px] sm:text-xs font-mono text-grid-400 font-semibold uppercase tracking-wider flex items-center justify-between">
-          <span>Choose AI Workload Archetype ({PRESET_PROMPTS.length} Presets):</span>
-          <span className="text-[10px] text-brand-emerald">1-Click Auto-Fill</span>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
-          {PRESET_PROMPTS.map((p) => {
-            const Icon = p.icon;
-            const isSelected = selectedPresetId === p.id;
-            return (
-              <button
-                key={p.id}
-                onClick={() => handleApplyPreset(p)}
-                disabled={isStreaming || isSigningPera}
-                className={`p-3 rounded-xl border text-left transition-all relative group cursor-pointer ${
-                  isSelected
-                    ? 'bg-brand-emerald/15 border-brand-emerald shadow-glow-emerald scale-[1.01]'
-                    : 'bg-black/60 border-white/[0.08] hover:border-white/[0.2] active:scale-[0.98]'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <span className="px-1.5 py-0.2 rounded text-[8px] sm:text-[9px] font-mono uppercase bg-white/[0.06] text-grid-300">
-                    {p.tag}
-                  </span>
-                  <Icon className={`w-3.5 h-3.5 ${isSelected ? 'text-brand-emerald' : 'text-grid-400 group-hover:text-white'}`} />
-                </div>
-                <div className="text-[11px] sm:text-xs font-bold font-mono text-white truncate">{p.title}</div>
-                <div className="text-[9px] sm:text-[10px] font-sans text-grid-400 mt-0.5 line-clamp-1 leading-tight">{p.desc}</div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Main Task Input Card */}
-      <div className="bg-black/80 border border-white/[0.1] rounded-2xl p-4 sm:p-6 space-y-4 sm:space-y-5 shadow-2xl backdrop-blur-md">
-        {/* Prompt Input */}
-        <div data-tour="prompt-input" className="space-y-2">
-          <div className="flex items-center justify-between text-xs font-mono">
-            <span className="text-grid-200 font-semibold uppercase tracking-wider flex items-center space-x-1.5 text-[11px] sm:text-xs">
-              <Sparkles className="w-3.5 h-3.5 text-brand-emerald" />
-              <span>Task Prompt / Agent Goal</span>
-            </span>
-            <span className="text-grid-400 text-[10px] sm:text-[11px]">
-              ~{Math.round(prompt.split(/\s+/).length * 1.35)} est. tokens
-            </span>
+        <div className="flex items-center space-x-2 shrink-0">
+          {/* Mode Switcher */}
+          <div className="bg-black/80 p-1 rounded-xl border border-white/[0.12] flex items-center space-x-1">
+            <button
+              onClick={() => setViewMode('simple')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                viewMode === 'simple'
+                  ? 'bg-brand-emerald text-black shadow-glow-emerald'
+                  : 'text-grid-400 hover:text-white'
+              }`}
+            >
+              ⚡ Simple
+            </button>
+            <button
+              onClick={() => setViewMode('pro')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                viewMode === 'pro'
+                  ? 'bg-white/[0.15] text-white border border-white/[0.2]'
+                  : 'text-grid-400 hover:text-white'
+              }`}
+            >
+              🛠️ Pro
+            </button>
           </div>
 
-          <textarea
-            value={prompt}
-            onChange={(e) => {
-              setPrompt(e.target.value);
-              setSelectedPresetId('');
-            }}
-            placeholder="Describe what you want the agent to accomplish..."
-            rows={3}
-            disabled={isStreaming || isSigningPera}
-            className="w-full bg-black border border-white/[0.12] rounded-xl p-3 sm:p-4 text-xs sm:text-sm font-mono text-white placeholder-grid-500 focus:outline-none focus:border-brand-emerald focus:ring-1 focus:ring-brand-emerald/40 transition-all resize-none leading-relaxed"
+          <TourGuideButton
+            tourId="console-tour"
+            buttonLabel="How It Works"
+            steps={[
+              {
+                targetSelector: '[data-tour="preset-archetypes"]',
+                title: "1. Select Agent Task",
+                description: "Pick an AI agent workload preset or enter custom prompt requirements."
+              },
+              {
+                targetSelector: '[data-tour="priority-selector"]',
+                title: "2. Optimization Priority",
+                description: "Choose your primary goal: Best Quality, Lowest Cost, or Ultra-Low Latency."
+              },
+              {
+                targetSelector: '[data-tour="pareto-preview"]',
+                title: "3. Optimal Route & Cost",
+                description: "AgentGrid automatically finds the cheapest and fastest GPU node with exact micro-ALGO pricing."
+              },
+              {
+                targetSelector: '[data-tour="dispatch-btn"]',
+                title: "4. Run AI Agent",
+                description: "Click to negotiate the x402 paywall, settle on Algorand TestNet, and stream live AI tokens."
+              }
+            ]}
           />
         </div>
+      </div>
 
-        {/* Priority Objective Pills */}
-        <div data-tour="priority-selector" className="space-y-2 pt-2 border-t border-white/[0.08]">
-          <div className="text-[11px] sm:text-xs font-mono text-grid-300">Optimization Goal:</div>
-          <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-1.5 sm:gap-2">
-            {[
-              { id: 'quality', label: 'Max Quality (H100)', desc: 'FP16 Precision' },
-              { id: 'speed', label: 'Ultra Latency (<1.5s)', desc: 'Fastest Ping' },
-              { id: 'cost', label: 'Lowest Cost (Spot)', desc: 'Max Savings' },
-              { id: 'balanced', label: 'Balanced Pareto', desc: 'Non-Dominated' },
-            ].map((opt) => (
-              <button
-                key={opt.id}
-                onClick={() => setPriority(opt.id as any)}
-                disabled={isStreaming || isSigningPera}
-                className={`py-2 px-2.5 sm:px-3 sm:py-1.5 rounded-lg border text-[11px] sm:text-xs font-mono text-center transition-all ${
-                  priority === opt.id
-                    ? 'bg-brand-emerald/20 border-brand-emerald text-brand-emerald font-bold shadow-sm'
-                    : 'bg-black/60 border-white/[0.08] text-grid-300 hover:text-white hover:border-white/[0.2]'
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Multi-Option Pareto Alternatives Selector */}
-        {previewRouting && previewRouting.paretoFrontier && (
-          <div data-tour="pareto-preview" className="space-y-2 pt-2 border-t border-white/[0.08]">
-            <div className="flex items-center justify-between text-[11px] sm:text-xs font-mono">
-              <span className="text-grid-300 font-semibold uppercase tracking-wide flex items-center space-x-1.5">
-                <Cpu className="w-3.5 h-3.5 text-brand-emerald" />
-                <span>Pareto Frontier Compute Routes (Top Options):</span>
-              </span>
-              <span className="text-[10px] text-grid-400">Click to Switch Route</span>
+      {/* ========================================================================= */}
+      {/* ⚡ SIMPLE MODE VIEW (Super Clean, 3 Easy Steps) */}
+      {/* ========================================================================= */}
+      {viewMode === 'simple' && (
+        <div className="space-y-4 animate-fadeIn">
+          {/* STEP 1: Pick an AI Task */}
+          <div data-tour="preset-archetypes" className="space-y-2">
+            <div className="text-xs text-grid-300 font-bold uppercase tracking-wide flex items-center space-x-1.5">
+              <span className="w-4 h-4 rounded-full bg-brand-emerald/20 text-brand-emerald text-[10px] flex items-center justify-center font-bold">1</span>
+              <span>Select AI Agent Workload:</span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-              {previewRouting.paretoFrontier.slice(0, 3).map((candidate, idx) => {
-                const isCandidateSelected = selectedCandidateIndex === idx;
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {SIMPLE_PRESETS.map((p) => {
+                const isSelected = selectedPresetId === p.id;
                 return (
                   <button
-                    key={idx}
-                    type="button"
-                    onClick={() => setSelectedCandidateIndex(idx)}
-                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
-                      isCandidateSelected
-                        ? 'bg-brand-emerald/15 border-brand-emerald shadow-glow-emerald'
-                        : 'bg-black/70 border-white/[0.08] hover:border-white/[0.2]'
+                    key={p.id}
+                    onClick={() => handleApplySimplePreset(p)}
+                    disabled={isStreaming || isSigningPera}
+                    className={`p-3.5 rounded-xl border text-left transition-all relative cursor-pointer ${
+                      isSelected
+                        ? 'bg-brand-emerald/15 border-brand-emerald shadow-glow-emerald ring-1 ring-brand-emerald'
+                        : 'bg-black/60 border-white/[0.08] hover:border-white/[0.2] active:scale-[0.99]'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-1">
-                      <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold font-mono ${
-                        idx === 0 ? 'bg-brand-emerald text-black' : 'bg-white/[0.1] text-grid-300'
-                      }`}>
-                        {idx === 0 ? '🏆 #1 Optimal' : `Option #${idx + 1}`}
-                      </span>
-                      <span className="text-[10px] text-brand-emerald font-bold font-mono">
-                        {candidate.estimatedCostAlgo} ALGO
-                      </span>
+                      <span className="text-xs font-bold text-white">{p.title}</span>
+                      {isSelected && <span className="w-2 h-2 rounded-full bg-brand-emerald animate-pulse" />}
                     </div>
-                    <div className="text-xs font-bold font-mono text-white truncate">
-                      {candidate.modelName}
-                    </div>
-                    <div className="text-[10px] font-mono text-grid-400 truncate">
-                      {candidate.computeName} ({candidate.gpuType})
-                    </div>
-                    <div className="flex items-center justify-between text-[10px] font-mono text-grid-400 mt-1.5 pt-1.5 border-t border-white/[0.06]">
-                      <span>{candidate.estimatedLatencyMs}ms</span>
-                      <span className="text-signal-cyan font-semibold">{candidate.projectedQualityScore}/100</span>
-                    </div>
+                    <div className="text-[11px] font-sans text-grid-300 leading-snug">{p.desc}</div>
                   </button>
                 );
               })}
             </div>
           </div>
-        )}
 
-        {/* Collapsible Advanced Settings (SLA, Budget, Failover) */}
-        <div className="border-t border-white/[0.08] pt-2 sm:pt-3">
-          <button
-            onClick={() => setShowAdvanced(!showAdvanced)}
-            className="w-full flex items-center justify-between text-[11px] sm:text-xs font-mono text-grid-300 hover:text-white py-1 transition-colors"
-          >
-            <span className="flex items-center space-x-1.5">
-              <Settings2 className="w-3.5 h-3.5 text-brand-emerald" />
-              <span>Budget, SLA Deadlines & Regional Failover</span>
-            </span>
-            {showAdvanced ? <ChevronUp className="w-4 h-4 text-brand-emerald" /> : <ChevronDown className="w-4 h-4" />}
-          </button>
+          {/* STEP 2: Choose Strategy */}
+          <div data-tour="priority-selector" className="space-y-2 pt-1">
+            <div className="text-xs text-grid-300 font-bold uppercase tracking-wide flex items-center space-x-1.5">
+              <span className="w-4 h-4 rounded-full bg-brand-emerald/20 text-brand-emerald text-[10px] flex items-center justify-center font-bold">2</span>
+              <span>Routing Optimization Goal:</span>
+            </div>
 
-          {showAdvanced && (
-            <div className="mt-3 p-3.5 sm:p-4 bg-black/60 rounded-xl border border-white/[0.08] space-y-3.5 animate-fadeIn">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                {/* SLA Deadline */}
-                <div className="space-y-1">
-                  <div className="flex justify-between text-[11px] sm:text-xs font-mono">
-                    <span className="text-grid-300">Max SLA Latency</span>
-                    <span className="text-brand-emerald font-bold">{deadlineMs} ms</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="500"
-                    max="15000"
-                    step="250"
-                    value={deadlineMs}
-                    onChange={(e) => setDeadlineMs(parseInt(e.target.value, 10))}
-                    disabled={isStreaming || isSigningPera}
-                    className="w-full h-1.5 bg-grid-800 rounded-lg appearance-none cursor-pointer accent-brand-emerald"
-                  />
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { id: 'quality', label: '🏆 Best Quality', desc: 'NVIDIA H100 Tensor' },
+                { id: 'speed', label: '⚡ Ultra Fast', desc: '<1.2s Round-Trip' },
+                { id: 'cost', label: '💰 Lowest Cost', desc: 'Maximum Savings' },
+              ].map((opt) => (
+                <button
+                  key={opt.id}
+                  onClick={() => setPriority(opt.id as any)}
+                  disabled={isStreaming || isSigningPera}
+                  className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer ${
+                    priority === opt.id
+                      ? 'bg-brand-emerald/20 border-brand-emerald text-brand-emerald font-bold shadow-sm'
+                      : 'bg-black/60 border-white/[0.08] text-grid-300 hover:text-white'
+                  }`}
+                >
+                  <div className="text-xs font-bold">{opt.label}</div>
+                  <div className="text-[9px] text-grid-400 mt-0.5">{opt.desc}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* STEP 3: Live Preview & Dispatch Card */}
+          <div className="bg-black/80 border-2 border-white/[0.12] rounded-2xl p-4 sm:p-5 space-y-4 shadow-2xl backdrop-blur-xl">
+            {/* Pareto Best Match Display */}
+            <div data-tour="pareto-preview" className="bg-[#0b100d] p-3.5 rounded-xl border border-brand-emerald/30 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+              <div className="space-y-0.5">
+                <div className="text-[10px] text-brand-emerald font-bold uppercase tracking-wider flex items-center space-x-1">
+                  <Sparkles className="w-3 h-3 text-brand-emerald" />
+                  <span>Optimal Compute Match Found</span>
                 </div>
-
-                {/* Max Budget Cap */}
-                <div className="space-y-1">
-                  <div className="flex justify-between text-[11px] sm:text-xs font-mono">
-                    <span className="text-grid-300">Max Budget Cap</span>
-                    <span className="text-brand-emerald font-bold">{maxBudgetAlgo.toFixed(2)} ALGO</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0.10"
-                    max="2.50"
-                    step="0.05"
-                    value={maxBudgetAlgo}
-                    onChange={(e) => setMaxBudgetAlgo(parseFloat(e.target.value))}
-                    disabled={isStreaming || isSigningPera}
-                    className="w-full h-1.5 bg-grid-800 rounded-lg appearance-none cursor-pointer accent-brand-emerald"
-                  />
+                <div className="text-sm font-bold text-white">
+                  {activeCandidate?.modelName || 'Gemini 3.7 Flash Lite'}{' '}
+                  <span className="text-grid-400 font-normal text-xs">on</span>{' '}
+                  <span className="text-brand-emerald">{activeCandidate?.computeName || 'NVIDIA H100 SXM5'}</span>
                 </div>
               </div>
 
-              {/* Failover Simulation Switch */}
-              <div className="pt-2 border-t border-white/[0.06]">
-                <label className="flex items-center justify-between cursor-pointer">
-                  <div className="space-y-0.5 pr-2">
-                    <div className="text-[11px] sm:text-xs font-mono text-white flex items-center space-x-1.5">
-                      <AlertTriangle className={`w-3.5 h-3.5 ${simulateFailover ? 'text-signal-rose' : 'text-grid-400'}`} />
-                      <span>Simulate Regional Node Failure</span>
-                    </div>
-                    <div className="text-[9px] sm:text-[10px] text-grid-400">
-                      Tests live in-flight dynamic rerouting mid-execution with zero dropped tokens
-                    </div>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={simulateFailover}
-                    onChange={(e) => setSimulateFailover(e.target.checked)}
-                    disabled={isStreaming || isSigningPera}
-                    className="w-4 h-4 accent-signal-rose cursor-pointer rounded shrink-0"
-                  />
-                </label>
+              <div className="flex items-center space-x-3 text-xs bg-black/60 px-3 py-1.5 rounded-lg border border-white/[0.08] shrink-0">
+                <span className="text-brand-emerald font-extrabold text-sm">
+                  {activeCandidate?.estimatedCostAlgo || '0.0092'} ALGO
+                </span>
+                <span className="text-grid-600">•</span>
+                <span className="text-white">
+                  {activeCandidate?.estimatedLatencyMs || 450} ms
+                </span>
               </div>
             </div>
-          )}
-        </div>
 
-        {/* Pera Wallet Status Banner */}
-        <div data-tour="wallet-status">
-          {isConnected ? (
-            <div className="p-2.5 sm:px-3.5 sm:py-2.5 rounded-xl bg-brand-emerald/10 border border-brand-emerald/30 text-[11px] sm:text-xs font-mono text-brand-emerald flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2">
-              <span className="flex items-center space-x-1.5 truncate">
-                <CheckCircle2 className="w-3.5 h-3.5 text-brand-emerald shrink-0" />
-                <span className="truncate">Settling via Pera ({walletAddress?.substring(0, 6)}...{walletAddress?.substring(walletAddress.length - 4)})</span>
-              </span>
-              <span className="text-[9px] sm:text-[10px] uppercase font-bold text-brand-emerald shrink-0">On-Chain Signer Ready</span>
+            {/* Pera Wallet Status */}
+            <div data-tour="wallet-status">
+              {isConnected ? (
+                <div className="p-2.5 rounded-xl bg-brand-emerald/10 border border-brand-emerald/30 text-xs text-brand-emerald flex items-center justify-between">
+                  <span className="flex items-center space-x-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-brand-emerald shrink-0" />
+                    <span>Signing via Connected Pera Wallet ({walletAddress?.substring(0, 6)}...{walletAddress?.substring(walletAddress.length - 4)})</span>
+                  </span>
+                  <span className="text-[10px] font-bold uppercase">Ready</span>
+                </div>
+              ) : (
+                <div className="p-2.5 rounded-xl bg-black/60 border border-white/[0.08] text-xs text-grid-300 flex items-center justify-between">
+                  <span className="flex items-center space-x-1.5">
+                    <Wallet className="w-3.5 h-3.5 text-brand-emerald shrink-0" />
+                    <span>Auto-settling via Autonomous Agent Wallet</span>
+                  </span>
+                  <button
+                    onClick={connectWallet}
+                    className="text-brand-emerald hover:underline text-xs font-bold"
+                  >
+                    Connect Pera ➔
+                  </button>
+                </div>
+              )}
             </div>
-          ) : (
-            <div className="p-2.5 sm:px-3.5 sm:py-2.5 rounded-xl bg-black/60 border border-white/[0.08] text-[11px] sm:text-xs font-mono text-grid-300 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-2">
-              <span className="flex items-center space-x-1.5">
-                <Wallet className="w-3.5 h-3.5 text-brand-emerald shrink-0" />
-                <span>Pera Wallet Signer (Algorand TestNet):</span>
-              </span>
+
+            {/* BIG 1-CLICK DISPATCH BUTTON */}
+            <div data-tour="dispatch-btn">
               <button
-                onClick={connectWallet}
-                className="text-brand-emerald hover:underline text-xs font-bold text-left sm:text-right"
+                onClick={handleDispatch}
+                disabled={isStreaming || isSigningPera}
+                className={`w-full py-4 px-6 rounded-xl font-bold text-sm uppercase tracking-wider flex items-center justify-center space-x-2 shadow-glow-emerald transition-all cursor-pointer ${
+                  isStreaming || isSigningPera
+                    ? 'bg-grid-800 text-grid-400 cursor-not-allowed'
+                    : 'bg-brand-emerald hover:bg-brand-emerald/90 text-black active:scale-[0.99]'
+                }`}
               >
-                Connect Pera Wallet →
+                {isSigningPera ? (
+                  <>
+                    <Wallet className="w-5 h-5 animate-bounce text-black shrink-0" />
+                    <span>Confirming on Pera Wallet...</span>
+                  </>
+                ) : isStreaming ? (
+                  <>
+                    <Zap className="w-5 h-5 animate-spin text-black shrink-0" />
+                    <span>Orchestrating across AgentGrid...</span>
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-5 h-5 fill-black text-black shrink-0" />
+                    <span>Run AI Agent with x402 ({activeCandidate?.estimatedCostAlgo || '0.009'} ALGO)</span>
+                    <ArrowRight className="w-5 h-5 text-black shrink-0" />
+                  </>
+                )}
               </button>
             </div>
-          )}
+          </div>
         </div>
+      )}
 
-        {/* Primary Action Button */}
-        <div data-tour="dispatch-btn">
+      {/* ========================================================================= */}
+      {/* 🛠️ PRO MODE VIEW (Custom Prompt, Full Sliders, Multi-Route Choices) */}
+      {/* ========================================================================= */}
+      {viewMode === 'pro' && (
+        <div className="bg-black/80 border border-white/[0.1] rounded-2xl p-4 sm:p-6 space-y-4 shadow-2xl backdrop-blur-md animate-fadeIn">
+          {/* Custom Prompt Input */}
+          <div data-tour="prompt-input" className="space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-grid-200 font-bold uppercase tracking-wider flex items-center space-x-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-brand-emerald" />
+                <span>Custom Agent Prompt</span>
+              </span>
+              <span className="text-grid-400 text-[11px]">
+                ~{Math.round(prompt.split(/\s+/).length * 1.35)} est. tokens
+              </span>
+            </div>
+
+            <textarea
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              placeholder="Enter custom prompt requirements..."
+              rows={3}
+              disabled={isStreaming || isSigningPera}
+              className="w-full bg-black border border-white/[0.12] rounded-xl p-3 sm:p-4 text-xs font-mono text-white placeholder-grid-500 focus:outline-none focus:border-brand-emerald focus:ring-1 focus:ring-brand-emerald/40 transition-all resize-none leading-relaxed"
+            />
+          </div>
+
+          {/* Multi-Option Pareto Alternatives */}
+          {previewRouting && previewRouting.paretoFrontier && (
+            <div className="space-y-2 pt-2 border-t border-white/[0.08]">
+              <div className="flex items-center justify-between text-xs font-bold text-grid-300 uppercase">
+                <span>Pareto Route Options (Click to Switch):</span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                {previewRouting.paretoFrontier.slice(0, 3).map((candidate, idx) => {
+                  const isCandidateSelected = selectedCandidateIndex === idx;
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setSelectedCandidateIndex(idx)}
+                      className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                        isCandidateSelected
+                          ? 'bg-brand-emerald/15 border-brand-emerald shadow-glow-emerald'
+                          : 'bg-black/70 border-white/[0.08] hover:border-white/[0.2]'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold ${
+                          idx === 0 ? 'bg-brand-emerald text-black' : 'bg-white/[0.1] text-grid-300'
+                        }`}>
+                          {idx === 0 ? '🏆 #1 Optimal' : `Option #${idx + 1}`}
+                        </span>
+                        <span className="text-[11px] text-brand-emerald font-bold">
+                          {candidate.estimatedCostAlgo} ALGO
+                        </span>
+                      </div>
+                      <div className="text-xs font-bold text-white truncate">{candidate.modelName}</div>
+                      <div className="text-[10px] text-grid-400 truncate">{candidate.computeName}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Collapsible SLA Sliders & Regional Failover */}
+          <div className="border-t border-white/[0.08] pt-2">
+            <button
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className="w-full flex items-center justify-between text-xs text-grid-300 hover:text-white py-1 transition-colors"
+            >
+              <span className="flex items-center space-x-1.5">
+                <Settings2 className="w-3.5 h-3.5 text-brand-emerald" />
+                <span>Fine-Tune Budget, SLA Latency & Failover Simulation</span>
+              </span>
+              {showAdvanced ? <ChevronUp className="w-4 h-4 text-brand-emerald" /> : <ChevronDown className="w-4 h-4" />}
+            </button>
+
+            {showAdvanced && (
+              <div className="mt-3 p-4 bg-black/60 rounded-xl border border-white/[0.08] space-y-3 animate-fadeIn">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-grid-300">Max SLA Latency</span>
+                      <span className="text-brand-emerald font-bold">{deadlineMs} ms</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="500"
+                      max="15000"
+                      step="250"
+                      value={deadlineMs}
+                      onChange={(e) => setDeadlineMs(parseInt(e.target.value, 10))}
+                      className="w-full h-1.5 bg-grid-800 rounded-lg appearance-none cursor-pointer accent-brand-emerald"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-grid-300">Max Budget Cap</span>
+                      <span className="text-brand-emerald font-bold">{maxBudgetAlgo.toFixed(2)} ALGO</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0.10"
+                      max="2.50"
+                      step="0.05"
+                      value={maxBudgetAlgo}
+                      onChange={(e) => setMaxBudgetAlgo(parseFloat(e.target.value))}
+                      className="w-full h-1.5 bg-grid-800 rounded-lg appearance-none cursor-pointer accent-brand-emerald"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-white/[0.06]">
+                  <label className="flex items-center justify-between cursor-pointer">
+                    <span className="text-xs text-white flex items-center space-x-1.5">
+                      <AlertTriangle className={`w-3.5 h-3.5 ${simulateFailover ? 'text-signal-rose' : 'text-grid-400'}`} />
+                      <span>Simulate Regional Node Failure (Tests in-flight zero-downtime rerouting)</span>
+                    </span>
+                    <input
+                      type="checkbox"
+                      checked={simulateFailover}
+                      onChange={(e) => setSimulateFailover(e.target.checked)}
+                      className="w-4 h-4 accent-signal-rose cursor-pointer rounded"
+                    />
+                  </label>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Dispatch Button in Pro Mode */}
           <button
             onClick={handleDispatch}
             disabled={isStreaming || isSigningPera || !prompt.trim()}
-            className={`w-full py-3.5 sm:py-4 px-4 sm:px-6 rounded-xl font-mono font-bold text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center space-x-2 transition-all cursor-pointer ${
+            className={`w-full py-4 px-6 rounded-xl font-bold text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center space-x-2 transition-all cursor-pointer ${
               isStreaming || isSigningPera
                 ? 'bg-grid-800 text-grid-400 cursor-not-allowed'
                 : 'bg-brand-emerald hover:bg-brand-emerald/90 text-black shadow-glow-emerald active:scale-[0.99]'
             }`}
           >
-            {isSigningPera ? (
-              <>
-                <Wallet className="w-4 h-4 animate-bounce text-black shrink-0" />
-                <span>Confirming on Pera Wallet...</span>
-              </>
-            ) : isStreaming ? (
-              <>
-                <Zap className="w-4 h-4 animate-spin text-black shrink-0" />
-                <span>Orchestrating across AgentGrid...</span>
-              </>
-            ) : (
-              <>
-                <Play className="w-4 h-4 fill-black text-black shrink-0" />
-                <span>Dispatch Autonomous Workload ({activeCandidate?.estimatedCostAlgo || '0.009'} ALGO)</span>
-                <ArrowRight className="w-4 h-4 text-black shrink-0" />
-              </>
-            )}
+            <Play className="w-4 h-4 fill-black text-black shrink-0" />
+            <span>Dispatch Pro Task ({activeCandidate?.estimatedCostAlgo || '0.009'} ALGO)</span>
+            <ArrowRight className="w-4 h-4 text-black shrink-0" />
           </button>
         </div>
-      </div>
+      )}
     </div>
   );
 };
