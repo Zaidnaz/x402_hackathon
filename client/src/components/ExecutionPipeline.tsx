@@ -14,7 +14,8 @@ import {
   ShieldCheck,
   Zap,
   ArrowRightLeft,
-  Search
+  Search,
+  Key
 } from 'lucide-react';
 import { ExecutionEvent, CompletedTask, ExecutionStage } from '../types';
 
@@ -45,12 +46,19 @@ export const ExecutionPipeline: React.FC<ExecutionPipelineProps> = ({
   onReset
 }) => {
   const [copied, setCopied] = useState(false);
+  const [copiedKey, setCopiedKey] = useState(false);
   const [activeInspectorTab, setActiveInspectorTab] = useState<'output' | 'x402' | 'algorand' | 'events'>('algorand');
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const copyKeyToClipboard = (key: string) => {
+    navigator.clipboard.writeText(key);
+    setCopiedKey(true);
+    setTimeout(() => setCopiedKey(false), 2000);
   };
 
   const exportCryptographicReceipt = () => {
@@ -125,6 +133,9 @@ export const ExecutionPipeline: React.FC<ExecutionPipelineProps> = ({
   };
 
   const loraUrl = completedTask?.algorandTx.loraUrl || `https://lora.algokit.io/testnet/transaction/${completedTask?.algorandTx.txId}`;
+  const generatedApiKey = completedTask 
+    ? `ag_x402_live_${completedTask.id.substring(0, 8)}_${completedTask.algorandTx.txId.substring(0, 12).toLowerCase()}`
+    : '';
 
   return (
     <div className="space-y-6">
@@ -204,6 +215,35 @@ export const ExecutionPipeline: React.FC<ExecutionPipelineProps> = ({
           );
         })}
       </div>
+
+      {/* 🔑 Cryptographic x402 API Session Credential Card */}
+      {completedTask && (
+        <div className="bg-[#0a120e] border-2 border-brand-emerald/60 rounded-2xl p-4 sm:p-5 shadow-2xl animate-fadeIn space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-brand-emerald/20 pb-3">
+            <div className="flex items-center space-x-2">
+              <div className="p-1.5 rounded-lg bg-brand-emerald/20 border border-brand-emerald/40 text-brand-emerald">
+                <Key className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="text-xs sm:text-sm font-bold text-white flex items-center space-x-2">
+                  <span>x402 Authorized Session API Key Issued</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+            <div className="bg-black/90 p-3 rounded-xl border border-white/[0.08] space-y-1.5">
+              <div className="text-[10px] text-grid-400 uppercase">Session API Bearer Key</div>
+              <div className="flex items-center justify-between bg-black p-2 rounded border border-white/[0.06] text-xs text-brand-emerald font-bold">
+                <span className="truncate max-w-[240px]">{generatedApiKey}</span>
+                <button onClick={() => copyKeyToClipboard(generatedApiKey)} className="p-1">
+                  {copiedKey ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Dual Panel HUD: Output Terminal + Settlement Inspector */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">

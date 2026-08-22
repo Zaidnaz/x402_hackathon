@@ -316,30 +316,51 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
             </div>
           </div>
 
-          {/* STEP 3: Live Preview & Dispatch Card */}
+          {/* STEP 3: Multi-Option Pareto Matches & Dispatch */}
           <div className="bg-black/80 border-2 border-white/[0.12] rounded-2xl p-4 sm:p-5 space-y-4 shadow-2xl backdrop-blur-xl">
-            {/* Pareto Best Match Display */}
-            <div data-tour="pareto-preview" className="bg-[#0b100d] p-3.5 rounded-xl border border-brand-emerald/30 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-              <div className="space-y-0.5">
-                <div className="text-[10px] text-brand-emerald font-bold uppercase tracking-wider flex items-center space-x-1">
-                  <Sparkles className="w-3 h-3 text-brand-emerald" />
-                  <span>Optimal Compute Match Found</span>
-                </div>
-                <div className="text-sm font-bold text-white">
-                  {activeCandidate?.modelName || 'Gemini 3.7 Flash Lite'}{' '}
-                  <span className="text-grid-400 font-normal text-xs">on</span>{' '}
-                  <span className="text-brand-emerald">{activeCandidate?.computeName || 'NVIDIA H100 SXM5'}</span>
-                </div>
+            {/* Multi-Option Match Cards */}
+            <div data-tour="pareto-preview" className="space-y-2">
+              <div className="flex items-center justify-between text-xs text-grid-300 font-bold uppercase tracking-wider">
+                <span className="flex items-center space-x-1.5 text-brand-emerald">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Optimal Compute Matches Found (3 Options):</span>
+                </span>
+                <span className="text-[10px] text-grid-400 font-normal">Click to select choice</span>
               </div>
 
-              <div className="flex items-center space-x-3 text-xs bg-black/60 px-3 py-1.5 rounded-lg border border-white/[0.08] shrink-0">
-                <span className="text-brand-emerald font-extrabold text-sm">
-                  {activeCandidate?.estimatedCostAlgo || '0.0092'} ALGO
-                </span>
-                <span className="text-grid-600">•</span>
-                <span className="text-white">
-                  {activeCandidate?.estimatedLatencyMs || 450} ms
-                </span>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                {previewRouting?.paretoFrontier && previewRouting.paretoFrontier.slice(0, 3).map((candidate, idx) => {
+                  const isCandidateSelected = selectedCandidateIndex === idx;
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setSelectedCandidateIndex(idx)}
+                      className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                        isCandidateSelected
+                          ? 'bg-brand-emerald/20 border-brand-emerald shadow-glow-emerald ring-1 ring-brand-emerald'
+                          : 'bg-black/70 border-white/[0.08] hover:border-white/[0.2] active:scale-[0.99]'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold ${
+                          idx === 0 ? 'bg-brand-emerald text-black font-extrabold' : 'bg-white/[0.1] text-grid-300'
+                        }`}>
+                          {idx === 0 ? '🏆 #1 Optimal' : idx === 1 ? '⚡ Ultra Fast' : '💰 Budget Saver'}
+                        </span>
+                        <span className="text-[11px] text-brand-emerald font-extrabold">
+                          {candidate.estimatedCostAlgo} ALGO
+                        </span>
+                      </div>
+                      <div className="text-xs font-bold text-white truncate">{candidate.modelName}</div>
+                      <div className="text-[10px] text-grid-400 truncate">{candidate.computeName}</div>
+                      <div className="flex items-center justify-between text-[10px] text-grid-400 mt-1.5 pt-1.5 border-t border-white/[0.06]">
+                        <span>{candidate.estimatedLatencyMs}ms</span>
+                        <span className="text-signal-cyan font-bold">{candidate.projectedQualityScore}/100</span>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
