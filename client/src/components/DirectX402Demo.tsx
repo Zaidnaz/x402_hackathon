@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useWallet } from '../context/WalletContext';
 import { testDirectX402 } from '../utils/api';
+import { HowItWorksBanner } from './HowItWorksBanner';
 
 export const DirectX402Demo: React.FC = () => {
   const { isConnected, walletAddress, connectWallet, executePeraPayment } = useWallet();
@@ -107,12 +108,6 @@ export const DirectX402Demo: React.FC = () => {
             <span className="w-2 h-2 rounded-full bg-brand-emerald animate-pulse" />
             <span className="text-xs font-mono uppercase tracking-widest text-brand-emerald font-semibold">Standardized RFC 7235 / x402 Engine</span>
           </div>
-          <h2 className="text-xl font-bold font-mono text-white">
-            Direct x402 HTTP Paywall Interactive Testbed
-          </h2>
-          <p className="text-xs font-mono text-grid-300 mt-1 max-w-2xl">
-            Test how an autonomous agent or user wallet interacts with a paid HTTP inference endpoint over the raw <span className="text-white font-semibold">x402 protocol</span> with GoPlausible facilitator settlement on Algorand TestNet.
-          </p>
         </div>
 
         <button
@@ -123,6 +118,28 @@ export const DirectX402Demo: React.FC = () => {
           <span>Reset Session</span>
         </button>
       </div>
+
+      {/* Interactive Page Tutorial Banner */}
+      <HowItWorksBanner
+        pageTitle="x402 HTTP Paywall Interactive Sandbox"
+        badgeText="RFC 7235 Standard"
+        summary="This sandbox allows developers and evaluators to manually test the raw machine-to-machine HTTP 402 challenge/response lifecycle without writing code."
+        steps={[
+          {
+            title: "Phase 1: Trigger Challenge",
+            desc: "Click 'Send GET Request'. The server denies unauthenticated access and returns HTTP 402 with GoPlausible challenge headers."
+          },
+          {
+            title: "Phase 2: On-Chain Settle",
+            desc: "Click 'Sign via Pera Wallet' (or 'Settle on TestNet') to execute the 0.15 ALGO micro-settlement and extract the payment token."
+          },
+          {
+            title: "Phase 3: Fetch with Token",
+            desc: "Click 'Fetch with x402 Token' to pass 'Authorization: x402 <token>' and receive HTTP 200 OK + inference result."
+          }
+        ]}
+        proTip="Inspect the raw response headers in the transaction inspector below to view X-402-Facilitator and avm:exact scheme headers."
+      />
 
       {/* Interactive 3-Step Guided Walkthrough */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs">

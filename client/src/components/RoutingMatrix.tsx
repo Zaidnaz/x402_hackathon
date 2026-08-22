@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { TaskRequirement, RoutingDecision, CandidateEvaluation } from '../types';
 import { analyzePrompt, evaluateRoute } from '../utils/api';
+import { HowItWorksBanner } from './HowItWorksBanner';
 
 export const RoutingMatrix: React.FC = () => {
   const [prompt, setPrompt] = useState('Optimize parallel matrix multiplication in CUDA C++');
@@ -66,10 +67,29 @@ export const RoutingMatrix: React.FC = () => {
           </p>
         </div>
 
-        <div className="bg-grid-950 px-4 py-2.5 rounded-lg border border-grid-800 text-xs font-mono text-grid-300">
-          Evaluated Permutations: <strong className="text-signal-amber font-semibold">{routing?.evaluatedCandidatesCount || 0} Candidates</strong>
-        </div>
       </div>
+
+      {/* Interactive Page Tutorial Banner */}
+      <HowItWorksBanner
+        pageTitle="Deterministic Pareto Optimization"
+        badgeText="Mathematical Matrix"
+        summary="This matrix illustrates how AgentGrid performs multi-objective optimization across all Model x Compute combinations to mathematically eliminate sub-optimal routes and find the Pareto frontier."
+        steps={[
+          {
+            title: "1. Adjust Objective Weights",
+            desc: "Drag the sliders for Cost, Latency, Quality, and Reliability to simulate different agent priorities."
+          },
+          {
+            title: "2. Watch Real-time Scoring",
+            desc: "The combinatorial candidate matrix re-ranks every Model + GPU node permutation in real time using the composite score formula."
+          },
+          {
+            title: "3. Identify Non-Dominated Nodes",
+            desc: "Nodes marked 'NON-DOMINATED' represent optimal trade-offs where no other node is strictly better in all dimensions."
+          }
+        ]}
+        proTip="Increase Cost Weight to 80% to see lightweight nodes rise to Rank #1; increase Quality Weight to 80% to see NVIDIA H100/H200 dominate."
+      />
 
       {/* Interactive Weight Controllers */}
       <div className="bg-grid-900 border border-grid-800 rounded-xl p-5 space-y-4">

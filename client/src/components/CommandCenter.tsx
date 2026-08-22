@@ -23,6 +23,7 @@ import {
 import { useWallet } from '../context/WalletContext';
 import { TaskRequirement, RoutingDecision, TaskModality } from '../types';
 import { analyzePrompt, evaluateRoute } from '../utils/api';
+import { HowItWorksBanner } from './HowItWorksBanner';
 
 interface CommandCenterProps {
   onDispatchTask: (
@@ -195,6 +196,28 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
           Pick a workload preset or enter custom prompt. AgentGrid dynamically selects the optimal model & GPU, negotiates x402 payment, and settles on Algorand.
         </p>
       </div>
+
+      {/* Interactive Page Tutorial Banner */}
+      <HowItWorksBanner
+        pageTitle="Console & Autonomous Execution"
+        badgeText="Core Orchestrator"
+        summary="This console demonstrates how an autonomous AI agent accepts tasks with strict budget and SLA constraints, automatically selects the optimal GPU compute node, and pays on-demand using x402 micropayments on Algorand."
+        steps={[
+          {
+            title: "1. Select or Enter Prompt",
+            desc: "Pick any of the 4 archetypes (Code, Reasoning, Batch, Chat) or type a custom prompt."
+          },
+          {
+            title: "2. Dispatch & Settle",
+            desc: "Click 'Dispatch Autonomous Workload'. If your Pera Wallet is connected, sign on your phone (or let the autonomous agent settle)."
+          },
+          {
+            title: "3. Verify on Lora",
+            desc: "Watch the 6-stage pipeline negotiate the x402 paywall and click 'Inspect on Lora' to view the confirmed block round on Algorand."
+          }
+        ]}
+        proTip="Enable 'Simulate Regional Node Failure' in advanced settings to showcase zero-downtime dynamic failover with 0 dropped tokens!"
+      />
 
       {/* 1-Click Workload Archetype Selector */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

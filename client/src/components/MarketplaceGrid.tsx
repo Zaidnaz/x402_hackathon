@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { ModelProvider, ComputeProvider } from '../types';
 import { toggleComputeStatus } from '../utils/api';
+import { HowItWorksBanner } from './HowItWorksBanner';
 
 interface MarketplaceGridProps {
   models: ModelProvider[];
@@ -79,6 +80,28 @@ export const MarketplaceGrid: React.FC<MarketplaceGridProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Interactive Page Tutorial Banner */}
+      <HowItWorksBanner
+        pageTitle="Decentralized Compute Marketplace"
+        badgeText="Service Registry"
+        summary="This marketplace acts as the open discovery registry where GPU hosts and foundation models publish their live endpoint capabilities, spot pricing, and Algorand payout addresses."
+        steps={[
+          {
+            title: "1. Inspect Fleet Telemetry",
+            desc: "Browse NVIDIA H100, A100, and Serverless clusters with real-time VRAM, interconnect bandwidth, and spot rates."
+          },
+          {
+            title: "2. Register New Providers",
+            desc: "Click 'Register Provider' to simulate onboarding a custom vLLM inference node with an Algorand payout wallet."
+          },
+          {
+            title: "3. Test Node Status Cycle",
+            desc: "Click the status badge on any GPU card (Active ➔ Degraded ➔ Offline) to test how the Pareto router avoids degraded nodes."
+          }
+        ]}
+        proTip="Switch a GPU node to 'Degraded' and watch the Console automatically avoid it during Pareto routing!"
+      />
 
       {/* Tab Filter */}
       <div className="flex items-center space-x-2 border-b border-grid-800 pb-3">

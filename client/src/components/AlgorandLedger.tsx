@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { AlgorandAccountInfo, AlgorandTransactionRecord } from '../types';
 import { fetchAccounts, fetchTransactions } from '../utils/api';
+import { HowItWorksBanner } from './HowItWorksBanner';
 
 export const AlgorandLedger: React.FC = () => {
   const [accounts, setAccounts] = useState<AlgorandAccountInfo[]>([]);
@@ -56,9 +57,6 @@ export const AlgorandLedger: React.FC = () => {
           <h2 className="text-xl font-bold font-mono text-white">
             x402 Micropayments & GoPlausible Facilitator Ledger
           </h2>
-          <p className="text-xs font-mono text-grid-300 mt-1 max-w-2xl">
-            Autonomous agent wallets pay compute providers on a per-task basis. AgentGrid smart escrow enforces atomic settlements with a <span className="text-white font-semibold">1.5% protocol fee</span> routed to treasury.
-          </p>
         </div>
 
         <button
@@ -70,6 +68,28 @@ export const AlgorandLedger: React.FC = () => {
           <span>Sync Ledger</span>
         </button>
       </div>
+
+      {/* Interactive Page Tutorial Banner */}
+      <HowItWorksBanner
+        pageTitle="Algorand TestNet Settlement & Audit Hub"
+        badgeText="Audit Infrastructure"
+        summary="This ledger provides an immutable audit trail linking every AI inference execution to its real-world on-chain transaction receipt, account balance changes, and 1.5% treasury protocol fee distribution."
+        steps={[
+          {
+            title: "1. Monitor Participant Wallets",
+            desc: "View live balances of Agent Wallets, decentralized GPU Compute Nodes, and the Protocol Treasury."
+          },
+          {
+            title: "2. Inspect Live Transactions",
+            desc: "Every task execution produces a confirmed transaction with round numbers, micro-ALGO fees, and GoPlausible facilitator tokens."
+          },
+          {
+            title: "3. 1-Click Lora Verification",
+            desc: "Click 'Lora' on any row to open the transaction directly on the official AlgoKit Lora TestNet explorer."
+          }
+        ]}
+        proTip="Every API response returned to an agent includes the confirmed txId and block round, guaranteeing zero non-repudiation."
+      />
 
       {/* Account Balances Grid */}
       <div className="space-y-3">
