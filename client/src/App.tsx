@@ -28,7 +28,7 @@ import {
 } from './utils/api';
 
 function MainLayout() {
-  const [activeTab, setActiveTab] = useState<'landing' | 'command' | 'grid' | 'routing' | 'ledger' | 'analytics' | 'x402-demo'>('landing');
+  const [activeTab, setActiveTab] = useState<'landing' | 'command' | 'grid' | 'routing' | 'ledger' | 'analytics' | 'x402-demo'>('command');
   const [models, setModels] = useState<ModelProvider[]>(FALLBACK_MODELS);
   const [computes, setComputes] = useState<ComputeProvider[]>(FALLBACK_COMPUTES);
   const [accounts, setAccounts] = useState<AlgorandAccountInfo[]>([]);
@@ -40,6 +40,7 @@ function MainLayout() {
   const [pipelineEvents, setPipelineEvents] = useState<ExecutionEvent[]>([]);
   const [streamedOutput, setStreamedOutput] = useState('');
   const [completedTask, setCompletedTask] = useState<CompletedTask | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const [activeStreamUnsub, setActiveStreamUnsub] = useState<(() => void) | null>(null);
 
@@ -72,6 +73,7 @@ function MainLayout() {
     setPipelineEvents([]);
     setStreamedOutput('');
     setCompletedTask(null);
+    setErrorMessage(null);
 
     const unsub = subscribeTaskStream(
       prompt,
@@ -110,6 +112,7 @@ function MainLayout() {
         console.error('Stream error', error);
         setIsStreaming(false);
         setCurrentStage('failed');
+        setErrorMessage(error || 'The agent lost connection to the server mid-task.');
       }
     );
 
@@ -123,6 +126,7 @@ function MainLayout() {
     setPipelineEvents([]);
     setStreamedOutput('');
     setCompletedTask(null);
+    setErrorMessage(null);
   };
 
   return (
@@ -158,6 +162,7 @@ function MainLayout() {
                   streamedOutput={streamedOutput}
                   completedTask={completedTask}
                   isStreaming={isStreaming}
+                  errorMessage={errorMessage}
                   onReset={handleResetPipeline}
                 />
               </div>
