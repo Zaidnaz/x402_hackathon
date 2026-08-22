@@ -1,6 +1,7 @@
 import { 
   TaskRequirement, 
   RoutingDecision, 
+  CandidateEvaluation,
   CompletedTask, 
   ExecutionEvent, 
   ModelProvider, 
@@ -205,128 +206,185 @@ export async function fetchCatalog(): Promise<{ models: ModelProvider[]; compute
   }
 }
 
-export function generateFallbackRoute(requirement?: Partial<TaskRequirement>): RoutingDecision {
-  const baseScoreBreakdown = {
-    costScore: 92,
-    latencyScore: 88,
-    qualityScore: 94,
-    reliabilityScore: 99,
-    penalty: 0
-  };
+const ALGO_USD_RATE = 0.1904;
 
-  const candidates = [
-    {
-      modelId: 'gemini-3-7-flash-lite',
-      modelName: 'Gemini 3.7 Flash-Lite',
-      computeId: 'together-serverless',
-      computeName: 'Together AI Serverless',
-      gpuType: 'Dynamic Tensor Fleet',
-      estimatedCostUsd: 0.0008,
-      estimatedCostAlgo: 0.004333,
-      estimatedLatencyMs: 450,
-      projectedQualityScore: 94.2,
-      slaAdherent: true,
-      budgetAdherent: true,
-      paretoOptimal: true,
-      compositeScore: 0.965,
-      scoreBreakdown: baseScoreBreakdown,
-      rank: 1
-    },
-    {
-      modelId: 'gemini-3-7-flash-lite',
-      modelName: 'Gemini 3.7 Flash-Lite',
-      computeId: 'runpod-h100-us',
-      computeName: 'RunPod Cloud',
-      gpuType: 'NVIDIA H100 80GB SXM5',
-      estimatedCostUsd: 0.0018,
-      estimatedCostAlgo: 0.009245,
-      estimatedLatencyMs: 380,
-      projectedQualityScore: 94.2,
-      slaAdherent: true,
-      budgetAdherent: true,
-      paretoOptimal: true,
-      compositeScore: 0.942,
-      scoreBreakdown: baseScoreBreakdown,
-      rank: 2
-    },
-    {
-      modelId: 'gemini-3-7-flash-lite',
-      modelName: 'Gemini 3.7 Flash-Lite',
-      computeId: 'lambda-a100-eu',
-      computeName: 'Lambda Labs',
-      gpuType: 'NVIDIA A100 80GB SXM4',
-      estimatedCostUsd: 0.0013,
-      estimatedCostAlgo: 0.006895,
-      estimatedLatencyMs: 520,
-      projectedQualityScore: 94.2,
-      slaAdherent: true,
-      budgetAdherent: true,
-      paretoOptimal: true,
-      compositeScore: 0.920,
-      scoreBreakdown: baseScoreBreakdown,
-      rank: 3
-    },
-    {
-      modelId: 'gemini-3-7-flash-lite',
-      modelName: 'Gemini 3.7 Flash-Lite',
-      computeId: 'coreweave-h200-us',
-      computeName: 'CoreWeave Dedicated',
-      gpuType: 'NVIDIA H200 141GB SXM',
-      estimatedCostUsd: 0.0022,
-      estimatedCostAlgo: 0.011697,
-      estimatedLatencyMs: 340,
-      projectedQualityScore: 94.2,
-      slaAdherent: true,
-      budgetAdherent: true,
-      paretoOptimal: true,
-      compositeScore: 0.910,
-      scoreBreakdown: baseScoreBreakdown,
-      rank: 4
-    },
-    {
-      modelId: 'claude-3-5-sonnet',
-      modelName: 'Claude 3.5 Sonnet',
-      computeId: 'together-serverless',
-      computeName: 'Together AI Serverless',
-      gpuType: 'Dynamic Tensor Fleet',
-      estimatedCostUsd: 0.0095,
-      estimatedCostAlgo: 0.049908,
-      estimatedLatencyMs: 1200,
-      projectedQualityScore: 95.4,
-      slaAdherent: true,
-      budgetAdherent: true,
-      paretoOptimal: true,
-      compositeScore: 0.880,
-      scoreBreakdown: baseScoreBreakdown,
-      rank: 5
-    },
-    {
-      modelId: 'claude-3-5-sonnet',
-      modelName: 'Claude 3.5 Sonnet',
-      computeId: 'runpod-h100-us',
-      computeName: 'RunPod Cloud',
-      gpuType: 'NVIDIA H100 80GB SXM5',
-      estimatedCostUsd: 0.0115,
-      estimatedCostAlgo: 0.060309,
-      estimatedLatencyMs: 850,
-      projectedQualityScore: 95.4,
-      slaAdherent: true,
-      budgetAdherent: true,
-      paretoOptimal: true,
-      compositeScore: 0.875,
-      scoreBreakdown: baseScoreBreakdown,
-      rank: 6
+export function generateFallbackRoute(requirement?: Partial<TaskRequirement>): RoutingDecision {
+  const models = FALLBACK_MODELS.filter(m => m.status !== 'offline');
+  const computes = FALLBACK_COMPUTES.filter(c => c.status !== 'offline');
+
+  const modality = requirement?.modality || 'code';
+  const inputTokens = requirement?.estimatedInputTokens || 320;
+  const outputTokens = requirement?.estimatedOutputTokens || 600;
+  const deadlineMs = requirement?.deadlineMs || 3500;
+  const maxBudgetAlgo = requirement?.maxBudgetAlgo || 0.85;
+  const minQualityScore = requirement?.minQualityScore || 85;
+
+  const candidates: CandidateEvaluation[] = [];
+
+  for (const model of models) {
+    if (!model.supportedModalities.includes(modality) && !model.supportedModalities.includes('general')) {
+      continue;
     }
-  ];
+
+    for (const compute of computes) {
+      let gpuBoost = 1.0;
+      if (compute.gpuType.includes('H200')) gpuBoost = 1.65;
+      else if (compute.gpuType.includes('H100')) gpuBoost = 1.45;
+      else if (compute.gpuType.includes('A100')) gpuBoost = 1.15;
+      else if (compute.gpuType.includes('L40S')) gpuBoost = 0.95;
+
+      const netTps = model.typicalTps * gpuBoost;
+      const processingTimeSec = outputTokens / Math.max(1, netTps);
+      const processingLatencyMs = Math.round(processingTimeSec * 1000);
+      const totalEstimatedLatencyMs = compute.latencyBaseMs + processingLatencyMs;
+
+      const tokenCostUsd = (
+        (inputTokens * model.costPer1kInputTokensUsd) +
+        (outputTokens * model.costPer1kOutputTokensUsd)
+      ) / 1000;
+
+      const computeCostUsd = (processingTimeSec / 3600) * compute.costPerHourUsd;
+      const totalCostUsd = tokenCostUsd + computeCostUsd;
+      const totalCostAlgo = Number((totalCostUsd / ALGO_USD_RATE).toFixed(6));
+
+      const loadPenalty = (compute.currentLoad > 85 ? (compute.currentLoad - 85) * 0.2 : 0);
+      const projectedQuality = Number(Math.max(0, model.qualityBenchmark - loadPenalty).toFixed(1));
+
+      const slaAdherent = totalEstimatedLatencyMs <= deadlineMs;
+      const budgetAdherent = totalCostAlgo <= maxBudgetAlgo;
+
+      candidates.push({
+        modelId: model.id,
+        modelName: model.name,
+        computeId: compute.id,
+        computeName: compute.name,
+        gpuType: compute.gpuType,
+        estimatedCostUsd: Number(totalCostUsd.toFixed(6)),
+        estimatedCostAlgo: totalCostAlgo,
+        estimatedLatencyMs: totalEstimatedLatencyMs,
+        projectedQualityScore: projectedQuality,
+        slaAdherent,
+        budgetAdherent,
+        paretoOptimal: false,
+        compositeScore: 0,
+        scoreBreakdown: {
+          costScore: 0,
+          latencyScore: 0,
+          qualityScore: 0,
+          reliabilityScore: 0,
+          penalty: 0
+        },
+        rank: 0
+      });
+    }
+  }
+
+  if (candidates.length === 0) {
+    return {
+      taskId: requirement?.id || 'task_fallback',
+      selectedCandidate: {} as any,
+      fallbackCandidate: {} as any,
+      evaluatedCandidatesCount: 0,
+      decisionReasoning: ['No matching providers found.'],
+      paretoFrontier: [],
+      timestamp: Date.now()
+    };
+  }
+
+  const minCost = Math.min(...candidates.map(c => c.estimatedCostUsd));
+  const maxCost = Math.max(...candidates.map(c => c.estimatedCostUsd)) || 1;
+  const minLat = Math.min(...candidates.map(c => c.estimatedLatencyMs));
+  const maxLat = Math.max(...candidates.map(c => c.estimatedLatencyMs)) || 1;
+
+  let wCost = 0.30;
+  let wLat = 0.30;
+  let wQual = 0.30;
+  let wRel = 0.10;
+
+  if (requirement?.priority === 'cost') {
+    wCost = 0.55; wLat = 0.15; wQual = 0.20; wRel = 0.10;
+  } else if (requirement?.priority === 'speed') {
+    wCost = 0.15; wLat = 0.55; wQual = 0.20; wRel = 0.10;
+  } else if (requirement?.priority === 'quality') {
+    wCost = 0.15; wLat = 0.15; wQual = 0.60; wRel = 0.10;
+  }
+
+  if (requirement?.customWeights) {
+    wCost = requirement.customWeights.cost;
+    wLat = requirement.customWeights.latency;
+    wQual = requirement.customWeights.quality;
+    wRel = requirement.customWeights.reliability;
+  }
+
+  for (const c of candidates) {
+    const model = FALLBACK_MODELS.find(m => m.id === c.modelId)!;
+    const compute = FALLBACK_COMPUTES.find(cp => cp.id === c.computeId)!;
+
+    const costNorm = 1 - ((c.estimatedCostUsd - minCost) / Math.max(0.00001, maxCost - minCost));
+    const latNorm = 1 - ((c.estimatedLatencyMs - minLat) / Math.max(1, maxLat - minLat));
+    const qualNorm = c.projectedQualityScore / 100;
+    const relNorm = (model.reliabilityScore * (compute.reliabilityUptime / 100));
+
+    const costScore = Number((costNorm * 100 * wCost).toFixed(2));
+    const latencyScore = Number((latNorm * 100 * wLat).toFixed(2));
+    const qualityScore = Number((qualNorm * 100 * wQual).toFixed(2));
+    const reliabilityScore = Number((relNorm * 100 * wRel).toFixed(2));
+
+    let penalty = 0;
+    if (!c.slaAdherent) penalty += 35;
+    if (!c.budgetAdherent) penalty += 40;
+    if (c.projectedQualityScore < minQualityScore) penalty += 25;
+
+    const compositeScore = Number((costScore + latencyScore + qualityScore + reliabilityScore - penalty).toFixed(2));
+
+    c.compositeScore = compositeScore;
+    c.scoreBreakdown = {
+      costScore,
+      latencyScore,
+      qualityScore,
+      reliabilityScore,
+      penalty
+    };
+  }
+
+  // Calculate Pareto non-dominated frontier
+  for (let i = 0; i < candidates.length; i++) {
+    const a = candidates[i];
+    let isDominated = false;
+
+    for (let j = 0; j < candidates.length; j++) {
+      if (i === j) continue;
+      const b = candidates[j];
+
+      if (
+        b.estimatedCostUsd <= a.estimatedCostUsd &&
+        b.estimatedLatencyMs <= a.estimatedLatencyMs &&
+        b.projectedQualityScore >= a.projectedQualityScore &&
+        (b.estimatedCostUsd < a.estimatedCostUsd || b.estimatedLatencyMs < a.estimatedLatencyMs || b.projectedQualityScore > a.projectedQualityScore)
+      ) {
+        isDominated = true;
+        break;
+      }
+    }
+    a.paretoOptimal = !isDominated;
+  }
+
+  // Sort by composite score descending
+  candidates.sort((a, b) => b.compositeScore - a.compositeScore);
+  candidates.forEach((c, idx) => { c.rank = idx + 1; });
+
+  const paretoFrontier = candidates.filter(c => c.paretoOptimal);
+  const selected = candidates[0];
+  const fallback = candidates.length > 1 ? candidates[1] : candidates[0];
 
   return {
-    taskId: 'task_preview_init',
-    selectedCandidate: candidates[0],
-    fallbackCandidate: candidates[1],
-    evaluatedCandidatesCount: 30,
+    taskId: requirement?.id || 'task_matrix_eval',
+    selectedCandidate: selected,
+    fallbackCandidate: fallback,
+    evaluatedCandidatesCount: candidates.length,
     decisionReasoning: [
-      "Together AI Serverless with Gemini 3.7 Flash-Lite selected as lowest-cost Pareto route.",
-      "SLA and budget bounds verified under 3500ms."
+      `Optimal match: ${selected.modelName} on ${selected.computeName} (${selected.gpuType}) with composite score ${selected.compositeScore}.`,
+      `Pareto frontier contains ${paretoFrontier.length} non-dominated combinations across ${candidates.length} total active permutations.`
     ],
     paretoFrontier: candidates,
     timestamp: Date.now()
