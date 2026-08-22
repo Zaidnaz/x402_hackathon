@@ -28,7 +28,8 @@ interface CommandCenterProps {
   onDispatchTask: (
     prompt: string, 
     overrides: Partial<TaskRequirement>, 
-    simulateFailover: boolean
+    simulateFailover: boolean,
+    customPeraTx?: { txId: string; round: number; explorerUrl: string; loraUrl: string }
   ) => void;
   isStreaming: boolean;
 }
@@ -144,17 +145,20 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
   };
 
   const handleDispatch = async () => {
+    let customPeraTx: { txId: string; round: number; explorerUrl: string; loraUrl: string } | undefined = undefined;
+
     if (isConnected && previewRouting) {
       try {
         setIsSigningPera(true);
         const targetNodePayout = 'A3R6WQFOLES2CTKEHALIEXFNEZ75R4KYJJ4VPWMZ63X57IZ7MIRJ7Q6HVQ';
         const costAlgo = previewRouting.selectedCandidate.estimatedCostAlgo || 0.05;
         
-        await executePeraPayment(
+        const txResult = await executePeraPayment(
           targetNodePayout,
           costAlgo,
           `x402:task:${previewRouting.taskId}:prompt:${prompt.substring(0, 16)}`
         );
+        customPeraTx = txResult;
       } catch (err: any) {
         console.warn('Pera signing skipped or cancelled, falling back to autonomous settlement:', err);
       } finally {
@@ -171,7 +175,8 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
         deadlineMs,
         minQualityScore
       },
-      simulateFailover
+      simulateFailover,
+      customPeraTx
     );
   };
 

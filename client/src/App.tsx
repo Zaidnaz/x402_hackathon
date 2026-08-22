@@ -59,7 +59,8 @@ function MainLayout() {
   const handleDispatchTask = (
     prompt: string,
     overrides: Partial<TaskRequirement>,
-    simulateFailover: boolean
+    simulateFailover: boolean,
+    customPeraTx?: { txId: string; round: number; explorerUrl: string; loraUrl: string }
   ) => {
     if (activeStreamUnsub) {
       activeStreamUnsub();
@@ -82,7 +83,23 @@ function MainLayout() {
         setStreamedOutput(prev => prev + chunk);
       },
       (task) => {
-        setCompletedTask(task);
+        const finalTask = customPeraTx ? {
+          ...task,
+          algorandTx: {
+            ...task.algorandTx,
+            txId: customPeraTx.txId,
+            round: customPeraTx.round,
+            explorerUrl: customPeraTx.explorerUrl,
+            loraUrl: customPeraTx.loraUrl
+          },
+          paymentProof: {
+            ...task.paymentProof,
+            txId: customPeraTx.txId,
+            round: customPeraTx.round
+          }
+        } : task;
+
+        setCompletedTask(finalTask);
         setIsStreaming(false);
         setCurrentStage('completed');
         fetchAccounts().then(setAccounts).catch(console.error);
