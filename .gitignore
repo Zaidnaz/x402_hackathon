@@ -24,6 +24,9 @@ lerna-debug.log*
 .env.test.local
 .env.production.local
 
+# Generated Algorand TestNet wallet mnemonics — never commit these
+server/data/
+
 # Editor & OS
 .vscode
 .idea
