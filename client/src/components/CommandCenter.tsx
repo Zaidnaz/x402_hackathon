@@ -182,25 +182,25 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
       {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pb-2">
-        <div className="text-center sm:text-left space-y-1.5">
-          <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-emerald/10 border border-brand-emerald/25 text-xs font-mono text-brand-emerald">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 pb-1">
+        <div className="text-left space-y-1">
+          <div className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full bg-brand-emerald/10 border border-brand-emerald/25 text-[10px] sm:text-xs font-mono text-brand-emerald">
             <Sparkles className="w-3 h-3" />
             <span>Autonomous AI Infrastructure Dispatcher</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold font-mono text-white">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold font-mono text-white tracking-tight">
             Agent Task Execution Console
           </h1>
-          <p className="text-xs sm:text-sm text-grid-300 max-w-xl font-sans">
+          <p className="text-[11px] sm:text-xs text-grid-300 max-w-xl font-sans leading-relaxed">
             Pick a workload preset or enter custom prompt. AgentGrid dynamically selects the optimal model & GPU, negotiates x402 payment, and settles on Algorand.
           </p>
         </div>
 
         <TourGuideButton
           tourId="console-tour"
-          buttonLabel="Interactive Spotlight Tour"
+          buttonLabel="How It Works"
           steps={[
             {
               targetSelector: '[data-tour="preset-archetypes"]',
@@ -237,7 +237,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
       </div>
 
       {/* 1-Click Workload Archetype Selector */}
-      <div data-tour="preset-archetypes" className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div data-tour="preset-archetypes" className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
         {PRESET_PROMPTS.map((p) => {
           const Icon = p.icon;
           const isSelected = selectedPresetId === p.id;
@@ -246,33 +246,33 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
               key={p.id}
               onClick={() => handleApplyPreset(p)}
               disabled={isStreaming || isSigningPera}
-              className={`p-4 rounded-xl border text-left transition-all relative group ${
+              className={`p-3 sm:p-4 rounded-xl border text-left transition-all relative group cursor-pointer ${
                 isSelected
-                  ? 'bg-brand-emerald/10 border-brand-emerald shadow-glow-emerald'
-                  : 'bg-black/60 border-white/[0.08] hover:border-white/[0.18]'
+                  ? 'bg-brand-emerald/15 border-brand-emerald shadow-glow-emerald'
+                  : 'bg-black/60 border-white/[0.08] hover:border-white/[0.2] active:scale-[0.98]'
               }`}
             >
-              <div className="flex items-center justify-between mb-2">
-                <Icon className={`w-4 h-4 ${isSelected ? 'text-brand-emerald' : 'text-grid-400 group-hover:text-white'}`} />
-                {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-brand-emerald shadow-glow-emerald" />}
+              <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+                <Icon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isSelected ? 'text-brand-emerald' : 'text-grid-400 group-hover:text-white'}`} />
+                {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-brand-emerald shadow-glow-emerald animate-pulse" />}
               </div>
-              <div className="text-xs font-bold font-mono text-white">{p.title}</div>
-              <div className="text-[10px] font-sans text-grid-400 mt-0.5">{p.desc}</div>
+              <div className="text-[11px] sm:text-xs font-bold font-mono text-white truncate">{p.title}</div>
+              <div className="text-[9px] sm:text-[10px] font-sans text-grid-400 mt-0.5 line-clamp-2 leading-tight">{p.desc}</div>
             </button>
           );
         })}
       </div>
 
       {/* Main Task Input Card */}
-      <div className="bg-black/75 border border-white/[0.09] rounded-2xl p-5 sm:p-6 space-y-5 shadow-2xl backdrop-blur-md">
+      <div className="bg-black/80 border border-white/[0.1] rounded-2xl p-4 sm:p-6 space-y-4 sm:space-y-5 shadow-2xl backdrop-blur-md">
         {/* Prompt Input */}
         <div data-tour="prompt-input" className="space-y-2">
           <div className="flex items-center justify-between text-xs font-mono">
-            <span className="text-grid-200 font-semibold uppercase tracking-wider flex items-center space-x-1.5">
+            <span className="text-grid-200 font-semibold uppercase tracking-wider flex items-center space-x-1.5 text-[11px] sm:text-xs">
               <Sparkles className="w-3.5 h-3.5 text-brand-emerald" />
               <span>Task Prompt / Agent Goal</span>
             </span>
-            <span className="text-grid-400 text-[11px]">
+            <span className="text-grid-400 text-[10px] sm:text-[11px]">
               ~{Math.round(prompt.split(/\s+/).length * 1.35)} est. tokens
             </span>
           </div>
@@ -284,19 +284,19 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
               setSelectedPresetId('');
             }}
             placeholder="Describe what you want the agent to accomplish..."
-            rows={4}
+            rows={3}
             disabled={isStreaming || isSigningPera}
-            className="w-full bg-grid-950 border border-white/[0.10] rounded-xl p-4 text-xs sm:text-sm font-mono text-white placeholder-grid-500 focus:outline-none focus:border-brand-emerald focus:ring-1 focus:ring-brand-emerald/40 transition-all resize-none leading-relaxed"
+            className="w-full bg-black border border-white/[0.12] rounded-xl p-3 sm:p-4 text-xs sm:text-sm font-mono text-white placeholder-grid-500 focus:outline-none focus:border-brand-emerald focus:ring-1 focus:ring-brand-emerald/40 transition-all resize-none leading-relaxed"
           />
         </div>
 
         {/* Priority Objective Pills */}
-        <div data-tour="priority-selector" className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-white/[0.08]">
-          <div className="text-xs font-mono text-grid-300">Optimization Goal:</div>
-          <div className="flex flex-wrap gap-2">
+        <div data-tour="priority-selector" className="space-y-2 pt-2 border-t border-white/[0.08]">
+          <div className="text-[11px] sm:text-xs font-mono text-grid-300">Optimization Goal:</div>
+          <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-1.5 sm:gap-2">
             {[
               { id: 'quality', label: 'Max Quality' },
-              { id: 'speed', label: 'Ultra-Low Latency' },
+              { id: 'speed', label: 'Ultra Latency' },
               { id: 'cost', label: 'Lowest Cost' },
               { id: 'balanced', label: 'Balanced Pareto' },
             ].map((opt) => (
@@ -304,10 +304,10 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
                 key={opt.id}
                 onClick={() => setPriority(opt.id as any)}
                 disabled={isStreaming || isSigningPera}
-                className={`px-3 py-1.5 rounded-lg border text-xs font-mono transition-all ${
+                className={`py-2 px-2.5 sm:px-3 sm:py-1.5 rounded-lg border text-[11px] sm:text-xs font-mono text-center transition-all ${
                   priority === opt.id
-                    ? 'bg-brand-emerald/15 border-brand-emerald text-brand-emerald font-semibold shadow-sm'
-                    : 'bg-black/50 border-white/[0.08] text-grid-300 hover:text-white hover:border-white/[0.2]'
+                    ? 'bg-brand-emerald/20 border-brand-emerald text-brand-emerald font-bold shadow-sm'
+                    : 'bg-black/60 border-white/[0.08] text-grid-300 hover:text-white hover:border-white/[0.2]'
                 }`}
               >
                 {opt.label}
@@ -317,26 +317,26 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
         </div>
 
         {/* Collapsible Advanced Settings (SLA, Budget, Failover) */}
-        <div className="border-t border-white/[0.08] pt-3">
+        <div className="border-t border-white/[0.08] pt-2 sm:pt-3">
           <button
             onClick={() => setShowAdvanced(!showAdvanced)}
-            className="w-full flex items-center justify-between text-xs font-mono text-grid-300 hover:text-white py-1 transition-colors"
+            className="w-full flex items-center justify-between text-[11px] sm:text-xs font-mono text-grid-300 hover:text-white py-1 transition-colors"
           >
             <span className="flex items-center space-x-1.5">
               <Settings2 className="w-3.5 h-3.5 text-brand-emerald" />
-              <span>Customize Budget, SLA Deadlines & Failover Resilience</span>
+              <span>Budget, SLA & Failover Resilience</span>
             </span>
             {showAdvanced ? <ChevronUp className="w-4 h-4 text-brand-emerald" /> : <ChevronDown className="w-4 h-4" />}
           </button>
 
           {showAdvanced && (
-            <div className="mt-4 p-4 bg-grid-950/80 rounded-xl border border-white/[0.08] space-y-4 animate-fadeIn">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="mt-3 p-3.5 sm:p-4 bg-black/60 rounded-xl border border-white/[0.08] space-y-3.5 animate-fadeIn">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 {/* SLA Deadline */}
-                <div className="space-y-1.5">
-                  <div className="flex justify-between text-xs font-mono">
+                <div className="space-y-1">
+                  <div className="flex justify-between text-[11px] sm:text-xs font-mono">
                     <span className="text-grid-300">Max SLA Latency</span>
-                    <span className="text-brand-emerald font-semibold">{deadlineMs} ms</span>
+                    <span className="text-brand-emerald font-bold">{deadlineMs} ms</span>
                   </div>
                   <input
                     type="range"
@@ -351,10 +351,10 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
                 </div>
 
                 {/* Max Budget Cap */}
-                <div className="space-y-1.5">
-                  <div className="flex justify-between text-xs font-mono">
+                <div className="space-y-1">
+                  <div className="flex justify-between text-[11px] sm:text-xs font-mono">
                     <span className="text-grid-300">Max Budget Cap</span>
-                    <span className="text-brand-emerald font-semibold">{maxBudgetAlgo.toFixed(2)} ALGO</span>
+                    <span className="text-brand-emerald font-bold">{maxBudgetAlgo.toFixed(2)} ALGO</span>
                   </div>
                   <input
                     type="range"
@@ -372,12 +372,12 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
               {/* Failover Simulation Switch */}
               <div className="pt-2 border-t border-white/[0.06]">
                 <label className="flex items-center justify-between cursor-pointer">
-                  <div className="space-y-0.5">
-                    <div className="text-xs font-mono text-white flex items-center space-x-1.5">
+                  <div className="space-y-0.5 pr-2">
+                    <div className="text-[11px] sm:text-xs font-mono text-white flex items-center space-x-1.5">
                       <AlertTriangle className={`w-3.5 h-3.5 ${simulateFailover ? 'text-signal-rose' : 'text-grid-400'}`} />
                       <span>Simulate Regional Node Failure</span>
                     </div>
-                    <div className="text-[10px] text-grid-400">
+                    <div className="text-[9px] sm:text-[10px] text-grid-400">
                       Tests live in-flight dynamic rerouting mid-execution with zero dropped tokens
                     </div>
                   </div>
@@ -386,7 +386,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
                     checked={simulateFailover}
                     onChange={(e) => setSimulateFailover(e.target.checked)}
                     disabled={isStreaming || isSigningPera}
-                    className="w-4 h-4 accent-signal-rose cursor-pointer rounded"
+                    className="w-4 h-4 accent-signal-rose cursor-pointer rounded shrink-0"
                   />
                 </label>
               </div>
@@ -396,16 +396,16 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
 
         {/* Live Pre-Evaluation Card */}
         {previewRouting && (
-          <div data-tour="pareto-preview" className="bg-grid-950 p-3.5 rounded-xl border border-white/[0.08] text-xs font-mono flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div data-tour="pareto-preview" className="bg-black/90 p-3 sm:p-3.5 rounded-xl border border-white/[0.1] text-xs font-mono flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3">
             <div className="space-y-0.5">
-              <div className="text-[10px] text-grid-400 uppercase">Optimal Pareto Pair</div>
-              <div className="text-white font-semibold">
+              <div className="text-[9px] sm:text-[10px] text-grid-400 uppercase tracking-wide">Optimal Pareto Pair</div>
+              <div className="text-white font-bold text-xs sm:text-sm">
                 {previewRouting.selectedCandidate.modelName} <span className="text-grid-400 font-normal">on</span> {previewRouting.selectedCandidate.computeName}
               </div>
             </div>
 
-            <div className="flex items-center space-x-3 text-[11px]">
-              <span className="text-brand-emerald font-semibold">
+            <div className="flex items-center space-x-2 sm:space-x-3 text-[10px] sm:text-[11px]">
+              <span className="text-brand-emerald font-bold">
                 {previewRouting.selectedCandidate.estimatedCostAlgo} ALGO
               </span>
               <span className="text-grid-600">•</span>
@@ -423,22 +423,22 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
         {/* Pera Wallet Status Banner */}
         <div data-tour="wallet-status">
           {isConnected ? (
-            <div className="px-3.5 py-2.5 rounded-lg bg-brand-emerald/10 border border-brand-emerald/30 text-xs font-mono text-brand-emerald flex items-center justify-between">
-              <span className="flex items-center space-x-1.5">
-                <CheckCircle2 className="w-3.5 h-3.5 text-brand-emerald" />
-                <span>Settlement via Connected Pera Wallet ({walletAddress?.substring(0, 6)}...{walletAddress?.substring(walletAddress.length - 4)})</span>
+            <div className="p-2.5 sm:px-3.5 sm:py-2.5 rounded-xl bg-brand-emerald/10 border border-brand-emerald/30 text-[11px] sm:text-xs font-mono text-brand-emerald flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2">
+              <span className="flex items-center space-x-1.5 truncate">
+                <CheckCircle2 className="w-3.5 h-3.5 text-brand-emerald shrink-0" />
+                <span className="truncate">Settling via Pera ({walletAddress?.substring(0, 6)}...{walletAddress?.substring(walletAddress.length - 4)})</span>
               </span>
-              <span className="text-[10px] uppercase font-bold text-brand-emerald">On-Chain Signer Ready</span>
+              <span className="text-[9px] sm:text-[10px] uppercase font-bold text-brand-emerald shrink-0">On-Chain Signer Ready</span>
             </div>
           ) : (
-            <div className="px-3.5 py-2.5 rounded-lg bg-grid-950 border border-white/[0.08] text-xs font-mono text-grid-300 flex items-center justify-between">
+            <div className="p-2.5 sm:px-3.5 sm:py-2.5 rounded-xl bg-black/60 border border-white/[0.08] text-[11px] sm:text-xs font-mono text-grid-300 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-2">
               <span className="flex items-center space-x-1.5">
-                <Wallet className="w-3.5 h-3.5 text-brand-emerald" />
-                <span>Sign real Algorand transactions with Pera Wallet:</span>
+                <Wallet className="w-3.5 h-3.5 text-brand-emerald shrink-0" />
+                <span>Pera Wallet Signer (Algorand TestNet):</span>
               </span>
               <button
                 onClick={connectWallet}
-                className="text-brand-emerald hover:underline text-[11px] font-semibold"
+                className="text-brand-emerald hover:underline text-xs font-bold text-left sm:text-right"
               >
                 Connect Pera Wallet →
               </button>
@@ -451,7 +451,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
           <button
             onClick={handleDispatch}
             disabled={isStreaming || isSigningPera || !prompt.trim()}
-            className={`w-full py-4 px-6 rounded-xl font-mono font-bold text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center space-x-2 transition-all ${
+            className={`w-full py-3.5 sm:py-4 px-4 sm:px-6 rounded-xl font-mono font-bold text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center space-x-2 transition-all cursor-pointer ${
               isStreaming || isSigningPera
                 ? 'bg-grid-800 text-grid-400 cursor-not-allowed'
                 : 'bg-brand-emerald hover:bg-brand-emerald/90 text-black shadow-glow-emerald active:scale-[0.99]'
@@ -459,19 +459,19 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
           >
             {isSigningPera ? (
               <>
-                <Wallet className="w-4 h-4 animate-bounce text-black" />
+                <Wallet className="w-4 h-4 animate-bounce text-black shrink-0" />
                 <span>Confirming on Pera Wallet...</span>
               </>
             ) : isStreaming ? (
               <>
-                <Zap className="w-4 h-4 animate-spin text-black" />
+                <Zap className="w-4 h-4 animate-spin text-black shrink-0" />
                 <span>Orchestrating across AgentGrid...</span>
               </>
             ) : (
               <>
-                <Play className="w-4 h-4 fill-black text-black" />
+                <Play className="w-4 h-4 fill-black text-black shrink-0" />
                 <span>Dispatch Autonomous Workload</span>
-                <ArrowRight className="w-4 h-4 text-black" />
+                <ArrowRight className="w-4 h-4 text-black shrink-0" />
               </>
             )}
           </button>

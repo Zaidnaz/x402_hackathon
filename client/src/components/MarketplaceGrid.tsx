@@ -66,7 +66,7 @@ export const MarketplaceGrid: React.FC<MarketplaceGridProps> = ({
         <div className="flex items-center space-x-2">
           <TourGuideButton
             tourId="marketplace-tour"
-            buttonLabel="Interactive Spotlight Tour"
+            buttonLabel="How It Works"
             steps={[
               {
                 targetSelector: '[data-tour="marketplace-header"]',
@@ -98,36 +98,36 @@ export const MarketplaceGrid: React.FC<MarketplaceGridProps> = ({
 
           <button
             onClick={onRefreshCatalog}
-            className="p-2.5 rounded-lg bg-grid-950 border border-grid-800 hover:border-grid-700 text-grid-400 hover:text-grid-200 text-xs font-mono flex items-center space-x-1.5 transition-all"
+            className="p-2 sm:p-2.5 rounded-lg bg-grid-950 border border-grid-800 hover:border-grid-700 text-grid-400 hover:text-grid-200 text-xs font-mono flex items-center space-x-1.5 transition-all cursor-pointer"
           >
             <RefreshCw className="w-3.5 h-3.5" />
-            <span>Sync</span>
+            <span className="hidden sm:inline">Sync</span>
           </button>
           <div data-tour="register-provider-btn">
             <button
               onClick={onOpenRegisterModal}
-              className="px-3.5 py-2.5 rounded-lg bg-signal-amber hover:bg-signal-amber/90 text-grid-950 text-xs font-mono font-bold uppercase tracking-wider flex items-center space-x-1.5 shadow-glow-amber transition-all"
+              className="px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-lg bg-signal-amber hover:bg-signal-amber/90 text-grid-950 text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider flex items-center space-x-1.5 shadow-glow-amber transition-all cursor-pointer"
             >
-              <Plus className="w-4 h-4" />
-              <span>Register Provider</span>
+              <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span>Register</span>
             </button>
           </div>
         </div>
       </div>
 
       {/* Tab Filter */}
-      <div className="flex items-center space-x-2 border-b border-grid-800 pb-3">
+      <div className="flex items-center space-x-1.5 sm:space-x-2 border-b border-grid-800 pb-3 overflow-x-auto no-scrollbar">
         {[
-          { id: 'all', label: `All Resources (${models.length + computes.length})` },
-          { id: 'models', label: `AI Models (${models.length})` },
-          { id: 'computes', label: `GPU Compute Nodes (${computes.length})` },
+          { id: 'all', label: `All (${models.length + computes.length})` },
+          { id: 'models', label: `Models (${models.length})` },
+          { id: 'computes', label: `GPU Fleet (${computes.length})` },
         ].map((tab) => (
           <button
             key={tab.id}
             onClick={() => setSelectedTab(tab.id as any)}
-            className={`px-3 py-1.5 rounded-md text-xs font-mono transition-all ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-mono whitespace-nowrap transition-all ${
               selectedTab === tab.id
-                ? 'bg-grid-850 text-signal-amber border border-grid-700 font-medium'
+                ? 'bg-grid-850 text-signal-amber border border-grid-700 font-bold'
                 : 'text-grid-400 hover:text-grid-200'
             }`}
           >

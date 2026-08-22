@@ -174,47 +174,47 @@ export const ExecutionPipeline: React.FC<ExecutionPipelineProps> = ({
       )}
 
       {/* 6-Stage Visual Stepper */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1.5 sm:gap-2">
         {STAGES.map((s, idx) => {
           const status = getStageStatus(s.id);
           return (
             <div
               key={s.id}
-              className={`p-3 rounded-lg border text-left transition-all ${
+              className={`p-2.5 sm:p-3 rounded-xl border text-left transition-all ${
                 status === 'active'
-                  ? 'bg-brand-emerald/10 border-brand-emerald shadow-glow-emerald'
+                  ? 'bg-brand-emerald/15 border-brand-emerald shadow-glow-emerald'
                   : status === 'completed'
-                  ? 'bg-black/60 border-brand-emerald/40'
-                  : 'bg-black/40 border-white/[0.05] opacity-60'
+                  ? 'bg-black/80 border-brand-emerald/40'
+                  : 'bg-black/40 border-white/[0.05] opacity-50'
               }`}
             >
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-[10px] font-mono text-grid-400">STAGE {idx + 1}</span>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[9px] sm:text-[10px] font-mono text-grid-400">STAGE {idx + 1}</span>
                 {status === 'completed' ? (
-                  <CheckCircle2 className="w-3.5 h-3.5 text-brand-emerald" />
+                  <CheckCircle2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-brand-emerald" />
                 ) : status === 'active' ? (
-                  <Zap className="w-3.5 h-3.5 text-brand-emerald animate-spin" />
+                  <Zap className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-brand-emerald animate-spin" />
                 ) : (
-                  <div className="w-2 h-2 rounded-full bg-grid-700" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-grid-700" />
                 )}
               </div>
-              <div className="text-xs font-mono font-semibold text-white truncate">{s.title}</div>
-              <div className="text-[10px] text-grid-400 truncate mt-0.5">{s.subtitle}</div>
+              <div className="text-[11px] sm:text-xs font-mono font-bold text-white truncate">{s.title}</div>
+              <div className="text-[9px] sm:text-[10px] text-grid-400 truncate mt-0.5">{s.subtitle}</div>
             </div>
           );
         })}
       </div>
 
       {/* Dual Panel HUD: Output Terminal + Settlement Inspector */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
         {/* Left Column: Live Streaming Terminal (7 cols) */}
-        <div className="lg:col-span-7 bg-black/80 border border-white/[0.08] rounded-xl overflow-hidden flex flex-col h-[520px]">
-          <div className="bg-black px-4 py-3 border-b border-white/[0.08] flex items-center justify-between">
+        <div className="lg:col-span-7 bg-black/85 border border-white/[0.1] rounded-2xl overflow-hidden flex flex-col h-[380px] sm:h-[460px] lg:h-[520px] shadow-xl">
+          <div className="bg-black px-3.5 py-2.5 sm:px-4 sm:py-3 border-b border-white/[0.08] flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <Terminal className="w-4 h-4 text-brand-emerald" />
-              <span className="text-xs font-mono font-semibold text-white uppercase tracking-wider">Live Model Inference Stream</span>
+              <Terminal className="w-4 h-4 text-brand-emerald shrink-0" />
+              <span className="text-[11px] sm:text-xs font-mono font-bold text-white uppercase tracking-wider">Live Model Inference Stream</span>
               {isStreaming && (
-                <span className="flex items-center space-x-1 text-[10px] font-mono text-brand-emerald animate-pulse">
+                <span className="flex items-center space-x-1 text-[9px] sm:text-[10px] font-mono text-brand-emerald animate-pulse">
                   <span>● Streaming</span>
                 </span>
               )}
@@ -223,16 +223,16 @@ export const ExecutionPipeline: React.FC<ExecutionPipelineProps> = ({
             <button
               onClick={() => copyToClipboard(streamedOutput)}
               disabled={!streamedOutput}
-              className="flex items-center space-x-1 text-xs font-mono text-grid-400 hover:text-white disabled:opacity-30 transition-all"
+              className="flex items-center space-x-1 text-xs font-mono text-grid-400 hover:text-white disabled:opacity-30 transition-all cursor-pointer"
             >
               {copied ? <Check className="w-3.5 h-3.5 text-brand-emerald" /> : <Copy className="w-3.5 h-3.5" />}
               <span>{copied ? 'Copied' : 'Copy'}</span>
             </button>
           </div>
 
-          <div className="p-4 flex-1 overflow-y-auto font-mono text-xs text-grid-100 whitespace-pre-wrap leading-relaxed bg-black/40 selection:bg-brand-emerald/20">
+          <div className="p-3 sm:p-4 flex-1 overflow-y-auto font-mono text-[11px] sm:text-xs text-grid-100 whitespace-pre-wrap leading-relaxed bg-black/50 selection:bg-brand-emerald/20">
             {streamedOutput || (
-              <div className="text-grid-500 flex items-center justify-center h-full">
+              <div className="text-grid-500 flex items-center justify-center h-full text-center px-4">
                 {isStreaming ? 'Negotiating x402 payment & initializing GPU stream...' : 'Awaiting task execution...'}
               </div>
             )}
@@ -240,25 +240,25 @@ export const ExecutionPipeline: React.FC<ExecutionPipelineProps> = ({
 
           {/* Telemetry Footer */}
           {completedTask && (
-            <div className="bg-black px-4 py-2.5 border-t border-white/[0.08] flex items-center justify-between text-[11px] font-mono text-grid-300">
-              <div className="flex items-center space-x-4">
-                <span>Model: <strong className="text-white">{completedTask.routing.selectedCandidate.modelName}</strong></span>
+            <div className="bg-black px-3 py-2 sm:px-4 sm:py-2.5 border-t border-white/[0.08] flex flex-col sm:flex-row sm:items-center justify-between text-[10px] sm:text-[11px] font-mono text-grid-300 gap-1">
+              <div className="flex items-center space-x-2 sm:space-x-3 truncate">
+                <span className="truncate">Model: <strong className="text-white">{completedTask.routing.selectedCandidate.modelName}</strong></span>
                 <span>•</span>
-                <span>Compute: <strong className="text-white">{completedTask.routing.selectedCandidate.computeName}</strong></span>
+                <span className="truncate">GPU: <strong className="text-white">{completedTask.routing.selectedCandidate.computeName}</strong></span>
               </div>
-              <div className="flex items-center space-x-4">
-                <span>Latency: <strong className="text-white">{completedTask.actualDurationMs}ms</strong></span>
+              <div className="flex items-center space-x-2 sm:space-x-3 shrink-0">
+                <span>{completedTask.actualDurationMs}ms</span>
                 <span>•</span>
-                <span>Cost: <strong className="text-brand-emerald font-semibold">{completedTask.actualCostAlgo} ALGO</strong></span>
+                <span className="text-brand-emerald font-bold">{completedTask.actualCostAlgo} ALGO</span>
               </div>
             </div>
           )}
         </div>
 
         {/* Right Column: Inspector Tabs (5 cols) */}
-        <div className="lg:col-span-5 bg-black/80 border border-white/[0.08] rounded-xl overflow-hidden flex flex-col h-[520px]">
+        <div className="lg:col-span-5 bg-black/85 border border-white/[0.1] rounded-2xl overflow-hidden flex flex-col h-[380px] sm:h-[460px] lg:h-[520px] shadow-xl">
           {/* Tabs */}
-          <div className="bg-black px-3 py-2 border-b border-white/[0.08] flex space-x-1">
+          <div className="bg-black px-2.5 py-2 border-b border-white/[0.08] flex space-x-1 overflow-x-auto no-scrollbar">
             {[
               { id: 'algorand', label: 'Algorand Ledger', icon: Coins },
               { id: 'x402', label: 'x402 Facilitator', icon: ShieldCheck },

@@ -62,7 +62,7 @@ export const AlgorandLedger: React.FC = () => {
         <div className="flex items-center space-x-2">
           <TourGuideButton
             tourId="ledger-tour"
-            buttonLabel="Interactive Spotlight Tour"
+            buttonLabel="How It Works"
             steps={[
               {
                 targetSelector: '[data-tour="participant-wallets"]',

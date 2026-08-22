@@ -119,7 +119,7 @@ export const DirectX402Demo: React.FC = () => {
         <div className="flex items-center space-x-2">
           <TourGuideButton
             tourId="x402-tour"
-            buttonLabel="Interactive Spotlight Tour"
+            buttonLabel="How It Works"
             steps={[
               {
                 targetSelector: '[data-tour="x402-phase-1"]',

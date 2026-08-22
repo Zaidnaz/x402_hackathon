@@ -69,7 +69,7 @@ export const RoutingMatrix: React.FC = () => {
         <div className="flex items-center space-x-2">
           <TourGuideButton
             tourId="routing-tour"
-            buttonLabel="Interactive Spotlight Tour"
+            buttonLabel="How It Works"
             steps={[
               {
                 targetSelector: '[data-tour="weight-sliders"]',
@@ -89,20 +89,20 @@ export const RoutingMatrix: React.FC = () => {
             ]}
           />
 
-          <div className="bg-grid-950 px-3.5 py-2 rounded-lg border border-grid-800 text-xs font-mono text-grid-300">
+          <div className="bg-grid-950 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-lg border border-grid-800 text-[11px] sm:text-xs font-mono text-grid-300">
             Permutations: <strong className="text-signal-amber font-semibold">{routing?.evaluatedCandidatesCount || 0}</strong>
           </div>
         </div>
       </div>
 
       {/* Interactive Weight Controllers */}
-      <div data-tour="weight-sliders" className="bg-grid-900 border border-grid-800 rounded-xl p-5 space-y-4">
+      <div data-tour="weight-sliders" className="bg-grid-900 border border-grid-800 rounded-xl p-4 sm:p-5 space-y-3 sm:space-y-4">
         <div className="text-xs font-mono font-semibold uppercase tracking-wider text-grid-300 flex items-center space-x-2">
           <SlidersHorizontal className="w-3.5 h-3.5 text-signal-amber" />
           <span>Interactive Objective Weight Tuners</span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs font-mono">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 text-xs font-mono">
           {/* Cost Weight */}
           <div className="bg-grid-950 p-3.5 rounded-lg border border-grid-800 space-y-2">
             <div className="flex justify-between">
