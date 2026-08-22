@@ -597,6 +597,24 @@ export async function fetchStats(): Promise<GlobalStats> {
   }
 }
 
+export async function fetchFundingStatus(): Promise<{ isFunded: boolean; balanceAlgo: number; fundUrl: string; agentAddress: string } | null> {
+  try {
+    const res = await fetch(`${API_BASE}/ledger/funding`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    if (!data?.success) return null;
+    return {
+      isFunded: data.isFunded,
+      balanceAlgo: data.balanceAlgo,
+      fundUrl: data.fundUrl,
+      agentAddress: data.agentAddress
+    };
+  } catch (err) {
+    console.warn('Could not fetch agent funding status:', err);
+    return null;
+  }
+}
+
 export async function fetchTaskHistory(): Promise<CompletedTask[]> {
   const res = await fetch(`${API_BASE}/tasks/history`);
   const data = await res.json();
@@ -670,13 +688,22 @@ export function subscribeTaskStream(
   if (overrides.minQualityScore) params.append('minQualityScore', String(overrides.minQualityScore));
 
   const eventSource = new EventSource(`${API_BASE}/tasks/stream?${params.toString()}`);
+  // The stream ends by the server closing the HTTP response after 'completed'
+  // (or 'error'). Native EventSource treats any connection drop it didn't
+  // initiate itself as reconnect-worthy and fires a generic 'error' event —
+  // including right after a perfectly successful completion. Without this
+  // flag, that spurious event would overwrite a successful result with a
+  // false "task failed" state.
+  let finished = false;
 
   eventSource.addEventListener('pipeline_event', (e) => {
     try {
       const event: ExecutionEvent = JSON.parse(e.data);
       onEvent(event);
       if (event.stage === 'completed' && event.data?.task) {
+        finished = true;
         onComplete(event.data.task);
+        eventSource.close();
       }
     } catch (err) {
       console.error('SSE parse error', err);
@@ -693,7 +720,8 @@ export function subscribeTaskStream(
   });
 
   eventSource.addEventListener('error', (e: any) => {
-    if (eventSource.readyState === EventSource.CLOSED) return;
+    if (finished || eventSource.readyState === EventSource.CLOSED) return;
+    finished = true;
     try {
       const parsed = JSON.parse(e.data || '{}');
       onError(parsed.error || 'Connection closed');
@@ -704,6 +732,7 @@ export function subscribeTaskStream(
   });
 
   return () => {
+    finished = true;
     eventSource.close();
   };
 }

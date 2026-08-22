@@ -18,14 +18,18 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [isGuideOpen, setIsGuideOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const navLinks = [
-    { id: 'landing', label: 'Overview' },
-    { id: 'command', label: 'Console' },
-    { id: 'grid', label: 'Marketplace' },
-    { id: 'routing', label: 'Routing Matrix' },
+  const primaryLink = { id: 'command', label: 'Agent' };
+  // Secondary/developer views — real detail behind the scenes, deliberately
+  // not competing for attention with the one thing most people need: the
+  // prompt box.
+  const secondaryLinks = [
     { id: 'ledger', label: 'Ledger' },
+    { id: 'grid', label: 'Marketplace' },
+    { id: 'routing', label: 'Routing' },
     { id: 'x402-demo', label: 'x402 Testbed' },
+    { id: 'landing', label: 'About' },
   ];
+  const navLinks = [primaryLink, ...secondaryLinks];
 
   return (
     <>
@@ -40,43 +44,52 @@ export const Navbar: React.FC<NavbarProps> = ({
               }}
               className="flex items-center space-x-2 sm:space-x-3 group focus:outline-none"
             >
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-brand-emerald flex items-center justify-center font-mono font-extrabold text-black text-xs sm:text-sm shadow-glow-emerald group-hover:scale-105 transition-transform">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-brand-emerald flex items-center justify-center font-serif font-semibold text-black text-sm shadow-glow-emerald group-hover:scale-105 transition-transform">
                 AG
               </div>
               <div className="flex flex-col text-left">
                 <div className="flex items-center space-x-1.5 sm:space-x-2">
-                  <span className="font-mono font-bold tracking-tight text-white text-sm sm:text-base group-hover:text-brand-emerald transition-colors">
+                  <span className="font-serif font-medium tracking-tight text-white text-base sm:text-lg group-hover:text-brand-emerald transition-colors">
                     AgentGrid
                   </span>
-                  <span className="px-1.5 py-0.2 sm:py-0.5 rounded text-[8px] sm:text-[9px] font-mono font-bold uppercase bg-brand-emerald/15 text-brand-emerald border border-brand-emerald/30">
-                    Team LENA
-                  </span>
                 </div>
-                <span className="text-[9px] sm:text-[10px] font-mono text-grid-400 tracking-wider uppercase">
-                  x402 // Algorand
+                <span className="text-[10px] text-grid-500 tracking-wide">
+                  Team LENA · x402 · Algorand
                 </span>
               </div>
             </button>
           </div>
 
-          {/* Desktop Center Navigation */}
-          <nav className="hidden lg:flex items-center space-x-1 bg-white/[0.03] p-1 rounded-full border border-white/[0.08]">
-            {navLinks.map((link) => {
-              const isActive = activeTab === link.id;
-              return (
-                <button
-                  key={link.id}
-                  onClick={() => setActiveTab(link.id)}
-                  className={`px-3.5 py-1.5 rounded-full text-xs font-mono transition-all duration-200 ${
-                    isActive
-                      ? 'bg-brand-emerald/15 text-brand-emerald border border-brand-emerald/30 font-bold shadow-sm'
-                      : 'text-grid-300 hover:text-white hover:bg-white/[0.04]'
-                  }`}
-                >
-                  {link.label}
-                </button>
-              );
-            })}
+          {/* Desktop Navigation — one primary destination, the rest muted/secondary */}
+          <nav className="hidden lg:flex items-center space-x-3">
+            <button
+              onClick={() => setActiveTab(primaryLink.id)}
+              className={`px-4 py-1.5 rounded-full text-xs font-mono font-bold transition-all duration-200 ${
+                activeTab === primaryLink.id
+                  ? 'bg-brand-emerald text-black shadow-glow-emerald'
+                  : 'bg-white/[0.06] text-white hover:bg-white/[0.1]'
+              }`}
+            >
+              {primaryLink.label}
+            </button>
+            <div className="flex items-center space-x-0.5 pl-2 border-l border-white/[0.08]">
+              {secondaryLinks.map((link) => {
+                const isActive = activeTab === link.id;
+                return (
+                  <button
+                    key={link.id}
+                    onClick={() => setActiveTab(link.id)}
+                    className={`px-2.5 py-1 rounded-full text-[11px] font-mono transition-all duration-200 ${
+                      isActive
+                        ? 'text-brand-emerald font-semibold'
+                        : 'text-grid-500 hover:text-grid-300'
+                    }`}
+                  >
+                    {link.label}
+                  </button>
+                );
+              })}
+            </div>
           </nav>
 
           {/* Right Action & Pera Wallet */}
@@ -88,18 +101,9 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
             )}
 
-            {/* Quick Faucet Link */}
-            <a
-              href="https://bank.testnet.algorand.network/"
-              target="_blank"
-              rel="noreferrer"
-              title="Get free TestNet ALGO tokens"
-              className="hidden sm:flex items-center space-x-1 px-2.5 py-1.5 rounded-full bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-grid-300 hover:text-white text-xs font-mono transition-all"
-            >
-              <span>🚰 Faucet</span>
-            </a>
-
-            {/* Pera Wallet Chip */}
+            {/* Pera Wallet is an optional, secondary "pay it yourself" demo path —
+                the agent pays autonomously with its own wallet by default, so
+                this stays small and out of the way unless already connected. */}
             {isConnected && walletAddress ? (
               <div className="flex items-center space-x-1.5 bg-white/[0.04] border border-white/[0.12] rounded-full pl-2.5 sm:pl-3 pr-1.5 py-1 text-xs font-mono shadow-sm">
                 <span className="w-2 h-2 rounded-full bg-brand-emerald animate-pulse shrink-0" />
@@ -118,9 +122,10 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 onClick={() => setIsGuideOpen(true)}
                 disabled={isConnecting}
-                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-brand-emerald/15 hover:bg-brand-emerald/25 border border-brand-emerald/35 text-[11px] sm:text-xs font-mono font-bold text-brand-emerald hover:text-white transition-all shadow-sm active:scale-95"
+                title="Optional: pay a task's cost yourself with a personal Pera Wallet instead of the agent's own wallet"
+                className="hidden sm:flex items-center space-x-1 text-[11px] font-mono text-grid-500 hover:text-grid-300 transition-all"
               >
-                <Wallet className="w-3.5 h-3.5 text-brand-emerald shrink-0" />
+                <Wallet className="w-3 h-3 shrink-0" />
                 <span>{isConnecting ? 'Connecting...' : 'Pera Wallet'}</span>
               </button>
             )}

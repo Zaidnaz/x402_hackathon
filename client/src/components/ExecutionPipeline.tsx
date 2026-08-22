@@ -1,23 +1,21 @@
-import React, { useState } from 'react';
-import { 
-  CheckCircle2, 
-  Clock, 
-  ExternalLink, 
-  FileText, 
-  Coins, 
-  Terminal, 
-  Copy, 
-  Check, 
-  AlertOctagon, 
-  ChevronRight, 
-  Code,
-  ShieldCheck,
-  Zap,
-  ArrowRightLeft,
+import React, { useState, useMemo } from 'react';
+import {
+  CheckCircle2,
+  ExternalLink,
+  FileText,
+  Coins,
+  Terminal,
+  Copy,
+  Check,
+  AlertOctagon,
+  Cpu,
+  Loader2,
   Search,
-  Key
+  ArrowRightLeft,
+  ChevronDown,
+  XCircle
 } from 'lucide-react';
-import { ExecutionEvent, CompletedTask, ExecutionStage } from '../types';
+import { ExecutionEvent, CompletedTask, ExecutionStage, RoutingDecision, X402PaymentChallenge } from '../types';
 
 interface ExecutionPipelineProps {
   events: ExecutionEvent[];
@@ -25,17 +23,120 @@ interface ExecutionPipelineProps {
   streamedOutput: string;
   completedTask: CompletedTask | null;
   isStreaming: boolean;
+  errorMessage: string | null;
   onReset: () => void;
 }
 
-const STAGES: { id: ExecutionStage; title: string; subtitle: string }[] = [
-  { id: 'analyzing_intent', title: '1. Intent & Constraints', subtitle: 'Extract tokens, modality, SLA' },
-  { id: 'discovering_grid', title: '2. Market Discovery', subtitle: 'Probe GPU & model endpoints' },
-  { id: 'optimizing_pareto', title: '3. Pareto Optimization', subtitle: 'Deterministic score calculation' },
-  { id: 'x402_challenging', title: '4. x402 Challenge', subtitle: 'GoPlausible AVM paywall standard' },
-  { id: 'settling_algorand', title: '5. Algorand Settlement', subtitle: 'On-chain atomic micro-tx' },
-  { id: 'executing_workload', title: '6. Workload Stream', subtitle: 'High-throughput tensor execution' },
+// Canonical order the live feed grows in, top to bottom. Only stages that
+// have actually fired an event get a card — this isn't a fixed stepper.
+const STAGE_ORDER: ExecutionStage[] = [
+  'analyzing_intent',
+  'discovering_grid',
+  'optimizing_pareto',
+  'x402_challenging',
+  'settling_algorand',
+  'rerouting_failover',
+  'executing_workload',
+  'verifying_telemetry'
 ];
+
+const STAGE_LABEL: Record<string, string> = {
+  analyzing_intent: 'Understanding the request',
+  discovering_grid: 'Scanning the market',
+  optimizing_pareto: 'Choosing a route',
+  x402_challenging: 'Requesting payment (x402)',
+  settling_algorand: 'Paying on Algorand',
+  rerouting_failover: 'Rerouting mid-task',
+  executing_workload: 'Running the task',
+  verifying_telemetry: 'Wrapping up'
+};
+
+function groupLatestByStage(events: ExecutionEvent[]): Map<ExecutionStage, ExecutionEvent[]> {
+  const map = new Map<ExecutionStage, ExecutionEvent[]>();
+  for (const ev of events) {
+    const arr = map.get(ev.stage) || [];
+    arr.push(ev);
+    map.set(ev.stage, arr);
+  }
+  return map;
+}
+
+const RoutingDecisionCard: React.FC<{ routing: RoutingDecision }> = ({ routing }) => {
+  const top = routing.paretoFrontier.slice(0, 4);
+  return (
+    <div className="space-y-3">
+      <div className="bg-brand-emerald/10 border border-brand-emerald/30 rounded-xl p-3 space-y-1.5">
+        <div className="text-[10px] uppercase tracking-wide text-grid-400">Selected</div>
+        <div className="text-sm font-bold text-white">
+          {routing.selectedCandidate.modelName} <span className="text-grid-400 font-normal">on</span> {routing.selectedCandidate.computeName}
+        </div>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-grid-300">
+          <span>{routing.selectedCandidate.gpuType}</span>
+          <span className="text-brand-emerald font-bold">{routing.selectedCandidate.estimatedCostAlgo} ALGO</span>
+          <span>{routing.selectedCandidate.estimatedLatencyMs}ms</span>
+          <span className="text-signal-cyan">Quality {routing.selectedCandidate.projectedQualityScore}/100</span>
+        </div>
+      </div>
+
+      <div className="text-[11px] text-grid-300 font-sans space-y-1">
+        {routing.decisionReasoning.slice(0, 3).map((r, i) => (
+          <div key={i} className="flex items-start space-x-1.5">
+            <span className="text-brand-emerald mt-0.5">›</span>
+            <span>{r}</span>
+          </div>
+        ))}
+      </div>
+
+      {top.length > 1 && (
+        <div className="space-y-1.5">
+          <div className="text-[10px] uppercase tracking-wide text-grid-500">
+            Evaluated {routing.evaluatedCandidatesCount} combinations — top alternatives:
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+            {top.map((c, idx) => {
+              const isSelected = c.modelId === routing.selectedCandidate.modelId && c.computeId === routing.selectedCandidate.computeId;
+              return (
+                <div
+                  key={idx}
+                  className={`p-2 rounded-lg border text-left ${
+                    isSelected ? 'bg-brand-emerald/15 border-brand-emerald/50' : 'bg-black/50 border-white/[0.08]'
+                  }`}
+                >
+                  <div className="text-[10px] font-bold text-white truncate">{c.modelName}</div>
+                  <div className="text-[9px] text-grid-400 truncate">{c.computeName}</div>
+                  <div className="text-[9px] text-grid-400 mt-0.5">{c.estimatedCostAlgo} ALGO · {c.estimatedLatencyMs}ms</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const PaymentCard: React.FC<{ challenge?: X402PaymentChallenge; settlement?: any; message: string }> = ({ challenge, settlement, message }) => {
+  if (!challenge) return <div className="text-[11px] text-grid-400 font-sans">{message}</div>;
+  return (
+    <div className="space-y-2">
+      <div className="text-[11px] text-grid-300 font-sans">
+        Requesting <span className="text-white font-bold">{challenge.amountAlgo} ALGO</span> via HTTP 402 (scheme <code className="text-brand-emerald">avm:exact</code>) from{' '}
+        <code className="text-grid-400">{challenge.destinationAddress.slice(0, 10)}...</code>
+      </div>
+      {settlement ? (
+        <div className="flex items-center space-x-1.5 text-[11px] text-brand-emerald font-bold">
+          <CheckCircle2 className="w-3.5 h-3.5" />
+          <span>Confirmed on-chain in round #{settlement.round}</span>
+        </div>
+      ) : (
+        <div className="flex items-center space-x-1.5 text-[11px] text-grid-400">
+          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          <span>Signing and broadcasting to Algorand TestNet...</span>
+        </div>
+      )}
+    </div>
+  );
+};
 
 export const ExecutionPipeline: React.FC<ExecutionPipelineProps> = ({
   events,
@@ -43,11 +144,11 @@ export const ExecutionPipeline: React.FC<ExecutionPipelineProps> = ({
   streamedOutput,
   completedTask,
   isStreaming,
+  errorMessage,
   onReset
 }) => {
   const [copied, setCopied] = useState(false);
-  const [copiedKey, setCopiedKey] = useState(false);
-  const [activeInspectorTab, setActiveInspectorTab] = useState<'output' | 'x402' | 'algorand' | 'events'>('algorand');
+  const [showRawEvents, setShowRawEvents] = useState(false);
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -55,440 +156,212 @@ export const ExecutionPipeline: React.FC<ExecutionPipelineProps> = ({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const copyKeyToClipboard = (key: string) => {
-    navigator.clipboard.writeText(key);
-    setCopiedKey(true);
-    setTimeout(() => setCopiedKey(false), 2000);
-  };
-
-  const exportCryptographicReceipt = () => {
+  const exportReceipt = () => {
     if (!completedTask) return;
     const receipt = {
-      standard: "x402-algorand-audit-v1",
+      standard: 'x402-algorand-audit-v1',
       timestamp: new Date(completedTask.completedAt).toISOString(),
-      project: "AgentGrid",
-      team: "Team LENA",
       task: {
         id: completedTask.id,
         prompt: completedTask.prompt,
-        modality: completedTask.requirement.modality,
-        tokensGenerated: completedTask.tokensGenerated,
-        actualDurationMs: completedTask.actualDurationMs
+        modality: completedTask.requirement.modality
       },
       blockchainSettlement: {
-        network: "Algorand TestNet (ChainID: 416002)",
+        network: 'Algorand TestNet (ChainID: 416002)',
         txId: completedTask.algorandTx.txId,
         blockRound: completedTask.algorandTx.round,
         amountAlgo: completedTask.actualCostAlgo,
-        amountMicroAlgo: Math.round(completedTask.actualCostAlgo * 1_000_000),
-        usdcAsaEquivalent: `${(completedTask.actualCostAlgo * 0.22).toFixed(4)} USDC (ASA #10458941)`,
-        protocolFeeAlgo: completedTask.x402Challenge.agentGridFeeAlgo,
-        providerPayoutAlgo: completedTask.x402Challenge.providerPayoutAlgo,
         loraExplorerUrl: completedTask.algorandTx.loraUrl,
         peraExplorerUrl: completedTask.algorandTx.explorerUrl
-      },
-      x402Facilitator: {
-        url: "https://facilitator.goplausible.xyz",
-        scheme: "avm:exact",
-        paymentToken: completedTask.paymentProof.paymentToken,
-        verified: true
       },
       routingDecision: {
         selectedModel: completedTask.routing.selectedCandidate.modelName,
         selectedCompute: completedTask.routing.selectedCandidate.computeName,
-        gpuType: completedTask.routing.selectedCandidate.gpuType,
-        compositeScore: completedTask.routing.selectedCandidate.compositeScore
+        compositeScore: completedTask.routing.selectedCandidate.compositeScore,
+        evaluatedCandidates: completedTask.routing.evaluatedCandidatesCount
       }
     };
-
-    const blob = new Blob([JSON.stringify(receipt, null, 2)], { type: "application/json" });
+    const blob = new Blob([JSON.stringify(receipt, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
+    const a = document.createElement('a');
     a.href = url;
     a.download = `x402-receipt-${completedTask.id}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
 
-  const getStageStatus = (stageId: ExecutionStage) => {
-    const stageOrder: ExecutionStage[] = [
-      'analyzing_intent',
-      'discovering_grid',
-      'optimizing_pareto',
-      'x402_challenging',
-      'settling_algorand',
-      'executing_workload',
-      'verifying_telemetry',
-      'completed'
-    ];
-
-    const currentIndex = stageOrder.indexOf(currentStage);
-    const thisIndex = stageOrder.indexOf(stageId);
-
-    if (currentStage === 'completed') return 'completed';
-    if (currentStage === 'rerouting_failover' && stageId === 'executing_workload') return 'active';
-    if (thisIndex < currentIndex) return 'completed';
-    if (thisIndex === currentIndex) return 'active';
-    return 'pending';
-  };
-
-  const loraUrl = completedTask?.algorandTx.loraUrl || `https://lora.algokit.io/testnet/transaction/${completedTask?.algorandTx.txId}`;
-  const generatedApiKey = completedTask 
-    ? `ag_x402_live_${completedTask.id.substring(0, 8)}_${completedTask.algorandTx.txId.substring(0, 12).toLowerCase()}`
-    : '';
+  const byStage = useMemo(() => groupLatestByStage(events), [events]);
+  const activeStages = STAGE_ORDER.filter((s) => byStage.has(s));
 
   return (
-    <div className="space-y-6">
-      {/* Top Header & Summary */}
-      <div className="bg-black/75 border border-white/[0.08] rounded-xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 backdrop-blur-md">
-        <div>
-          <div className="flex items-center space-x-2">
-            <span className={`w-2.5 h-2.5 rounded-full ${isStreaming ? 'bg-brand-emerald animate-ping' : 'bg-brand-emerald'}`} />
-            <h2 className="text-lg font-bold font-mono text-white">Autonomous Orchestration Pipeline</h2>
-            {completedTask?.failoverOccurred && (
-              <span className="px-2 py-0.5 rounded text-[10px] font-mono uppercase bg-signal-roseDim text-signal-rose border border-signal-rose/30 flex items-center space-x-1">
-                <ArrowRightLeft className="w-3 h-3" />
-                <span>Failover Handled</span>
-              </span>
-            )}
-          </div>
-          <p className="text-xs font-mono text-grid-300 mt-1">
-            {isStreaming ? 'Real-time multi-agent execution & settlement in progress...' : completedTask ? `Completed in ${completedTask.actualDurationMs}ms with verified x402 settlement.` : 'Ready for workload dispatch.'}
-          </p>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <span className={`w-2 h-2 rounded-full ${isStreaming ? 'bg-brand-emerald animate-ping' : errorMessage ? 'bg-signal-rose' : 'bg-brand-emerald'}`} />
+          <span className="text-sm font-medium text-white">
+            {errorMessage ? 'Task failed' : isStreaming ? 'Agent is working...' : completedTask ? `Done in ${completedTask.actualDurationMs}ms` : ''}
+          </span>
         </div>
-
-        <div className="flex items-center space-x-3">
-          <button
-            onClick={onReset}
-            disabled={isStreaming}
-            className="px-3.5 py-1.5 rounded-lg border border-white/[0.08] bg-black/60 text-xs font-mono text-grid-300 hover:text-white hover:border-white/[0.2] transition-all disabled:opacity-50"
-          >
-            New Task
-          </button>
-        </div>
+        <button
+          onClick={onReset}
+          disabled={isStreaming}
+          className="px-3 py-1.5 rounded-lg border border-white/[0.08] bg-black/60 text-[13px] text-grid-300 hover:text-white hover:border-white/[0.2] transition-all disabled:opacity-50 cursor-pointer"
+        >
+          New Task
+        </button>
       </div>
 
-      {/* Dynamic Failover Alert Banner */}
-      {completedTask?.failoverOccurred && completedTask.failoverDetails && (
-        <div className="bg-signal-roseDim border border-signal-rose/40 rounded-xl p-4 flex items-start space-x-3 text-xs font-mono text-signal-rose animate-fadeIn">
-          <AlertOctagon className="w-5 h-5 flex-shrink-0 mt-0.5 text-signal-rose" />
+      {errorMessage && (
+        <div className="bg-signal-roseDim border border-signal-rose/40 rounded-xl p-4 flex items-start space-x-3 text-sm text-signal-rose animate-fadeIn">
+          <XCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
           <div className="space-y-1">
-            <div className="font-bold uppercase tracking-wide">Live Dynamic Failover & Reroute Executed</div>
-            <div className="text-grid-300 text-[11px]">
-              <strong>Degraded Node:</strong> {completedTask.failoverDetails.originalProvider} — Reason: <span className="text-signal-rose">{completedTask.failoverDetails.reason}</span>
-            </div>
-            <div className="text-grid-300 text-[11px]">
-              <strong>Failover Route:</strong> Automatically switched in-flight execution to <span className="text-brand-emerald font-semibold">{completedTask.failoverDetails.newProvider}</span> with +{completedTask.failoverDetails.rerouteLatencyOverheadMs}ms reroute overhead. 0 lost tokens.
-            </div>
+            <div className="font-semibold">The agent couldn't complete this task</div>
+            <div className="text-grid-300 text-[13px]">{errorMessage}</div>
           </div>
         </div>
       )}
 
-      {/* 6-Stage Visual Stepper */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1.5 sm:gap-2">
-        {STAGES.map((s, idx) => {
-          const status = getStageStatus(s.id);
+      {/* Live, growing feed — one card per stage, appearing the moment it starts */}
+      <div className="space-y-2.5">
+        {activeStages.map((stage, stageIdx) => {
+          const stageEvents = byStage.get(stage)!;
+          const latest = stageEvents[stageEvents.length - 1];
+          const isLastActiveStage = stageIdx === activeStages.length - 1;
+          const isActive = isLastActiveStage && isStreaming;
+          const isDone = !isActive && !(errorMessage && isLastActiveStage);
+
           return (
             <div
-              key={s.id}
-              className={`p-2.5 sm:p-3 rounded-xl border text-left transition-all ${
-                status === 'active'
-                  ? 'bg-brand-emerald/15 border-brand-emerald shadow-glow-emerald'
-                  : status === 'completed'
-                  ? 'bg-black/80 border-brand-emerald/40'
-                  : 'bg-black/40 border-white/[0.05] opacity-50'
+              key={stage}
+              className={`bg-black/70 border rounded-xl p-3.5 animate-fadeIn transition-colors ${
+                isActive ? 'border-brand-emerald/50' : 'border-white/[0.08]'
               }`}
             >
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-[9px] sm:text-[10px] font-mono text-grid-400">STAGE {idx + 1}</span>
-                {status === 'completed' ? (
-                  <CheckCircle2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-brand-emerald" />
-                ) : status === 'active' ? (
-                  <Zap className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-brand-emerald animate-spin" />
+              <div className="flex items-center space-x-2 mb-1.5">
+                {isActive ? (
+                  <Loader2 className="w-3.5 h-3.5 text-brand-emerald animate-spin shrink-0" />
+                ) : isDone ? (
+                  <CheckCircle2 className="w-3.5 h-3.5 text-brand-emerald shrink-0" />
                 ) : (
-                  <div className="w-1.5 h-1.5 rounded-full bg-grid-700" />
+                  <div className="w-3.5 h-3.5 rounded-full bg-grid-700 shrink-0" />
+                )}
+                <span className="text-sm font-medium text-white">{STAGE_LABEL[stage] || stage}</span>
+              </div>
+
+              <div className="pl-5.5 ml-0.5">
+                {stage === 'optimizing_pareto' && latest.data?.routing ? (
+                  <RoutingDecisionCard routing={latest.data.routing} />
+                ) : stage === 'x402_challenging' ? (
+                  <PaymentCard challenge={latest.data?.challenge} message={latest.message} />
+                ) : stage === 'settling_algorand' ? (
+                  <PaymentCard
+                    challenge={(byStage.get('x402_challenging') || []).find((e) => e.data?.challenge)?.data?.challenge}
+                    settlement={stageEvents.find((e) => e.data?.settlement)?.data?.settlement}
+                    message={latest.message}
+                  />
+                ) : stage === 'rerouting_failover' ? (
+                  <div className="flex items-start space-x-2 text-[11px] font-sans text-signal-rose">
+                    <ArrowRightLeft className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                    <span>{latest.message}</span>
+                  </div>
+                ) : (
+                  <div className="text-[11px] text-grid-400 font-sans">{latest.message}</div>
                 )}
               </div>
-              <div className="text-[11px] sm:text-xs font-mono font-bold text-white truncate">{s.title}</div>
-              <div className="text-[9px] sm:text-[10px] text-grid-400 truncate mt-0.5">{s.subtitle}</div>
             </div>
           );
         })}
       </div>
 
-      {/* 🔑 Cryptographic x402 API Session Credential Card */}
-      {completedTask && (
-        <div className="bg-[#0a120e] border-2 border-brand-emerald/60 rounded-2xl p-4 sm:p-5 shadow-2xl animate-fadeIn space-y-3">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-brand-emerald/20 pb-3">
-            <div className="flex items-center space-x-2">
-              <div className="p-1.5 rounded-lg bg-brand-emerald/20 border border-brand-emerald/40 text-brand-emerald">
-                <Key className="w-4 h-4" />
-              </div>
-              <div>
-                <div className="text-xs sm:text-sm font-bold text-white flex items-center space-x-2">
-                  <span>x402 Authorized Session API Key Issued</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
-            <div className="bg-black/90 p-3 rounded-xl border border-white/[0.08] space-y-1.5">
-              <div className="text-[10px] text-grid-400 uppercase">Session API Bearer Key</div>
-              <div className="flex items-center justify-between bg-black p-2 rounded border border-white/[0.06] text-xs text-brand-emerald font-bold">
-                <span className="truncate max-w-[240px]">{generatedApiKey}</span>
-                <button onClick={() => copyKeyToClipboard(generatedApiKey)} className="p-1">
-                  {copiedKey ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Dual Panel HUD: Output Terminal + Settlement Inspector */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
-        {/* Left Column: Live Streaming Terminal (7 cols) */}
-        <div className="lg:col-span-7 bg-black/85 border border-white/[0.1] rounded-2xl overflow-hidden flex flex-col h-[380px] sm:h-[460px] lg:h-[520px] shadow-xl">
-          <div className="bg-black px-3.5 py-2.5 sm:px-4 sm:py-3 border-b border-white/[0.08] flex items-center justify-between">
+      {/* Live output stream */}
+      {(streamedOutput || currentStage === 'executing_workload' || completedTask) && (
+        <div className="bg-black/85 border border-white/[0.1] rounded-2xl overflow-hidden">
+          <div className="bg-black px-3.5 py-2.5 border-b border-white/[0.08] flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <Terminal className="w-4 h-4 text-brand-emerald shrink-0" />
-              <span className="text-[11px] sm:text-xs font-mono font-bold text-white uppercase tracking-wider">Live Model Inference Stream</span>
-              {isStreaming && (
-                <span className="flex items-center space-x-1 text-[9px] sm:text-[10px] font-mono text-brand-emerald animate-pulse">
-                  <span>● Streaming</span>
-                </span>
-              )}
+              <span className="text-[13px] font-medium text-white">Result</span>
             </div>
-
             <button
               onClick={() => copyToClipboard(streamedOutput)}
               disabled={!streamedOutput}
-              className="flex items-center space-x-1 text-xs font-mono text-grid-400 hover:text-white disabled:opacity-30 transition-all cursor-pointer"
+              className="flex items-center space-x-1 text-[13px] text-grid-400 hover:text-white disabled:opacity-30 transition-all cursor-pointer"
             >
               {copied ? <Check className="w-3.5 h-3.5 text-brand-emerald" /> : <Copy className="w-3.5 h-3.5" />}
               <span>{copied ? 'Copied' : 'Copy'}</span>
             </button>
           </div>
+          <div className="p-4 max-h-[340px] overflow-y-auto text-[14px] text-grid-100 whitespace-pre-wrap leading-relaxed">
+            {streamedOutput || <span className="text-grid-500">Streaming will start once payment is confirmed...</span>}
+          </div>
+        </div>
+      )}
 
-          <div className="p-3 sm:p-4 flex-1 overflow-y-auto font-mono text-[11px] sm:text-xs text-grid-100 whitespace-pre-wrap leading-relaxed bg-black/50 selection:bg-brand-emerald/20">
-            {streamedOutput || (
-              <div className="text-grid-500 flex items-center justify-center h-full text-center px-4">
-                {isStreaming ? 'Negotiating x402 payment & initializing GPU stream...' : 'Awaiting task execution...'}
-              </div>
-            )}
+      {/* Final receipt */}
+      {completedTask && (
+        <div className="bg-black/70 border border-white/[0.08] rounded-xl p-3.5 space-y-2.5">
+          {completedTask.failoverOccurred && completedTask.failoverDetails && (
+            <div className="flex items-start space-x-2 text-[11px] text-signal-rose bg-signal-roseDim border border-signal-rose/30 rounded-lg p-2.5">
+              <AlertOctagon className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+              <span>
+                Rerouted from {completedTask.failoverDetails.originalProvider} to{' '}
+                <strong>{completedTask.failoverDetails.newProvider}</strong> after a simulated failure — 0 tokens lost.
+              </span>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between text-[13px]">
+            <span className="flex items-center space-x-1.5 text-grid-400">
+              <Coins className="w-3.5 h-3.5" />
+              <span>Paid <strong className="text-brand-emerald font-mono">{completedTask.actualCostAlgo} ALGO</strong> on Algorand TestNet</span>
+            </span>
+            <a
+              href={completedTask.algorandTx.loraUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center space-x-1 px-2.5 py-1 rounded-full bg-brand-emerald text-black font-medium text-[12px] hover:bg-brand-emerald/90 transition-all"
+            >
+              <Search className="w-3 h-3" />
+              <span>View on-chain receipt</span>
+              <ExternalLink className="w-3 h-3" />
+            </a>
           </div>
 
-          {/* Telemetry Footer */}
-          {completedTask && (
-            <div className="bg-black px-3 py-2 sm:px-4 sm:py-2.5 border-t border-white/[0.08] flex flex-col sm:flex-row sm:items-center justify-between text-[10px] sm:text-[11px] font-mono text-grid-300 gap-1">
-              <div className="flex items-center space-x-2 sm:space-x-3 truncate">
-                <span className="truncate">Model: <strong className="text-white">{completedTask.routing.selectedCandidate.modelName}</strong></span>
-                <span>•</span>
-                <span className="truncate">GPU: <strong className="text-white">{completedTask.routing.selectedCandidate.computeName}</strong></span>
-              </div>
-              <div className="flex items-center space-x-2 sm:space-x-3 shrink-0">
-                <span>{completedTask.actualDurationMs}ms</span>
-                <span>•</span>
-                <span className="text-brand-emerald font-bold">{completedTask.actualCostAlgo} ALGO</span>
-              </div>
+          <button
+            onClick={exportReceipt}
+            className="w-full py-1.5 px-3 rounded-lg bg-black hover:bg-white/[0.05] border border-white/[0.1] text-[13px] text-grid-300 hover:text-white flex items-center justify-center space-x-2 transition-all cursor-pointer"
+          >
+            <FileText className="w-3.5 h-3.5" />
+            <span>Download receipt (.json)</span>
+          </button>
+        </div>
+      )}
+
+      {/* Developer detail — collapsed by default */}
+      {events.length > 0 && (
+        <div>
+          <button
+            onClick={() => setShowRawEvents((v) => !v)}
+            className="flex items-center space-x-1 text-[10px] text-grid-500 hover:text-grid-300 transition-colors cursor-pointer"
+          >
+            <Cpu className="w-3 h-3" />
+            <span>Raw event log ({events.length})</span>
+            <ChevronDown className={`w-3 h-3 transition-transform ${showRawEvents ? 'rotate-180' : ''}`} />
+          </button>
+          {showRawEvents && (
+            <div className="mt-2 space-y-1.5 max-h-[240px] overflow-y-auto">
+              {events.map((ev, i) => (
+                <div key={i} className="p-2 bg-black rounded border border-white/[0.08] text-[10px]">
+                  <div className="flex items-center justify-between text-grid-500 mb-0.5">
+                    <span className="font-bold text-brand-emerald uppercase">{ev.stage}</span>
+                    <span>{new Date(ev.timestamp).toLocaleTimeString()}</span>
+                  </div>
+                  <div className="text-grid-300">{ev.message}</div>
+                </div>
+              ))}
             </div>
           )}
         </div>
-
-        {/* Right Column: Inspector Tabs (5 cols) */}
-        <div className="lg:col-span-5 bg-black/85 border border-white/[0.1] rounded-2xl overflow-hidden flex flex-col h-[380px] sm:h-[460px] lg:h-[520px] shadow-xl">
-          {/* Tabs */}
-          <div className="bg-black px-2.5 py-2 border-b border-white/[0.08] flex space-x-1 overflow-x-auto no-scrollbar">
-            {[
-              { id: 'algorand', label: 'Algorand Ledger', icon: Coins },
-              { id: 'x402', label: 'x402 Facilitator', icon: ShieldCheck },
-              { id: 'events', label: 'Event Log', icon: FileText },
-            ].map((tab) => {
-              const Icon = tab.icon;
-              const isActive = activeInspectorTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveInspectorTab(tab.id as any)}
-                  className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-all ${
-                    isActive
-                      ? 'bg-brand-emerald/15 text-brand-emerald border border-brand-emerald/30 font-semibold'
-                      : 'text-grid-400 hover:text-white'
-                  }`}
-                >
-                  <Icon className="w-3.5 h-3.5" />
-                  <span>{tab.label}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="p-4 flex-1 overflow-y-auto font-mono text-xs space-y-4 bg-black/30">
-            {/* Algorand Tab with Lora Explorer Verification */}
-            {activeInspectorTab === 'algorand' && (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-mono text-grid-400 uppercase tracking-wide">On-Chain Settlement Verification</span>
-                  <span className="text-[10px] text-brand-emerald font-semibold bg-brand-emerald/10 px-2 py-0.5 rounded border border-brand-emerald/20">
-                    Live on TestNet
-                  </span>
-                </div>
-                
-                {completedTask ? (
-                  <div className="space-y-3">
-                    {/* Official Lora Explorer Verification Box */}
-                    <div className="bg-brand-emerald/10 p-3.5 rounded-lg border border-brand-emerald/30 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-white font-bold flex items-center space-x-1.5">
-                          <Search className="w-3.5 h-3.5 text-brand-emerald" />
-                          <span>Inspect on Lora (AlgoKit)</span>
-                        </span>
-                        <a
-                          href={loraUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="px-2.5 py-1 rounded bg-brand-emerald text-black font-bold text-[10px] uppercase flex items-center space-x-1 shadow-glow-emerald hover:bg-brand-emerald/90 transition-all"
-                        >
-                          <span>Open in Lora</span>
-                          <ExternalLink className="w-3 h-3" />
-                        </a>
-                      </div>
-                      <div className="text-[10px] text-grid-300 font-sans">
-                        Verify this real on-chain transaction on the official AlgoKit Lora TestNet explorer:
-                      </div>
-                      <div className="text-[10px] text-brand-emerald truncate font-mono bg-black/60 p-1.5 rounded border border-brand-emerald/20">
-                        {loraUrl}
-                      </div>
-                    </div>
-
-                    <div className="bg-black/70 p-3 rounded-lg border border-white/[0.08] space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-grid-400">Transaction ID</span>
-                        <a
-                          href={completedTask.algorandTx.explorerUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-brand-emerald hover:underline flex items-center space-x-1 truncate max-w-[180px]"
-                        >
-                          <span className="truncate">{completedTask.algorandTx.txId}</span>
-                          <ExternalLink className="w-3 h-3 flex-shrink-0" />
-                        </a>
-                      </div>
-
-                      <div className="flex justify-between">
-                        <span className="text-grid-400">Block Round</span>
-                        <span className="text-white font-semibold">#{completedTask.algorandTx.round}</span>
-                      </div>
-
-                      <div className="flex justify-between">
-                        <span className="text-grid-400">Total Settlement</span>
-                        <div className="text-right">
-                          <span className="text-brand-emerald font-semibold">{completedTask.actualCostAlgo} ALGO</span>
-                          <span className="text-[10px] text-grid-400 block">≈ {(completedTask.actualCostAlgo * 0.22).toFixed(4)} USDC (ASA #10458941)</span>
-                        </div>
-                      </div>
-
-                      <div className="flex justify-between">
-                        <span className="text-grid-400">Protocol Fee (1.5%)</span>
-                        <span className="text-grid-200 font-semibold">{completedTask.x402Challenge.agentGridFeeAlgo} ALGO</span>
-                      </div>
-
-                      <div className="flex justify-between">
-                        <span className="text-grid-400">Provider Net Payout</span>
-                        <span className="text-grid-200 font-semibold">{completedTask.x402Challenge.providerPayoutAlgo} ALGO</span>
-                      </div>
-                    </div>
-
-                    <div className="bg-black/70 p-3 rounded-lg border border-white/[0.08] space-y-1.5">
-                      <div className="text-[10px] text-grid-400 uppercase">Cryptographic Payment Token</div>
-                      <div className="text-[11px] text-white break-all bg-black p-2 rounded border border-white/[0.08]">
-                        {completedTask.paymentProof.paymentToken}
-                      </div>
-                    </div>
-
-                    {/* Download Cryptographic Audit Receipt Button */}
-                    <button
-                      onClick={exportCryptographicReceipt}
-                      className="w-full py-2 px-3 rounded-lg bg-black hover:bg-white/[0.05] border border-white/[0.12] hover:border-brand-emerald/40 text-xs font-mono text-white hover:text-brand-emerald flex items-center justify-center space-x-2 transition-all shadow-sm active:scale-95"
-                    >
-                      <FileText className="w-3.5 h-3.5 text-brand-emerald" />
-                      <span>Download Cryptographic Receipt (.json)</span>
-                    </button>
-                  </div>
-                ) : (
-                  <div className="text-grid-500 text-center py-12">
-                    Algorand settlement details will render upon execution completion.
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* x402 Facilitator Tab */}
-            {activeInspectorTab === 'x402' && (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-mono text-grid-400 uppercase tracking-wide">GoPlausible x402 AVM Facilitator</span>
-                  <span className="text-[10px] text-brand-emerald bg-brand-emerald/10 px-2 py-0.5 rounded border border-brand-emerald/20">
-                    avm:exact
-                  </span>
-                </div>
-                
-                {completedTask ? (
-                  <div className="space-y-2">
-                    <div className="text-xs text-grid-300">
-                      Standardized <span className="font-semibold text-brand-emerald">RFC 7235 / x402</span> headers verified through GoPlausible Facilitator:
-                    </div>
-
-                    <pre className="p-3 bg-black rounded-lg border border-white/[0.08] text-[11px] text-grid-200 overflow-x-auto">
-{`HTTP/1.1 402 Payment Required
-WWW-Authenticate: ${completedTask.x402Challenge.headers['WWW-Authenticate']}
-X-402-Payment-Address: ${completedTask.x402Challenge.headers['X-402-Payment-Address']}
-X-402-Amount: ${completedTask.x402Challenge.headers['X-402-Amount']} (µALGO)
-X-402-Currency: ALGO-micro
-X-402-Network: Algorand-TestNet
-X-402-Facilitator: https://facilitator.goplausible.xyz
-X-402-Scheme: avm:exact
-X-402-Nonce: ${completedTask.x402Challenge.headers['X-402-Nonce']}`}
-                    </pre>
-
-                    <div className="p-3 bg-black/60 rounded-lg border border-white/[0.08] text-xs text-grid-300 space-y-1">
-                      <div className="text-white font-bold">Facilitator Settlement Status:</div>
-                      <div>• Provider Address: <code className="text-brand-emerald text-[11px]">{completedTask.x402Challenge.destinationAddress}</code></div>
-                      <div>• Facilitator Endpoint: <code className="text-white text-[11px]">https://facilitator.goplausible.xyz</code></div>
-                      <div>• Scheme: <code className="text-brand-emerald text-[11px]">avm:exact</code></div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-grid-500 text-center py-12">
-                    x402 challenge negotiation records will appear during execution.
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Events Log Tab */}
-            {activeInspectorTab === 'events' && (
-              <div className="space-y-2">
-                <div className="text-[11px] font-mono text-grid-400 uppercase tracking-wide">Real-time Pipeline Telemetry Events</div>
-                <div className="space-y-2">
-                  {events.map((ev, i) => (
-                    <div key={i} className="p-2.5 bg-black rounded border border-white/[0.08] text-[11px]">
-                      <div className="flex items-center justify-between text-grid-400 mb-1">
-                        <span className="font-bold text-brand-emerald uppercase tracking-tight">{ev.stage}</span>
-                        <span>{new Date(ev.timestamp).toLocaleTimeString()}</span>
-                      </div>
-                      <div className="text-white">{ev.message}</div>
-                    </div>
-                  ))}
-                  {events.length === 0 && (
-                    <div className="text-grid-500 text-center py-12">No telemetry events logged yet.</div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+      )}
     </div>
   );
 };
