@@ -83,7 +83,12 @@ console.log(`  💳 Protocol: x402 HTTP Payment Standard`);
 console.log(`  🤖 Gemini AI Live Streaming: ${process.env.GEMINI_API_KEY ? 'ACTIVE ✅' : 'SIMULATED (No API key found)'}`);
 console.log(`======================================================\n`);
 
-serve({
-  fetch: app.fetch,
-  port: PORT
-});
+if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL) {
+  serve({
+    fetch: app.fetch,
+    port: PORT
+  });
+}
+
+export { app };
+export default app;
