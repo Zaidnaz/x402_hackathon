@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import { useWallet } from '../context/WalletContext';
 import { TaskRequirement, RoutingDecision, TaskModality } from '../types';
-import { analyzePrompt, evaluateRoute } from '../utils/api';
+import { analyzePrompt, evaluateRoute, generateFallbackRoute } from '../utils/api';
 import { TourGuideButton } from './TourGuideButton';
 
 interface CommandCenterProps {
@@ -94,8 +94,8 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
   // Progressive Disclosure: Advanced Settings Toggle
   const [showAdvanced, setShowAdvanced] = useState(false);
 
-  // Live preview decision & custom candidate selection
-  const [previewRouting, setPreviewRouting] = useState<RoutingDecision | null>(null);
+  // Live preview decision & custom candidate selection (pre-populated so it is NEVER blank on production)
+  const [previewRouting, setPreviewRouting] = useState<RoutingDecision | null>(() => generateFallbackRoute());
   const [selectedCandidateIndex, setSelectedCandidateIndex] = useState(0);
   const [isEvaluating, setIsEvaluating] = useState(false);
   const [isSigningPera, setIsSigningPera] = useState(false);
