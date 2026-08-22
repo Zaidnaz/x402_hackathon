@@ -186,7 +186,7 @@ export const AlgorandLedger: React.FC = () => {
                 <th className="py-3 px-4">Protocol Fee</th>
                 <th className="py-3 px-4">Status</th>
                 <th className="py-3 px-4">Timestamp</th>
-                <th className="py-3 px-4 text-right">Lora Explorer</th>
+                <th data-tour="lora-link-btn" className="py-3 px-4 text-right">Lora Explorer</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[0.06]">
