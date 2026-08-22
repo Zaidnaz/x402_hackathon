@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { TaskRequirement, RoutingDecision, CandidateEvaluation } from '../types';
 import { analyzePrompt, evaluateRoute } from '../utils/api';
-import { HowItWorksBanner } from './HowItWorksBanner';
+import { HowThisWorksButton } from './HowThisWorksButton';
 
 export const RoutingMatrix: React.FC = () => {
   const [prompt, setPrompt] = useState('Optimize parallel matrix multiplication in CUDA C++');
@@ -66,30 +66,44 @@ export const RoutingMatrix: React.FC = () => {
             AgentGrid evaluates all active combinatorial permutations of <span className="text-grid-200">Model $\times$ Compute</span> nodes to find non-dominated Pareto-optimal choices.
           </p>
         </div>
+        <div className="flex items-center space-x-2">
+          <HowThisWorksButton
+            guide={{
+              pageTitle: "Multi-Objective Pareto Frontier & Matrix",
+              badge: "Optimization Engine",
+              tagline: "Mathematical Elimination of Sub-Optimal Node Combinations",
+              overview: "In open compute networks, picking a GPU or model isn't just about lowest price or highest raw FLOPS. AgentGrid evaluates all active combinatorial Model x Compute permutations to find non-dominated Pareto-optimal choices.",
+              steps: [
+                {
+                  title: "1. Tune Objective Weights",
+                  desc: "Adjust the weight sliders for Cost, Latency, Quality, and Reliability to reflect different autonomous agent goals.",
+                  highlightAction: "Drag Sliders"
+                },
+                {
+                  title: "2. Watch Real-Time Matrix Re-Ranking",
+                  desc: "The combinatorial matrix instantly calculates multi-dimensional scalarized scores across all hardware nodes.",
+                  highlightAction: "View Ranked Table"
+                },
+                {
+                  title: "3. Verify Non-Dominated Pareto Status",
+                  desc: "Non-dominated nodes are strictly optimal trade-offs where no alternative node is both cheaper and faster.",
+                  highlightAction: "NON-DOMINATED Tag"
+                }
+              ],
+              whatToLookFor: [
+                "Rank #1 dynamically updates as you shift priority between budget and latency.",
+                "SLA Adherence flags verify if each candidate meets max latency and budget bounds.",
+                "Composite score breakdown calculated per token."
+              ],
+              evaluationTip: "Slide Cost Weight to 80% to see lightweight nodes rise to Rank #1; increase Quality Weight to 80% to see NVIDIA H100/H200 dominate."
+            }}
+          />
 
+          <div className="bg-grid-950 px-3.5 py-2 rounded-lg border border-grid-800 text-xs font-mono text-grid-300">
+            Permutations: <strong className="text-signal-amber font-semibold">{routing?.evaluatedCandidatesCount || 0}</strong>
+          </div>
+        </div>
       </div>
-
-      {/* Interactive Page Tutorial Banner */}
-      <HowItWorksBanner
-        pageTitle="Deterministic Pareto Optimization"
-        badgeText="Mathematical Matrix"
-        summary="This matrix illustrates how AgentGrid performs multi-objective optimization across all Model x Compute combinations to mathematically eliminate sub-optimal routes and find the Pareto frontier."
-        steps={[
-          {
-            title: "1. Adjust Objective Weights",
-            desc: "Drag the sliders for Cost, Latency, Quality, and Reliability to simulate different agent priorities."
-          },
-          {
-            title: "2. Watch Real-time Scoring",
-            desc: "The combinatorial candidate matrix re-ranks every Model + GPU node permutation in real time using the composite score formula."
-          },
-          {
-            title: "3. Identify Non-Dominated Nodes",
-            desc: "Nodes marked 'NON-DOMINATED' represent optimal trade-offs where no other node is strictly better in all dimensions."
-          }
-        ]}
-        proTip="Increase Cost Weight to 80% to see lightweight nodes rise to Rank #1; increase Quality Weight to 80% to see NVIDIA H100/H200 dominate."
-      />
 
       {/* Interactive Weight Controllers */}
       <div className="bg-grid-900 border border-grid-800 rounded-xl p-5 space-y-4">

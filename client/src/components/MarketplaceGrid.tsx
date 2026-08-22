@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { ModelProvider, ComputeProvider } from '../types';
 import { toggleComputeStatus } from '../utils/api';
-import { HowItWorksBanner } from './HowItWorksBanner';
+import { HowThisWorksButton } from './HowThisWorksButton';
 
 interface MarketplaceGridProps {
   models: ModelProvider[];
@@ -64,6 +64,38 @@ export const MarketplaceGrid: React.FC<MarketplaceGridProps> = ({
         </div>
 
         <div className="flex items-center space-x-2">
+          <HowThisWorksButton
+            guide={{
+              pageTitle: "Decentralized Model & GPU Compute Fleet",
+              badge: "Service Discovery Registry",
+              tagline: "Live Telemetry, Benchmark Scoring & Node Registration",
+              overview: "The Marketplace acts as an open, decentralized service registry where independent GPU compute clusters and foundation model hosts publish their endpoint capabilities, pricing, and Algorand payout addresses.",
+              steps: [
+                {
+                  title: "1. Inspect Real-Time Fleet Telemetry",
+                  desc: "Browse high-end NVIDIA H100, A100, and Serverless clusters with live VRAM, NVLink interconnect bandwidth, and spot rates.",
+                  highlightAction: "View GPU Cards"
+                },
+                {
+                  title: "2. Register New Infrastructure Nodes",
+                  desc: "Click 'Register Provider' to onboard a custom model or GPU inference endpoint with an Algorand receiver wallet.",
+                  highlightAction: "Register Provider Button"
+                },
+                {
+                  title: "3. Test Dynamic Fault Adaptation",
+                  desc: "Click the status badge on any GPU card (Active ➔ Degraded ➔ Offline) to simulate cluster degradation and watch the Pareto router bypass failing hardware.",
+                  highlightAction: "Click Status Pill"
+                }
+              ],
+              whatToLookFor: [
+                "Dual pricing in USD spot rate and per-token micro-ALGO equivalents.",
+                "Individual Algorand TestNet payout wallet addresses bound to each cluster.",
+                "Live hardware specs: VRAM GB, context window capacity, and baseline TPS."
+              ],
+              evaluationTip: "Toggle a GPU node to 'Degraded' and go back to the Console to verify that AgentGrid automatically avoids routing traffic to it!"
+            }}
+          />
+
           <button
             onClick={onRefreshCatalog}
             className="p-2.5 rounded-lg bg-grid-950 border border-grid-800 hover:border-grid-700 text-grid-400 hover:text-grid-200 text-xs font-mono flex items-center space-x-1.5 transition-all"
@@ -80,28 +112,6 @@ export const MarketplaceGrid: React.FC<MarketplaceGridProps> = ({
           </button>
         </div>
       </div>
-
-      {/* Interactive Page Tutorial Banner */}
-      <HowItWorksBanner
-        pageTitle="Decentralized Compute Marketplace"
-        badgeText="Service Registry"
-        summary="This marketplace acts as the open discovery registry where GPU hosts and foundation models publish their live endpoint capabilities, spot pricing, and Algorand payout addresses."
-        steps={[
-          {
-            title: "1. Inspect Fleet Telemetry",
-            desc: "Browse NVIDIA H100, A100, and Serverless clusters with real-time VRAM, interconnect bandwidth, and spot rates."
-          },
-          {
-            title: "2. Register New Providers",
-            desc: "Click 'Register Provider' to simulate onboarding a custom vLLM inference node with an Algorand payout wallet."
-          },
-          {
-            title: "3. Test Node Status Cycle",
-            desc: "Click the status badge on any GPU card (Active ➔ Degraded ➔ Offline) to test how the Pareto router avoids degraded nodes."
-          }
-        ]}
-        proTip="Switch a GPU node to 'Degraded' and watch the Console automatically avoid it during Pareto routing!"
-      />
 
       {/* Tab Filter */}
       <div className="flex items-center space-x-2 border-b border-grid-800 pb-3">

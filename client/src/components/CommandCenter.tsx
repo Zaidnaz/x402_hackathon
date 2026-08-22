@@ -23,7 +23,7 @@ import {
 import { useWallet } from '../context/WalletContext';
 import { TaskRequirement, RoutingDecision, TaskModality } from '../types';
 import { analyzePrompt, evaluateRoute } from '../utils/api';
-import { HowItWorksBanner } from './HowItWorksBanner';
+import { HowThisWorksButton } from './HowThisWorksButton';
 
 interface CommandCenterProps {
   onDispatchTask: (
@@ -184,40 +184,53 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header Banner */}
-      <div className="text-center space-y-2 pb-2">
-        <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-brand-emerald/10 border border-brand-emerald/25 text-xs font-mono text-brand-emerald">
-          <Sparkles className="w-3.5 h-3.5" />
-          <span>Autonomous AI Infrastructure Dispatcher</span>
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pb-2">
+        <div className="text-center sm:text-left space-y-1.5">
+          <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-emerald/10 border border-brand-emerald/25 text-xs font-mono text-brand-emerald">
+            <Sparkles className="w-3 h-3" />
+            <span>Autonomous AI Infrastructure Dispatcher</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-bold font-mono text-white">
+            Agent Task Execution Console
+          </h1>
+          <p className="text-xs sm:text-sm text-grid-300 max-w-xl font-sans">
+            Pick a workload preset or enter custom prompt. AgentGrid dynamically selects the optimal model & GPU, negotiates x402 payment, and settles on Algorand.
+          </p>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-bold font-mono text-white">
-          Agent Task Execution Console
-        </h1>
-        <p className="text-xs sm:text-sm text-grid-300 max-w-xl mx-auto font-sans">
-          Pick a workload preset or enter custom prompt. AgentGrid dynamically selects the optimal model & GPU, negotiates x402 payment, and settles on Algorand.
-        </p>
-      </div>
 
-      {/* Interactive Page Tutorial Banner */}
-      <HowItWorksBanner
-        pageTitle="Console & Autonomous Execution"
-        badgeText="Core Orchestrator"
-        summary="This console demonstrates how an autonomous AI agent accepts tasks with strict budget and SLA constraints, automatically selects the optimal GPU compute node, and pays on-demand using x402 micropayments on Algorand."
-        steps={[
-          {
-            title: "1. Select or Enter Prompt",
-            desc: "Pick any of the 4 archetypes (Code, Reasoning, Batch, Chat) or type a custom prompt."
-          },
-          {
-            title: "2. Dispatch & Settle",
-            desc: "Click 'Dispatch Autonomous Workload'. If your Pera Wallet is connected, sign on your phone (or let the autonomous agent settle)."
-          },
-          {
-            title: "3. Verify on Lora",
-            desc: "Watch the 6-stage pipeline negotiate the x402 paywall and click 'Inspect on Lora' to view the confirmed block round on Algorand."
-          }
-        ]}
-        proTip="Enable 'Simulate Regional Node Failure' in advanced settings to showcase zero-downtime dynamic failover with 0 dropped tokens!"
-      />
+        <HowThisWorksButton
+          guide={{
+            pageTitle: "Agent Task Console & Autonomous Pipeline",
+            badge: "Core Orchestration",
+            tagline: "End-to-End Autonomous AI Compute Brokerage",
+            overview: "This console simulates how an autonomous AI agent accepts user prompts with strict budgets and SLA deadlines, benchmarks open GPU/model nodes using Pareto optimization, pays on-demand using x402 on Algorand, and streams live tokens with zero-downtime failover.",
+            steps: [
+              {
+                title: "1. Select a Workload Archetype",
+                desc: "Choose from Fast Code Gen, Deep Math & Logic, Batch Summarization, or Low-Latency Chat (or type any custom prompt).",
+                highlightAction: "Click any top preset"
+              },
+              {
+                title: "2. Dispatch & Settle on Algorand",
+                desc: "Click 'Dispatch Autonomous Workload'. If Pera Wallet is connected, sign on your phone; otherwise the autonomous agent settles automatically in ~2.8s.",
+                highlightAction: "Green Dispatch Button"
+              },
+              {
+                title: "3. Verify on Lora & Download Receipt",
+                desc: "Watch the 6-stage HUD negotiate the GoPlausible x402 challenge, stream Gemini AI tokens, click 'Open in Lora' for on-chain block proof, and download the cryptographic receipt.",
+                highlightAction: "Inspector Panel"
+              }
+            ],
+            whatToLookFor: [
+              "Stage 4: RFC 7235 x402 challenge via GoPlausible Facilitator (avm:exact).",
+              "Stage 5: Live confirmed block round number and micro-ALGO fees on Algorand TestNet.",
+              "1-Click 'Inspect on Lora' link directly to https://lora.algokit.io/testnet.",
+              "Live Gemini 3.7 / 2.0 Flash-Lite real-time streaming output."
+            ],
+            evaluationTip: "Toggle 'Simulate Regional Node Failure' in advanced settings to show judges live zero-downtime dynamic failover without losing tokens!"
+          }}
+        />
+      </div>
 
       {/* 1-Click Workload Archetype Selector */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

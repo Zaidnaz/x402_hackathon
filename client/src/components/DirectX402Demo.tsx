@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { useWallet } from '../context/WalletContext';
 import { testDirectX402 } from '../utils/api';
-import { HowItWorksBanner } from './HowItWorksBanner';
+import { HowThisWorksButton } from './HowThisWorksButton';
 
 export const DirectX402Demo: React.FC = () => {
   const { isConnected, walletAddress, connectWallet, executePeraPayment } = useWallet();
@@ -108,38 +108,56 @@ export const DirectX402Demo: React.FC = () => {
             <span className="w-2 h-2 rounded-full bg-brand-emerald animate-pulse" />
             <span className="text-xs font-mono uppercase tracking-widest text-brand-emerald font-semibold">Standardized RFC 7235 / x402 Engine</span>
           </div>
+          <h2 className="text-xl font-bold font-mono text-white">
+            Direct x402 HTTP Paywall Interactive Testbed
+          </h2>
+          <p className="text-xs font-mono text-grid-300 mt-1 max-w-2xl">
+            Test how an autonomous agent or user wallet interacts with a paid HTTP inference endpoint over the raw <span className="text-white font-semibold">x402 protocol</span> with GoPlausible facilitator settlement on Algorand TestNet.
+          </p>
         </div>
 
-        <button
-          onClick={handleReset}
-          className="p-2.5 rounded-lg bg-black/60 border border-white/[0.08] hover:border-white/[0.2] text-grid-300 hover:text-white text-xs font-mono flex items-center space-x-1.5 transition-all"
-        >
-          <RefreshCw className="w-3.5 h-3.5" />
-          <span>Reset Session</span>
-        </button>
-      </div>
+        <div className="flex items-center space-x-2">
+          <HowThisWorksButton
+            guide={{
+              pageTitle: "Direct x402 HTTP Paywall Testbed",
+              badge: "RFC 7235 Standard",
+              tagline: "Live Machine-to-Machine 402 Challenge & Settlement Lifecycle",
+              overview: "This testbed allows evaluators and developers to manually trigger and inspect each discrete step of the HTTP 402 Payment Required negotiation cycle defined in RFC 7235 and the GoPlausible Facilitator standard on Algorand.",
+              steps: [
+                {
+                  title: "Phase 1: Send Unauthenticated GET",
+                  desc: "Trigger the paywall without credentials. The server responds with HTTP 402 Payment Required containing WWW-Authenticate and X-402 headers.",
+                  highlightAction: "Phase 1 Button"
+                },
+                {
+                  title: "Phase 2: Settle on Algorand",
+                  desc: "Click 'Sign via Pera Wallet' to execute an on-chain transfer of 0.15 ALGO to the node's payout address on TestNet.",
+                  highlightAction: "Phase 2 Button"
+                },
+                {
+                  title: "Phase 3: Authorized Payload Retrieval",
+                  desc: "Pass the cryptographic payment token in 'Authorization: x402 <token>'. The server verifies the on-chain receipt and returns HTTP 200 OK + inference payload.",
+                  highlightAction: "Phase 3 Button"
+                }
+              ],
+              whatToLookFor: [
+                "Real HTTP 402 status code and custom X-402-Facilitator & X-402-Scheme headers.",
+                "Confirmed transaction round on Algorand TestNet with 1-click Lora explorer link.",
+                "Developer integration snippets showing @x402/fetch and raw cURL."
+              ],
+              evaluationTip: "Check the raw headers in the response inspector below to see X-402-Facilitator: https://facilitator.goplausible.xyz and X-402-Scheme: avm:exact in action!"
+            }}
+          />
 
-      {/* Interactive Page Tutorial Banner */}
-      <HowItWorksBanner
-        pageTitle="x402 HTTP Paywall Interactive Sandbox"
-        badgeText="RFC 7235 Standard"
-        summary="This sandbox allows developers and evaluators to manually test the raw machine-to-machine HTTP 402 challenge/response lifecycle without writing code."
-        steps={[
-          {
-            title: "Phase 1: Trigger Challenge",
-            desc: "Click 'Send GET Request'. The server denies unauthenticated access and returns HTTP 402 with GoPlausible challenge headers."
-          },
-          {
-            title: "Phase 2: On-Chain Settle",
-            desc: "Click 'Sign via Pera Wallet' (or 'Settle on TestNet') to execute the 0.15 ALGO micro-settlement and extract the payment token."
-          },
-          {
-            title: "Phase 3: Fetch with Token",
-            desc: "Click 'Fetch with x402 Token' to pass 'Authorization: x402 <token>' and receive HTTP 200 OK + inference result."
-          }
-        ]}
-        proTip="Inspect the raw response headers in the transaction inspector below to view X-402-Facilitator and avm:exact scheme headers."
-      />
+          <button
+            onClick={handleReset}
+            className="p-2.5 rounded-lg bg-black/60 border border-white/[0.08] hover:border-white/[0.2] text-grid-300 hover:text-white text-xs font-mono flex items-center space-x-1.5 transition-all"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            <span>Reset Session</span>
+          </button>
+        </div>
+      </div>
 
       {/* Interactive 3-Step Guided Walkthrough */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs">

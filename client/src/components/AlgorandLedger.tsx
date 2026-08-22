@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { AlgorandAccountInfo, AlgorandTransactionRecord } from '../types';
 import { fetchAccounts, fetchTransactions } from '../utils/api';
-import { HowItWorksBanner } from './HowItWorksBanner';
+import { HowThisWorksButton } from './HowThisWorksButton';
 
 export const AlgorandLedger: React.FC = () => {
   const [accounts, setAccounts] = useState<AlgorandAccountInfo[]>([]);
@@ -54,42 +54,54 @@ export const AlgorandLedger: React.FC = () => {
             <span className="w-2 h-2 rounded-full bg-brand-emerald animate-pulse" />
             <span className="text-xs font-mono uppercase tracking-widest text-brand-emerald font-semibold">Algorand TestNet Settlement Layer</span>
           </div>
-          <h2 className="text-xl font-bold font-mono text-white">
-            x402 Micropayments & GoPlausible Facilitator Ledger
-          </h2>
+          <p className="text-xs font-mono text-grid-300 mt-1 max-w-2xl">
+            Autonomous agent wallets pay compute providers on a per-task basis. AgentGrid smart escrow enforces atomic settlements with a <span className="text-white font-semibold">1.5% protocol fee</span> routed to treasury.
+          </p>
         </div>
 
-        <button
-          onClick={loadData}
-          disabled={loading}
-          className="p-2.5 rounded-lg bg-black/60 border border-white/[0.08] hover:border-white/[0.2] text-grid-300 hover:text-white text-xs font-mono flex items-center space-x-1.5 transition-all"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-brand-emerald' : ''}`} />
-          <span>Sync Ledger</span>
-        </button>
-      </div>
+        <div className="flex items-center space-x-2">
+          <HowThisWorksButton
+            guide={{
+              pageTitle: "Algorand TestNet Settlement & Audit Hub",
+              badge: "Audit Infrastructure",
+              tagline: "Immutable On-Chain Verification & Fee Flow",
+              overview: "Every AI inference request routed through AgentGrid produces an immutable on-chain transaction receipt on Algorand TestNet, linking the API call, round number, micro-ALGO fee, and GoPlausible facilitator token.",
+              steps: [
+                {
+                  title: "1. Monitor Participant Balances",
+                  desc: "Inspect live balances of autonomous Agent Wallets, decentralized GPU Node accounts, and the Protocol Treasury fee receiver.",
+                  highlightAction: "Account Cards"
+                },
+                {
+                  title: "2. Inspect Transaction Receipts",
+                  desc: "Every completed inference workload records its transaction ID, round height, exact micro-ALGO amount, and confirmed status.",
+                  highlightAction: "Transaction Table"
+                },
+                {
+                  title: "3. 1-Click Lora Explorer Proof",
+                  desc: "Click 'Lora' on any row to open the transaction directly on the official AlgoKit Lora TestNet explorer.",
+                  highlightAction: "Lora Button"
+                }
+              ],
+              whatToLookFor: [
+                "1.5% protocol fee automatically deducted and routed to the treasury wallet.",
+                "Real block round numbers from Algorand TestNet.",
+                "Direct links to official Lora and Pera blockchain explorers."
+              ],
+              evaluationTip: "Copy any transaction ID from this table and search it on https://lora.algokit.io/testnet to prove zero non-repudiation!"
+            }}
+          />
 
-      {/* Interactive Page Tutorial Banner */}
-      <HowItWorksBanner
-        pageTitle="Algorand TestNet Settlement & Audit Hub"
-        badgeText="Audit Infrastructure"
-        summary="This ledger provides an immutable audit trail linking every AI inference execution to its real-world on-chain transaction receipt, account balance changes, and 1.5% treasury protocol fee distribution."
-        steps={[
-          {
-            title: "1. Monitor Participant Wallets",
-            desc: "View live balances of Agent Wallets, decentralized GPU Compute Nodes, and the Protocol Treasury."
-          },
-          {
-            title: "2. Inspect Live Transactions",
-            desc: "Every task execution produces a confirmed transaction with round numbers, micro-ALGO fees, and GoPlausible facilitator tokens."
-          },
-          {
-            title: "3. 1-Click Lora Verification",
-            desc: "Click 'Lora' on any row to open the transaction directly on the official AlgoKit Lora TestNet explorer."
-          }
-        ]}
-        proTip="Every API response returned to an agent includes the confirmed txId and block round, guaranteeing zero non-repudiation."
-      />
+          <button
+            onClick={loadData}
+            disabled={loading}
+            className="p-2.5 rounded-lg bg-black/60 border border-white/[0.08] hover:border-white/[0.2] text-grid-300 hover:text-white text-xs font-mono flex items-center space-x-1.5 transition-all"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-brand-emerald' : ''}`} />
+            <span>Sync Ledger</span>
+          </button>
+        </div>
+      </div>
 
       {/* Account Balances Grid */}
       <div className="space-y-3">
