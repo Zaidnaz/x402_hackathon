@@ -23,7 +23,7 @@ import {
 import { useWallet } from '../context/WalletContext';
 import { TaskRequirement, RoutingDecision, TaskModality } from '../types';
 import { analyzePrompt, evaluateRoute } from '../utils/api';
-import { HowThisWorksButton } from './HowThisWorksButton';
+import { TourGuideButton } from './TourGuideButton';
 
 interface CommandCenterProps {
   onDispatchTask: (
@@ -198,42 +198,46 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
           </p>
         </div>
 
-        <HowThisWorksButton
-          guide={{
-            pageTitle: "Agent Task Console & Autonomous Pipeline",
-            badge: "Core Orchestration",
-            tagline: "End-to-End Autonomous AI Compute Brokerage",
-            overview: "This console simulates how an autonomous AI agent accepts user prompts with strict budgets and SLA deadlines, benchmarks open GPU/model nodes using Pareto optimization, pays on-demand using x402 on Algorand, and streams live tokens with zero-downtime failover.",
-            steps: [
-              {
-                title: "1. Select a Workload Archetype",
-                desc: "Choose from Fast Code Gen, Deep Math & Logic, Batch Summarization, or Low-Latency Chat (or type any custom prompt).",
-                highlightAction: "Click any top preset"
-              },
-              {
-                title: "2. Dispatch & Settle on Algorand",
-                desc: "Click 'Dispatch Autonomous Workload'. If Pera Wallet is connected, sign on your phone; otherwise the autonomous agent settles automatically in ~2.8s.",
-                highlightAction: "Green Dispatch Button"
-              },
-              {
-                title: "3. Verify on Lora & Download Receipt",
-                desc: "Watch the 6-stage HUD negotiate the GoPlausible x402 challenge, stream Gemini AI tokens, click 'Open in Lora' for on-chain block proof, and download the cryptographic receipt.",
-                highlightAction: "Inspector Panel"
-              }
-            ],
-            whatToLookFor: [
-              "Stage 4: RFC 7235 x402 challenge via GoPlausible Facilitator (avm:exact).",
-              "Stage 5: Live confirmed block round number and micro-ALGO fees on Algorand TestNet.",
-              "1-Click 'Inspect on Lora' link directly to https://lora.algokit.io/testnet.",
-              "Live Gemini 3.7 / 2.0 Flash-Lite real-time streaming output."
-            ],
-            evaluationTip: "Toggle 'Simulate Regional Node Failure' in advanced settings to show judges live zero-downtime dynamic failover without losing tokens!"
-          }}
+        <TourGuideButton
+          tourId="console-tour"
+          buttonLabel="Interactive Spotlight Tour"
+          steps={[
+            {
+              targetSelector: '[data-tour="preset-archetypes"]',
+              title: "1. Workload Presets",
+              description: "Pick an AI workload preset (Fast Code, Math/Reasoning, Batch Summarization, or Low-Latency Chat) or enter custom prompt requirements."
+            },
+            {
+              targetSelector: '[data-tour="prompt-input"]',
+              title: "2. Prompt & Token Estimator",
+              description: "AgentGrid automatically extracts intent, calculates estimated tokens, and establishes SLA constraints."
+            },
+            {
+              targetSelector: '[data-tour="priority-selector"]',
+              title: "3. Optimization Priority",
+              description: "Choose your primary goal: Max Quality, Ultra-Low Latency, Lowest Cost, or Balanced Pareto Frontier."
+            },
+            {
+              targetSelector: '[data-tour="pareto-preview"]',
+              title: "4. Live Pareto Optimal Pair",
+              description: "AgentGrid pre-calculates the optimal hardware + model combination with estimated micro-ALGO cost, latency, and quality score."
+            },
+            {
+              targetSelector: '[data-tour="wallet-status"]',
+              title: "5. Algorand Pera Wallet Settlement",
+              description: "Connect your mobile Pera Wallet to sign real on-chain transactions on TestNet, or let the autonomous agent wallet settle seamlessly."
+            },
+            {
+              targetSelector: '[data-tour="dispatch-btn"]',
+              title: "6. Dispatch & Settle",
+              description: "Click here to trigger the 6-stage autonomous pipeline, negotiate the x402 paywall, and stream live AI tokens."
+            }
+          ]}
         />
       </div>
 
       {/* 1-Click Workload Archetype Selector */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div data-tour="preset-archetypes" className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {PRESET_PROMPTS.map((p) => {
           const Icon = p.icon;
           const isSelected = selectedPresetId === p.id;
@@ -262,7 +266,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
       {/* Main Task Input Card */}
       <div className="bg-black/75 border border-white/[0.09] rounded-2xl p-5 sm:p-6 space-y-5 shadow-2xl backdrop-blur-md">
         {/* Prompt Input */}
-        <div className="space-y-2">
+        <div data-tour="prompt-input" className="space-y-2">
           <div className="flex items-center justify-between text-xs font-mono">
             <span className="text-grid-200 font-semibold uppercase tracking-wider flex items-center space-x-1.5">
               <Sparkles className="w-3.5 h-3.5 text-brand-emerald" />
@@ -287,7 +291,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
         </div>
 
         {/* Priority Objective Pills */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-white/[0.08]">
+        <div data-tour="priority-selector" className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-white/[0.08]">
           <div className="text-xs font-mono text-grid-300">Optimization Goal:</div>
           <div className="flex flex-wrap gap-2">
             {[
@@ -392,7 +396,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
 
         {/* Live Pre-Evaluation Card */}
         {previewRouting && (
-          <div className="bg-grid-950 p-3.5 rounded-xl border border-white/[0.08] text-xs font-mono flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div data-tour="pareto-preview" className="bg-grid-950 p-3.5 rounded-xl border border-white/[0.08] text-xs font-mono flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="space-y-0.5">
               <div className="text-[10px] text-grid-400 uppercase">Optimal Pareto Pair</div>
               <div className="text-white font-semibold">
@@ -417,57 +421,61 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
         )}
 
         {/* Pera Wallet Status Banner */}
-        {isConnected ? (
-          <div className="px-3.5 py-2.5 rounded-lg bg-brand-emerald/10 border border-brand-emerald/30 text-xs font-mono text-brand-emerald flex items-center justify-between">
-            <span className="flex items-center space-x-1.5">
-              <CheckCircle2 className="w-3.5 h-3.5 text-brand-emerald" />
-              <span>Settlement via Connected Pera Wallet ({walletAddress?.substring(0, 6)}...{walletAddress?.substring(walletAddress.length - 4)})</span>
-            </span>
-            <span className="text-[10px] uppercase font-bold text-brand-emerald">On-Chain Signer Ready</span>
-          </div>
-        ) : (
-          <div className="px-3.5 py-2.5 rounded-lg bg-grid-950 border border-white/[0.08] text-xs font-mono text-grid-300 flex items-center justify-between">
-            <span className="flex items-center space-x-1.5">
-              <Wallet className="w-3.5 h-3.5 text-brand-emerald" />
-              <span>Sign real Algorand transactions with Pera Wallet:</span>
-            </span>
-            <button
-              onClick={connectWallet}
-              className="text-brand-emerald hover:underline text-[11px] font-semibold"
-            >
-              Connect Pera Wallet →
-            </button>
-          </div>
-        )}
+        <div data-tour="wallet-status">
+          {isConnected ? (
+            <div className="px-3.5 py-2.5 rounded-lg bg-brand-emerald/10 border border-brand-emerald/30 text-xs font-mono text-brand-emerald flex items-center justify-between">
+              <span className="flex items-center space-x-1.5">
+                <CheckCircle2 className="w-3.5 h-3.5 text-brand-emerald" />
+                <span>Settlement via Connected Pera Wallet ({walletAddress?.substring(0, 6)}...{walletAddress?.substring(walletAddress.length - 4)})</span>
+              </span>
+              <span className="text-[10px] uppercase font-bold text-brand-emerald">On-Chain Signer Ready</span>
+            </div>
+          ) : (
+            <div className="px-3.5 py-2.5 rounded-lg bg-grid-950 border border-white/[0.08] text-xs font-mono text-grid-300 flex items-center justify-between">
+              <span className="flex items-center space-x-1.5">
+                <Wallet className="w-3.5 h-3.5 text-brand-emerald" />
+                <span>Sign real Algorand transactions with Pera Wallet:</span>
+              </span>
+              <button
+                onClick={connectWallet}
+                className="text-brand-emerald hover:underline text-[11px] font-semibold"
+              >
+                Connect Pera Wallet →
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* Primary Action Button */}
-        <button
-          onClick={handleDispatch}
-          disabled={isStreaming || isSigningPera || !prompt.trim()}
-          className={`w-full py-4 px-6 rounded-xl font-mono font-bold text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center space-x-2 transition-all ${
-            isStreaming || isSigningPera
-              ? 'bg-grid-800 text-grid-400 cursor-not-allowed'
-              : 'bg-brand-emerald hover:bg-brand-emerald/90 text-black shadow-glow-emerald active:scale-[0.99]'
-          }`}
-        >
-          {isSigningPera ? (
-            <>
-              <Wallet className="w-4 h-4 animate-bounce text-black" />
-              <span>Confirming on Pera Wallet...</span>
-            </>
-          ) : isStreaming ? (
-            <>
-              <Zap className="w-4 h-4 animate-spin text-black" />
-              <span>Orchestrating across AgentGrid...</span>
-            </>
-          ) : (
-            <>
-              <Play className="w-4 h-4 fill-black text-black" />
-              <span>Dispatch Autonomous Workload</span>
-              <ArrowRight className="w-4 h-4 text-black" />
-            </>
-          )}
-        </button>
+        <div data-tour="dispatch-btn">
+          <button
+            onClick={handleDispatch}
+            disabled={isStreaming || isSigningPera || !prompt.trim()}
+            className={`w-full py-4 px-6 rounded-xl font-mono font-bold text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center space-x-2 transition-all ${
+              isStreaming || isSigningPera
+                ? 'bg-grid-800 text-grid-400 cursor-not-allowed'
+                : 'bg-brand-emerald hover:bg-brand-emerald/90 text-black shadow-glow-emerald active:scale-[0.99]'
+            }`}
+          >
+            {isSigningPera ? (
+              <>
+                <Wallet className="w-4 h-4 animate-bounce text-black" />
+                <span>Confirming on Pera Wallet...</span>
+              </>
+            ) : isStreaming ? (
+              <>
+                <Zap className="w-4 h-4 animate-spin text-black" />
+                <span>Orchestrating across AgentGrid...</span>
+              </>
+            ) : (
+              <>
+                <Play className="w-4 h-4 fill-black text-black" />
+                <span>Dispatch Autonomous Workload</span>
+                <ArrowRight className="w-4 h-4 text-black" />
+              </>
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );

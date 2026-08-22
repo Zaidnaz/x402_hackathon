@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { AlgorandAccountInfo, AlgorandTransactionRecord } from '../types';
 import { fetchAccounts, fetchTransactions } from '../utils/api';
-import { HowThisWorksButton } from './HowThisWorksButton';
+import { TourGuideButton } from './TourGuideButton';
 
 export const AlgorandLedger: React.FC = () => {
   const [accounts, setAccounts] = useState<AlgorandAccountInfo[]>([]);
@@ -60,36 +60,26 @@ export const AlgorandLedger: React.FC = () => {
         </div>
 
         <div className="flex items-center space-x-2">
-          <HowThisWorksButton
-            guide={{
-              pageTitle: "Algorand TestNet Settlement & Audit Hub",
-              badge: "Audit Infrastructure",
-              tagline: "Immutable On-Chain Verification & Fee Flow",
-              overview: "Every AI inference request routed through AgentGrid produces an immutable on-chain transaction receipt on Algorand TestNet, linking the API call, round number, micro-ALGO fee, and GoPlausible facilitator token.",
-              steps: [
-                {
-                  title: "1. Monitor Participant Balances",
-                  desc: "Inspect live balances of autonomous Agent Wallets, decentralized GPU Node accounts, and the Protocol Treasury fee receiver.",
-                  highlightAction: "Account Cards"
-                },
-                {
-                  title: "2. Inspect Transaction Receipts",
-                  desc: "Every completed inference workload records its transaction ID, round height, exact micro-ALGO amount, and confirmed status.",
-                  highlightAction: "Transaction Table"
-                },
-                {
-                  title: "3. 1-Click Lora Explorer Proof",
-                  desc: "Click 'Lora' on any row to open the transaction directly on the official AlgoKit Lora TestNet explorer.",
-                  highlightAction: "Lora Button"
-                }
-              ],
-              whatToLookFor: [
-                "1.5% protocol fee automatically deducted and routed to the treasury wallet.",
-                "Real block round numbers from Algorand TestNet.",
-                "Direct links to official Lora and Pera blockchain explorers."
-              ],
-              evaluationTip: "Copy any transaction ID from this table and search it on https://lora.algokit.io/testnet to prove zero non-repudiation!"
-            }}
+          <TourGuideButton
+            tourId="ledger-tour"
+            buttonLabel="Interactive Spotlight Tour"
+            steps={[
+              {
+                targetSelector: '[data-tour="participant-wallets"]',
+                title: "1. Network Participant Accounts",
+                description: "Live balances of Agent Wallets, independent GPU Node accounts, and the 1.5% Protocol Treasury receiver."
+              },
+              {
+                targetSelector: '[data-tour="settlement-history-table"]',
+                title: "2. Settlement History & Block Proof",
+                description: "Every AI inference execution records an immutable receipt with confirmed round height, micro-ALGO fee, and timestamp."
+              },
+              {
+                targetSelector: '[data-tour="lora-link-btn"]',
+                title: "3. 1-Click Lora Explorer Verification",
+                description: "Click 'Lora' to view the transaction directly on the official AlgoKit Lora TestNet explorer."
+              }
+            ]}
           />
 
           <button
@@ -104,7 +94,7 @@ export const AlgorandLedger: React.FC = () => {
       </div>
 
       {/* Account Balances Grid */}
-      <div className="space-y-3">
+      <div data-tour="participant-wallets" className="space-y-3">
         <div className="text-xs font-mono font-semibold uppercase tracking-wider text-grid-400 flex items-center space-x-2">
           <Wallet className="w-3.5 h-3.5 text-brand-emerald" />
           <span>Network Participant Accounts (Algorand TestNet)</span>
@@ -173,7 +163,7 @@ export const AlgorandLedger: React.FC = () => {
       </div>
 
       {/* Transaction History Table */}
-      <div className="bg-black/75 border border-white/[0.08] rounded-xl overflow-hidden shadow-sm">
+      <div data-tour="settlement-history-table" className="bg-black/75 border border-white/[0.08] rounded-xl overflow-hidden shadow-sm">
         <div className="p-4 bg-black border-b border-white/[0.08] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="text-xs font-mono font-semibold uppercase tracking-wider text-white flex items-center space-x-2">
             <Coins className="w-3.5 h-3.5 text-brand-emerald" />
@@ -200,7 +190,7 @@ export const AlgorandLedger: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[0.06]">
-              {transactions.map((tx) => {
+              {transactions.map((tx, idx) => {
                 const loraUrl = tx.loraUrl || `https://lora.algokit.io/testnet/transaction/${tx.txId}`;
                 return (
                   <tr key={tx.id} className="hover:bg-white/[0.02] transition-all">
@@ -236,16 +226,18 @@ export const AlgorandLedger: React.FC = () => {
                     </td>
 
                     <td className="py-3 px-4 text-right">
-                      <a
-                        href={loraUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="px-2.5 py-1 rounded bg-brand-emerald/15 hover:bg-brand-emerald/25 border border-brand-emerald/30 text-brand-emerald text-[11px] inline-flex items-center space-x-1 shadow-sm transition-all"
-                      >
-                        <Search className="w-3 h-3" />
-                        <span>Lora</span>
-                        <ArrowUpRight className="w-3 h-3" />
-                      </a>
+                      <div data-tour={idx === 0 ? "lora-link-btn" : undefined} className="inline-block">
+                        <a
+                          href={loraUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="px-2.5 py-1 rounded bg-brand-emerald/15 hover:bg-brand-emerald/25 border border-brand-emerald/30 text-brand-emerald text-[11px] inline-flex items-center space-x-1 shadow-sm transition-all"
+                        >
+                          <Search className="w-3 h-3" />
+                          <span>Lora</span>
+                          <ArrowUpRight className="w-3 h-3" />
+                        </a>
+                      </div>
                     </td>
                   </tr>
                 );

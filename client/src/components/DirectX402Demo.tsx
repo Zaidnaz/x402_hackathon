@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { useWallet } from '../context/WalletContext';
 import { testDirectX402 } from '../utils/api';
-import { HowThisWorksButton } from './HowThisWorksButton';
+import { TourGuideButton } from './TourGuideButton';
 
 export const DirectX402Demo: React.FC = () => {
   const { isConnected, walletAddress, connectWallet, executePeraPayment } = useWallet();
@@ -117,36 +117,36 @@ export const DirectX402Demo: React.FC = () => {
         </div>
 
         <div className="flex items-center space-x-2">
-          <HowThisWorksButton
-            guide={{
-              pageTitle: "Direct x402 HTTP Paywall Testbed",
-              badge: "RFC 7235 Standard",
-              tagline: "Live Machine-to-Machine 402 Challenge & Settlement Lifecycle",
-              overview: "This testbed allows evaluators and developers to manually trigger and inspect each discrete step of the HTTP 402 Payment Required negotiation cycle defined in RFC 7235 and the GoPlausible Facilitator standard on Algorand.",
-              steps: [
-                {
-                  title: "Phase 1: Send Unauthenticated GET",
-                  desc: "Trigger the paywall without credentials. The server responds with HTTP 402 Payment Required containing WWW-Authenticate and X-402 headers.",
-                  highlightAction: "Phase 1 Button"
-                },
-                {
-                  title: "Phase 2: Settle on Algorand",
-                  desc: "Click 'Sign via Pera Wallet' to execute an on-chain transfer of 0.15 ALGO to the node's payout address on TestNet.",
-                  highlightAction: "Phase 2 Button"
-                },
-                {
-                  title: "Phase 3: Authorized Payload Retrieval",
-                  desc: "Pass the cryptographic payment token in 'Authorization: x402 <token>'. The server verifies the on-chain receipt and returns HTTP 200 OK + inference payload.",
-                  highlightAction: "Phase 3 Button"
-                }
-              ],
-              whatToLookFor: [
-                "Real HTTP 402 status code and custom X-402-Facilitator & X-402-Scheme headers.",
-                "Confirmed transaction round on Algorand TestNet with 1-click Lora explorer link.",
-                "Developer integration snippets showing @x402/fetch and raw cURL."
-              ],
-              evaluationTip: "Check the raw headers in the response inspector below to see X-402-Facilitator: https://facilitator.goplausible.xyz and X-402-Scheme: avm:exact in action!"
-            }}
+          <TourGuideButton
+            tourId="x402-tour"
+            buttonLabel="Interactive Spotlight Tour"
+            steps={[
+              {
+                targetSelector: '[data-tour="x402-phase-1"]',
+                title: "1. Phase 1: HTTP 402 Paywall Challenge",
+                description: "Click 'Send GET Request' without credentials to trigger an authentic HTTP 402 challenge with GoPlausible Facilitator headers."
+              },
+              {
+                targetSelector: '[data-tour="x402-phase-2"]',
+                title: "2. Phase 2: On-Chain Algorand Settlement",
+                description: "Sign 0.15 ALGO via your connected Pera Wallet (or autonomous wallet) onto Algorand TestNet."
+              },
+              {
+                targetSelector: '[data-tour="x402-phase-3"]',
+                title: "3. Phase 3: Authorized Payload Retrieval",
+                description: "Click 'Fetch with x402 Token' passing Authorization: x402 <token> to verify the receipt and receive 200 OK + payload."
+              },
+              {
+                targetSelector: '[data-tour="http-network-inspector"]',
+                title: "4. Raw HTTP Network Transaction Inspector",
+                description: "Inspect raw response headers, WWW-Authenticate challenges, GoPlausible tokens, and JSON payloads in real time."
+              },
+              {
+                targetSelector: '[data-tour="developer-code-snippets"]',
+                title: "5. Developer SDK Integration",
+                description: "Copy TypeScript and cURL snippets showing how external autonomous agents query this paywalled endpoint."
+              }
+            ]}
           />
 
           <button
@@ -162,7 +162,7 @@ export const DirectX402Demo: React.FC = () => {
       {/* Interactive 3-Step Guided Walkthrough */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs">
         {/* Step 1 */}
-        <div className={`p-4 rounded-xl border transition-all ${
+        <div data-tour="x402-phase-1" className={`p-4 rounded-xl border transition-all ${
           step === 1 ? 'bg-black/80 border-brand-emerald shadow-glow-emerald' : 'bg-black/40 border-white/[0.08] opacity-80'
         }`}>
           <div className="flex items-center justify-between mb-2">
@@ -184,7 +184,7 @@ export const DirectX402Demo: React.FC = () => {
         </div>
 
         {/* Step 2 */}
-        <div className={`p-4 rounded-xl border transition-all ${
+        <div data-tour="x402-phase-2" className={`p-4 rounded-xl border transition-all ${
           step === 2 ? 'bg-black/80 border-brand-emerald shadow-glow-emerald' : 'bg-black/40 border-white/[0.08] opacity-80'
         }`}>
           <div className="flex items-center justify-between mb-2">
@@ -206,7 +206,7 @@ export const DirectX402Demo: React.FC = () => {
         </div>
 
         {/* Step 3 */}
-        <div className={`p-4 rounded-xl border transition-all ${
+        <div data-tour="x402-phase-3" className={`p-4 rounded-xl border transition-all ${
           step === 3 ? 'bg-black/80 border-brand-emerald shadow-glow-emerald' : 'bg-black/40 border-white/[0.08] opacity-80'
         }`}>
           <div className="flex items-center justify-between mb-2">
@@ -260,7 +260,7 @@ export const DirectX402Demo: React.FC = () => {
       )}
 
       {/* Raw HTTP Request / Response Inspector */}
-      <div className="bg-black/75 border border-white/[0.08] rounded-xl overflow-hidden font-mono text-xs shadow-sm">
+      <div data-tour="http-network-inspector" className="bg-black/75 border border-white/[0.08] rounded-xl overflow-hidden font-mono text-xs shadow-sm">
         <div className="p-4 bg-black border-b border-white/[0.08] flex items-center justify-between">
           <div className="text-xs font-semibold uppercase tracking-wider text-white flex items-center space-x-2">
             <Terminal className="w-3.5 h-3.5 text-brand-emerald" />
@@ -323,7 +323,7 @@ export const DirectX402Demo: React.FC = () => {
       </div>
 
       {/* Developer Integration Code Snippets Panel */}
-      <div className="bg-black/75 border border-white/[0.08] rounded-xl p-5 space-y-3 font-mono text-xs shadow-sm">
+      <div data-tour="developer-code-snippets" className="bg-black/75 border border-white/[0.08] rounded-xl p-5 space-y-3 font-mono text-xs shadow-sm">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2 text-white font-semibold uppercase tracking-wider">
             <Layers className="w-4 h-4 text-brand-emerald" />

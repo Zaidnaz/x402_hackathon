@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { ModelProvider, ComputeProvider } from '../types';
 import { toggleComputeStatus } from '../utils/api';
-import { HowThisWorksButton } from './HowThisWorksButton';
+import { TourGuideButton } from './TourGuideButton';
 
 interface MarketplaceGridProps {
   models: ModelProvider[];
@@ -64,36 +64,36 @@ export const MarketplaceGrid: React.FC<MarketplaceGridProps> = ({
         </div>
 
         <div className="flex items-center space-x-2">
-          <HowThisWorksButton
-            guide={{
-              pageTitle: "Decentralized Model & GPU Compute Fleet",
-              badge: "Service Discovery Registry",
-              tagline: "Live Telemetry, Benchmark Scoring & Node Registration",
-              overview: "The Marketplace acts as an open, decentralized service registry where independent GPU compute clusters and foundation model hosts publish their endpoint capabilities, pricing, and Algorand payout addresses.",
-              steps: [
-                {
-                  title: "1. Inspect Real-Time Fleet Telemetry",
-                  desc: "Browse high-end NVIDIA H100, A100, and Serverless clusters with live VRAM, NVLink interconnect bandwidth, and spot rates.",
-                  highlightAction: "View GPU Cards"
-                },
-                {
-                  title: "2. Register New Infrastructure Nodes",
-                  desc: "Click 'Register Provider' to onboard a custom model or GPU inference endpoint with an Algorand receiver wallet.",
-                  highlightAction: "Register Provider Button"
-                },
-                {
-                  title: "3. Test Dynamic Fault Adaptation",
-                  desc: "Click the status badge on any GPU card (Active ➔ Degraded ➔ Offline) to simulate cluster degradation and watch the Pareto router bypass failing hardware.",
-                  highlightAction: "Click Status Pill"
-                }
-              ],
-              whatToLookFor: [
-                "Dual pricing in USD spot rate and per-token micro-ALGO equivalents.",
-                "Individual Algorand TestNet payout wallet addresses bound to each cluster.",
-                "Live hardware specs: VRAM GB, context window capacity, and baseline TPS."
-              ],
-              evaluationTip: "Toggle a GPU node to 'Degraded' and go back to the Console to verify that AgentGrid automatically avoids routing traffic to it!"
-            }}
+          <TourGuideButton
+            tourId="marketplace-tour"
+            buttonLabel="Interactive Spotlight Tour"
+            steps={[
+              {
+                targetSelector: '[data-tour="marketplace-header"]',
+                title: "1. Fleet Registry Header",
+                description: "Independent GPU clusters & models register their API paywalls and Algorand payout wallets here."
+              },
+              {
+                targetSelector: '[data-tour="register-provider-btn"]',
+                title: "2. Register Provider",
+                description: "Click here to simulate onboarding a new custom vLLM inference node or foundation model with custom pricing."
+              },
+              {
+                targetSelector: '[data-tour="compute-fleet-cards"]',
+                title: "3. GPU Hardware Telemetry & Spot Rates",
+                description: "Inspect hardware VRAM, interconnect type (NVLink/PCIe), base latency ping, and spot hourly rates."
+              },
+              {
+                targetSelector: '[data-tour="node-status-toggle"]',
+                title: "4. Dynamic Node Degradation",
+                description: "Click any status badge (Active ➔ Degraded ➔ Offline) to simulate real-time cluster failures and watch the Pareto router adapt!"
+              },
+              {
+                targetSelector: '[data-tour="model-catalog-cards"]',
+                title: "5. Foundation Models Catalog",
+                description: "Browse supported models with token economics (input/output rates) and standard quality benchmark scores."
+              }
+            ]}
           />
 
           <button
@@ -103,13 +103,15 @@ export const MarketplaceGrid: React.FC<MarketplaceGridProps> = ({
             <RefreshCw className="w-3.5 h-3.5" />
             <span>Sync</span>
           </button>
-          <button
-            onClick={onOpenRegisterModal}
-            className="px-3.5 py-2.5 rounded-lg bg-signal-amber hover:bg-signal-amber/90 text-grid-950 text-xs font-mono font-bold uppercase tracking-wider flex items-center space-x-1.5 shadow-glow-amber transition-all"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Register Provider</span>
-          </button>
+          <div data-tour="register-provider-btn">
+            <button
+              onClick={onOpenRegisterModal}
+              className="px-3.5 py-2.5 rounded-lg bg-signal-amber hover:bg-signal-amber/90 text-grid-950 text-xs font-mono font-bold uppercase tracking-wider flex items-center space-x-1.5 shadow-glow-amber transition-all"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Register Provider</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -136,7 +138,7 @@ export const MarketplaceGrid: React.FC<MarketplaceGridProps> = ({
 
       {/* Compute Providers Grid */}
       {(selectedTab === 'all' || selectedTab === 'computes') && (
-        <div className="space-y-3">
+        <div data-tour="compute-fleet-cards" className="space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-mono font-semibold uppercase tracking-wider text-grid-400 flex items-center space-x-2">
               <Server className="w-3.5 h-3.5 text-signal-amber" />
@@ -164,6 +166,7 @@ export const MarketplaceGrid: React.FC<MarketplaceGridProps> = ({
                   </div>
 
                   <button
+                    data-tour="node-status-toggle"
                     onClick={() => handleToggleStatus(comp.id, comp.status)}
                     disabled={isUpdatingStatus === comp.id}
                     title="Click to cycle status (Active -> Degraded -> Offline)"
@@ -211,7 +214,7 @@ export const MarketplaceGrid: React.FC<MarketplaceGridProps> = ({
 
       {/* Model Providers Grid */}
       {(selectedTab === 'all' || selectedTab === 'models') && (
-        <div className="space-y-3 pt-4">
+        <div data-tour="model-catalog-cards" className="space-y-3 pt-4">
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-mono font-semibold uppercase tracking-wider text-grid-400 flex items-center space-x-2">
               <Cpu className="w-3.5 h-3.5 text-signal-cyan" />

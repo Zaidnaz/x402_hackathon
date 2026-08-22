@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { TaskRequirement, RoutingDecision, CandidateEvaluation } from '../types';
 import { analyzePrompt, evaluateRoute } from '../utils/api';
-import { HowThisWorksButton } from './HowThisWorksButton';
+import { TourGuideButton } from './TourGuideButton';
 
 export const RoutingMatrix: React.FC = () => {
   const [prompt, setPrompt] = useState('Optimize parallel matrix multiplication in CUDA C++');
@@ -67,36 +67,26 @@ export const RoutingMatrix: React.FC = () => {
           </p>
         </div>
         <div className="flex items-center space-x-2">
-          <HowThisWorksButton
-            guide={{
-              pageTitle: "Multi-Objective Pareto Frontier & Matrix",
-              badge: "Optimization Engine",
-              tagline: "Mathematical Elimination of Sub-Optimal Node Combinations",
-              overview: "In open compute networks, picking a GPU or model isn't just about lowest price or highest raw FLOPS. AgentGrid evaluates all active combinatorial Model x Compute permutations to find non-dominated Pareto-optimal choices.",
-              steps: [
-                {
-                  title: "1. Tune Objective Weights",
-                  desc: "Adjust the weight sliders for Cost, Latency, Quality, and Reliability to reflect different autonomous agent goals.",
-                  highlightAction: "Drag Sliders"
-                },
-                {
-                  title: "2. Watch Real-Time Matrix Re-Ranking",
-                  desc: "The combinatorial matrix instantly calculates multi-dimensional scalarized scores across all hardware nodes.",
-                  highlightAction: "View Ranked Table"
-                },
-                {
-                  title: "3. Verify Non-Dominated Pareto Status",
-                  desc: "Non-dominated nodes are strictly optimal trade-offs where no alternative node is both cheaper and faster.",
-                  highlightAction: "NON-DOMINATED Tag"
-                }
-              ],
-              whatToLookFor: [
-                "Rank #1 dynamically updates as you shift priority between budget and latency.",
-                "SLA Adherence flags verify if each candidate meets max latency and budget bounds.",
-                "Composite score breakdown calculated per token."
-              ],
-              evaluationTip: "Slide Cost Weight to 80% to see lightweight nodes rise to Rank #1; increase Quality Weight to 80% to see NVIDIA H100/H200 dominate."
-            }}
+          <TourGuideButton
+            tourId="routing-tour"
+            buttonLabel="Interactive Spotlight Tour"
+            steps={[
+              {
+                targetSelector: '[data-tour="weight-sliders"]',
+                title: "1. Objective Weight Tuners",
+                description: "Drag the sliders for Cost, Latency, Quality, and Reliability to simulate different autonomous agent optimization preferences."
+              },
+              {
+                targetSelector: '[data-tour="candidate-table"]',
+                title: "2. Combinatorial Candidate Ranking",
+                description: "Every Model + GPU cluster combination is scored in real-time. Rank #1 highlights the non-dominated Pareto optimum."
+              },
+              {
+                targetSelector: '[data-tour="pareto-badge"]',
+                title: "3. Non-Dominated Pareto Status",
+                description: "Identifies mathematical Pareto efficiency where no other node delivers lower latency at a cheaper micro-ALGO price."
+              }
+            ]}
           />
 
           <div className="bg-grid-950 px-3.5 py-2 rounded-lg border border-grid-800 text-xs font-mono text-grid-300">
@@ -106,7 +96,7 @@ export const RoutingMatrix: React.FC = () => {
       </div>
 
       {/* Interactive Weight Controllers */}
-      <div className="bg-grid-900 border border-grid-800 rounded-xl p-5 space-y-4">
+      <div data-tour="weight-sliders" className="bg-grid-900 border border-grid-800 rounded-xl p-5 space-y-4">
         <div className="text-xs font-mono font-semibold uppercase tracking-wider text-grid-300 flex items-center space-x-2">
           <SlidersHorizontal className="w-3.5 h-3.5 text-signal-amber" />
           <span>Interactive Objective Weight Tuners</span>
@@ -192,7 +182,7 @@ export const RoutingMatrix: React.FC = () => {
       </div>
 
       {/* Candidate Ranking & Score Table */}
-      <div className="bg-grid-900 border border-grid-800 rounded-xl overflow-hidden">
+      <div data-tour="candidate-table" className="bg-grid-900 border border-grid-800 rounded-xl overflow-hidden">
         <div className="p-4 bg-grid-950 border-b border-grid-800 flex items-center justify-between">
           <div className="text-xs font-mono font-semibold uppercase tracking-wider text-grid-200">
             Combinatorial Candidate Matrix (Ranked by Score)
@@ -267,7 +257,7 @@ export const RoutingMatrix: React.FC = () => {
                     </div>
                   </td>
 
-                  <td className="py-3 px-4">
+                  <td data-tour={idx === 0 ? "pareto-badge" : undefined} className="py-3 px-4">
                     {c.paretoOptimal ? (
                       <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-signal-cyanDim text-signal-cyan border border-signal-cyan/30">
                         NON-DOMINATED
