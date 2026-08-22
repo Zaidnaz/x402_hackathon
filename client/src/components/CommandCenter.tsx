@@ -37,48 +37,76 @@ interface CommandCenterProps {
 
 const PRESET_PROMPTS = [
   {
-    id: 'code',
-    title: 'Fast Code Gen',
-    desc: 'CUDA Kernel / Algorand SDK',
+    id: 'cuda',
+    title: 'CUDA Tensor Kernel',
+    tag: 'Code & FLOPS',
+    desc: 'FP16 Warp Matrix Multiplication',
     modality: 'code' as TaskModality,
-    prompt: 'Write an optimized FP16 matrix multiplication kernel for NVIDIA H100 with shared memory tiling and warp-level primitives.',
+    prompt: 'Write an optimized FP16 matrix multiplication kernel for NVIDIA H100 with shared memory tiling, double-buffering, and warp-level tensor core primitives.',
     priority: 'quality' as const,
     budget: 0.85,
     sla: 3500,
     icon: Code2
   },
   {
-    id: 'reasoning',
-    title: 'Deep Math & Logic',
-    desc: 'Formal Proof & Safety Bounds',
+    id: 'algorand',
+    title: 'Algorand Contract Audit',
+    tag: 'Smart Contract',
+    desc: 'PyTeal Reentrancy & Opcode Cost',
     modality: 'reasoning' as TaskModality,
-    prompt: 'Deduce formal safety bounds and worst-case execution latency for a multi-agent Raft consensus protocol across unstable network partitions.',
+    prompt: 'Audit this Algorand PyTeal smart contract for inner transaction reentrancy, re-keying vulnerabilities, minimum balance requirements, and maximum opcode budget consumption.',
     priority: 'quality' as const,
     budget: 1.20,
     sla: 6000,
     icon: BrainCircuit
   },
   {
-    id: 'batch',
-    title: 'Batch Summarization',
-    desc: 'Corpus & Anomaly Extraction',
-    modality: 'batch-summary' as TaskModality,
-    prompt: 'Synthesize 20,000 telemetry log lines into anomalous error clusters, root cause categories, and failure distribution metrics.',
-    priority: 'cost' as const,
-    budget: 0.30,
-    sla: 10000,
-    icon: FileText
-  },
-  {
-    id: 'chat',
-    title: 'Ultra-Low Latency Chat',
-    desc: 'Instant Financial Derivative Pricing',
+    id: 'finance',
+    title: 'High-Freq Alpha Signal',
+    tag: 'Real-Time Finance',
+    desc: 'Implied Volatility Arbitrage',
     modality: 'fast-chat' as TaskModality,
-    prompt: 'Calculate implied volatility smile arbitrage conditions for continuous European call options with live delta hedging.',
+    prompt: 'Calculate implied volatility smile arbitrage conditions for continuous European call options with live delta hedging and Black-Scholes Greeks sensitivity bounds.',
     priority: 'speed' as const,
     budget: 0.20,
     sla: 1200,
     icon: MessageSquare
+  },
+  {
+    id: 'genomics',
+    title: 'Genomics Sequence Match',
+    tag: 'Bio & Scientific',
+    desc: 'CRISPR Target Cleavage Analysis',
+    modality: 'batch-summary' as TaskModality,
+    prompt: 'Analyze CRISPR-Cas9 off-target cleavage probabilities across a 3.2M base pair genomic FASTA sequence with PAM motif alignment and mismatch penalties.',
+    priority: 'cost' as const,
+    budget: 0.40,
+    sla: 8000,
+    icon: FileText
+  },
+  {
+    id: 'swarm',
+    title: 'Multi-Agent Consensus',
+    tag: 'Agent Swarm',
+    desc: 'Raft Byzantine Fault Tolerance',
+    modality: 'fast-chat' as TaskModality,
+    prompt: 'Synthesize a fault-tolerant state-machine quorum for 12 autonomous trading agents handling asynchronous transaction ordering over high-latency networks.',
+    priority: 'speed' as const,
+    budget: 0.35,
+    sla: 1800,
+    icon: Zap
+  },
+  {
+    id: 'legal',
+    title: 'Legal Multi-Doc Synthesis',
+    tag: 'Enterprise NLP',
+    desc: 'Multi-Jurisdictional Cross-Ref',
+    modality: 'batch-summary' as TaskModality,
+    prompt: 'Cross-reference 15 enterprise SaaS master service agreements (MSAs) to extract indemnification liability caps, GDPR data sovereignty clauses, and termination triggers.',
+    priority: 'cost' as const,
+    budget: 0.25,
+    sla: 9000,
+    icon: FileText
   }
 ];
 
@@ -101,8 +129,9 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
   // Progressive Disclosure: Advanced Settings Toggle
   const [showAdvanced, setShowAdvanced] = useState(false);
 
-  // Live preview decision
+  // Live preview decision & custom candidate selection
   const [previewRouting, setPreviewRouting] = useState<RoutingDecision | null>(null);
+  const [selectedCandidateIndex, setSelectedCandidateIndex] = useState(0);
   const [isEvaluating, setIsEvaluating] = useState(false);
   const [isSigningPera, setIsSigningPera] = useState(false);
 
@@ -122,6 +151,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
         const route = await evaluateRoute(req);
         if (active) {
           setPreviewRouting(route);
+          setSelectedCandidateIndex(0);
         }
       } catch (err) {
         console.error('Preview error', err);
@@ -145,19 +175,23 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
     setDeadlineMs(preset.sla);
   };
 
+  const activeCandidate = previewRouting?.paretoFrontier && previewRouting.paretoFrontier[selectedCandidateIndex]
+    ? previewRouting.paretoFrontier[selectedCandidateIndex]
+    : previewRouting?.selectedCandidate;
+
   const handleDispatch = async () => {
     let customPeraTx: { txId: string; round: number; explorerUrl: string; loraUrl: string } | undefined = undefined;
 
-    if (isConnected && previewRouting) {
+    if (isConnected && activeCandidate) {
       try {
         setIsSigningPera(true);
         const targetNodePayout = 'A3R6WQFOLES2CTKEHALIEXFNEZ75R4KYJJ4VPWMZ63X57IZ7MIRJ7Q6HVQ';
-        const costAlgo = previewRouting.selectedCandidate.estimatedCostAlgo || 0.05;
+        const costAlgo = activeCandidate.estimatedCostAlgo || 0.05;
         
         const txResult = await executePeraPayment(
           targetNodePayout,
           costAlgo,
-          `x402:task:${previewRouting.taskId}:prompt:${prompt.substring(0, 16)}`
+          `x402:task:${previewRouting?.taskId || 'demo'}:prompt:${prompt.substring(0, 16)}`
         );
         customPeraTx = txResult;
       } catch (err: any) {
@@ -194,7 +228,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
             Agent Task Execution Console
           </h1>
           <p className="text-[11px] sm:text-xs text-grid-300 max-w-xl font-sans leading-relaxed">
-            Pick a workload preset or enter custom prompt. AgentGrid dynamically selects the optimal model & GPU, negotiates x402 payment, and settles on Algorand.
+            Pick a workload preset or enter a custom prompt. AgentGrid dynamically benchmarks the compute fleet, settles x402 on Algorand, and streams live AI tokens.
           </p>
         </div>
 
@@ -204,8 +238,8 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
           steps={[
             {
               targetSelector: '[data-tour="preset-archetypes"]',
-              title: "1. Workload Presets",
-              description: "Pick an AI workload preset (Fast Code, Math/Reasoning, Batch Summarization, or Low-Latency Chat) or enter custom prompt requirements."
+              title: "1. Workload Presets (6 Options)",
+              description: "Pick an AI workload preset (CUDA kernels, Smart Contract audits, Alpha signals, Genomics, Swarms) or enter your custom goal."
             },
             {
               targetSelector: '[data-tour="prompt-input"]',
@@ -219,8 +253,8 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
             },
             {
               targetSelector: '[data-tour="pareto-preview"]',
-              title: "4. Live Pareto Optimal Pair",
-              description: "AgentGrid pre-calculates the optimal hardware + model combination with estimated micro-ALGO cost, latency, and quality score."
+              title: "4. Multi-Option Pareto Alternatives",
+              description: "Compare the Top 3 Pareto-optimal Model + GPU cluster pairs and pick your preferred trade-off before dispatching!"
             },
             {
               targetSelector: '[data-tour="wallet-status"]',
@@ -236,31 +270,39 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
         />
       </div>
 
-      {/* 1-Click Workload Archetype Selector */}
-      <div data-tour="preset-archetypes" className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
-        {PRESET_PROMPTS.map((p) => {
-          const Icon = p.icon;
-          const isSelected = selectedPresetId === p.id;
-          return (
-            <button
-              key={p.id}
-              onClick={() => handleApplyPreset(p)}
-              disabled={isStreaming || isSigningPera}
-              className={`p-3 sm:p-4 rounded-xl border text-left transition-all relative group cursor-pointer ${
-                isSelected
-                  ? 'bg-brand-emerald/15 border-brand-emerald shadow-glow-emerald'
-                  : 'bg-black/60 border-white/[0.08] hover:border-white/[0.2] active:scale-[0.98]'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-1.5 sm:mb-2">
-                <Icon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isSelected ? 'text-brand-emerald' : 'text-grid-400 group-hover:text-white'}`} />
-                {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-brand-emerald shadow-glow-emerald animate-pulse" />}
-              </div>
-              <div className="text-[11px] sm:text-xs font-bold font-mono text-white truncate">{p.title}</div>
-              <div className="text-[9px] sm:text-[10px] font-sans text-grid-400 mt-0.5 line-clamp-2 leading-tight">{p.desc}</div>
-            </button>
-          );
-        })}
+      {/* 1-Click Workload Archetype Selector (6 High-Tech Cards) */}
+      <div data-tour="preset-archetypes" className="space-y-1.5">
+        <div className="text-[11px] sm:text-xs font-mono text-grid-400 font-semibold uppercase tracking-wider flex items-center justify-between">
+          <span>Choose AI Workload Archetype ({PRESET_PROMPTS.length} Presets):</span>
+          <span className="text-[10px] text-brand-emerald">1-Click Auto-Fill</span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+          {PRESET_PROMPTS.map((p) => {
+            const Icon = p.icon;
+            const isSelected = selectedPresetId === p.id;
+            return (
+              <button
+                key={p.id}
+                onClick={() => handleApplyPreset(p)}
+                disabled={isStreaming || isSigningPera}
+                className={`p-3 rounded-xl border text-left transition-all relative group cursor-pointer ${
+                  isSelected
+                    ? 'bg-brand-emerald/15 border-brand-emerald shadow-glow-emerald scale-[1.01]'
+                    : 'bg-black/60 border-white/[0.08] hover:border-white/[0.2] active:scale-[0.98]'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="px-1.5 py-0.2 rounded text-[8px] sm:text-[9px] font-mono uppercase bg-white/[0.06] text-grid-300">
+                    {p.tag}
+                  </span>
+                  <Icon className={`w-3.5 h-3.5 ${isSelected ? 'text-brand-emerald' : 'text-grid-400 group-hover:text-white'}`} />
+                </div>
+                <div className="text-[11px] sm:text-xs font-bold font-mono text-white truncate">{p.title}</div>
+                <div className="text-[9px] sm:text-[10px] font-sans text-grid-400 mt-0.5 line-clamp-1 leading-tight">{p.desc}</div>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Main Task Input Card */}
@@ -295,10 +337,10 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
           <div className="text-[11px] sm:text-xs font-mono text-grid-300">Optimization Goal:</div>
           <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-1.5 sm:gap-2">
             {[
-              { id: 'quality', label: 'Max Quality' },
-              { id: 'speed', label: 'Ultra Latency' },
-              { id: 'cost', label: 'Lowest Cost' },
-              { id: 'balanced', label: 'Balanced Pareto' },
+              { id: 'quality', label: 'Max Quality (H100)', desc: 'FP16 Precision' },
+              { id: 'speed', label: 'Ultra Latency (<1.5s)', desc: 'Fastest Ping' },
+              { id: 'cost', label: 'Lowest Cost (Spot)', desc: 'Max Savings' },
+              { id: 'balanced', label: 'Balanced Pareto', desc: 'Non-Dominated' },
             ].map((opt) => (
               <button
                 key={opt.id}
@@ -316,6 +358,58 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
           </div>
         </div>
 
+        {/* Multi-Option Pareto Alternatives Selector */}
+        {previewRouting && previewRouting.paretoFrontier && (
+          <div data-tour="pareto-preview" className="space-y-2 pt-2 border-t border-white/[0.08]">
+            <div className="flex items-center justify-between text-[11px] sm:text-xs font-mono">
+              <span className="text-grid-300 font-semibold uppercase tracking-wide flex items-center space-x-1.5">
+                <Cpu className="w-3.5 h-3.5 text-brand-emerald" />
+                <span>Pareto Frontier Compute Routes (Top Options):</span>
+              </span>
+              <span className="text-[10px] text-grid-400">Click to Switch Route</span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              {previewRouting.paretoFrontier.slice(0, 3).map((candidate, idx) => {
+                const isCandidateSelected = selectedCandidateIndex === idx;
+                return (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setSelectedCandidateIndex(idx)}
+                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                      isCandidateSelected
+                        ? 'bg-brand-emerald/15 border-brand-emerald shadow-glow-emerald'
+                        : 'bg-black/70 border-white/[0.08] hover:border-white/[0.2]'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold font-mono ${
+                        idx === 0 ? 'bg-brand-emerald text-black' : 'bg-white/[0.1] text-grid-300'
+                      }`}>
+                        {idx === 0 ? '🏆 #1 Optimal' : `Option #${idx + 1}`}
+                      </span>
+                      <span className="text-[10px] text-brand-emerald font-bold font-mono">
+                        {candidate.estimatedCostAlgo} ALGO
+                      </span>
+                    </div>
+                    <div className="text-xs font-bold font-mono text-white truncate">
+                      {candidate.modelName}
+                    </div>
+                    <div className="text-[10px] font-mono text-grid-400 truncate">
+                      {candidate.computeName} ({candidate.gpuType})
+                    </div>
+                    <div className="flex items-center justify-between text-[10px] font-mono text-grid-400 mt-1.5 pt-1.5 border-t border-white/[0.06]">
+                      <span>{candidate.estimatedLatencyMs}ms</span>
+                      <span className="text-signal-cyan font-semibold">{candidate.projectedQualityScore}/100</span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Collapsible Advanced Settings (SLA, Budget, Failover) */}
         <div className="border-t border-white/[0.08] pt-2 sm:pt-3">
           <button
@@ -324,7 +418,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
           >
             <span className="flex items-center space-x-1.5">
               <Settings2 className="w-3.5 h-3.5 text-brand-emerald" />
-              <span>Budget, SLA & Failover Resilience</span>
+              <span>Budget, SLA Deadlines & Regional Failover</span>
             </span>
             {showAdvanced ? <ChevronUp className="w-4 h-4 text-brand-emerald" /> : <ChevronDown className="w-4 h-4" />}
           </button>
@@ -394,32 +488,6 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
           )}
         </div>
 
-        {/* Live Pre-Evaluation Card */}
-        {previewRouting && (
-          <div data-tour="pareto-preview" className="bg-black/90 p-3 sm:p-3.5 rounded-xl border border-white/[0.1] text-xs font-mono flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3">
-            <div className="space-y-0.5">
-              <div className="text-[9px] sm:text-[10px] text-grid-400 uppercase tracking-wide">Optimal Pareto Pair</div>
-              <div className="text-white font-bold text-xs sm:text-sm">
-                {previewRouting.selectedCandidate.modelName} <span className="text-grid-400 font-normal">on</span> {previewRouting.selectedCandidate.computeName}
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-2 sm:space-x-3 text-[10px] sm:text-[11px]">
-              <span className="text-brand-emerald font-bold">
-                {previewRouting.selectedCandidate.estimatedCostAlgo} ALGO
-              </span>
-              <span className="text-grid-600">•</span>
-              <span className="text-white">
-                {previewRouting.selectedCandidate.estimatedLatencyMs} ms
-              </span>
-              <span className="text-grid-600">•</span>
-              <span className="text-brand-emerald">
-                {previewRouting.selectedCandidate.projectedQualityScore}/100
-              </span>
-            </div>
-          </div>
-        )}
-
         {/* Pera Wallet Status Banner */}
         <div data-tour="wallet-status">
           {isConnected ? (
@@ -470,7 +538,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
             ) : (
               <>
                 <Play className="w-4 h-4 fill-black text-black shrink-0" />
-                <span>Dispatch Autonomous Workload</span>
+                <span>Dispatch Autonomous Workload ({activeCandidate?.estimatedCostAlgo || '0.009'} ALGO)</span>
                 <ArrowRight className="w-4 h-4 text-black shrink-0" />
               </>
             )}
