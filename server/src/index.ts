@@ -175,9 +175,19 @@ app.route('/api/merchant', merchantRouter);
 app.route('/api/ledger', ledgerRouter);
 app.route('/api/x402', x402DemoRouter);
 
-// Serve frontend static assets in production Docker/Node container
-app.use('/*', serveStatic({ root: './client/dist' }));
-app.get('*', serveStatic({ path: './client/dist/index.html' }));
+// Serve frontend static assets in production Docker/Node container (skip /api)
+app.use('*', async (c, next) => {
+  if (c.req.path.startsWith('/api')) {
+    return next();
+  }
+  return serveStatic({ root: './client/dist' })(c, next);
+});
+app.get('*', async (c, next) => {
+  if (c.req.path.startsWith('/api')) {
+    return next();
+  }
+  return serveStatic({ path: './client/dist/index.html' })(c, next);
+});
 
 const PORT = Number(process.env.PORT) || 3001;
 
