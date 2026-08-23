@@ -20,60 +20,49 @@ interface LandingPageProps {
 export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp, onNavigateTab }) => {
   return (
     <>
-      {/* Full-Screen WebGL PixelSnow Background with Black Pixels */}
-      <div className="fixed inset-0 w-screen h-screen pointer-events-none z-0 overflow-hidden opacity-25">
-        <PixelSnow 
-          color="#18181b"
-          flakeSize={0.035}
-          minFlakeSize={1.8}
-          pixelResolution={180}
-          speed={1.0}
-          density={0.28}
-          direction={125}
-          brightness={1.0}
-          depthFade={8}
-          farPlane={20}
-          gamma={0.4545}
-          variant="square"
-        />
-      </div>
+      {/* 100% Transparent PixelSnow with Floating Black Pixels */}
+      <PixelSnow 
+        color="#18181b"
+        density={0.4}
+        speed={0.9}
+      />
 
       <div className="relative z-10 min-h-[80vh] flex flex-col justify-center max-w-4xl mx-auto text-center space-y-10 py-16 px-4">
-      {/* Status Pill */}
-      <div>
-        <div className="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full bg-zinc-100 border border-zinc-200 text-xs font-mono text-zinc-600">
-          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-zinc-200 text-zinc-900 uppercase">Team LENA</span>
-          <span className="text-zinc-400">•</span>
-          <span className="w-2 h-2 rounded-full bg-emerald-600" />
-          <span className="text-zinc-700">Algorand TestNet</span>
-          <span className="text-zinc-400">•</span>
-          <span className="text-zinc-700 font-mono">x402 Protocol</span>
-        </div>
-      </div>
-
-      {/* Hero Title */}
-      <div className="space-y-3">
-        <div className="text-5xl sm:text-7xl md:text-8xl font-mono font-extrabold tracking-tight text-zinc-950">
-          <Shuffle
-            text="AGENTGRID"
-            duration={0.5}
-            stagger={0.04}
-            triggerOnHover={true}
-            className="text-zinc-950"
-          />
+        {/* Status Pill */}
+        <div>
+          <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-white border border-zinc-200 text-xs font-mono text-zinc-700 shadow-sm">
+            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-zinc-900 text-white uppercase">Team LENA</span>
+            <span className="text-zinc-300">•</span>
+            <span className="w-2 h-2 rounded-full bg-emerald-600" />
+            <span className="text-zinc-800 font-medium">Algorand TestNet</span>
+            <span className="text-zinc-300">•</span>
+            <span className="text-zinc-800 font-mono font-medium">x402 Protocol</span>
+          </div>
         </div>
 
-        <div className="text-xs sm:text-sm font-mono text-emerald-600 tracking-widest font-semibold uppercase">
-          Autonomous AI Infrastructure Marketplace
-        </div>
-      </div>
+        {/* Hero Title */}
+        <div className="space-y-3">
+          <div className="text-5xl sm:text-7xl md:text-8xl font-mono font-extrabold tracking-tight text-zinc-950">
+            <Shuffle
+              text="AGENTGRID"
+              duration={0.5}
+              stagger={0.04}
+              triggerOnHover={true}
+              className="text-zinc-950"
+            />
+          </div>
 
-      {/* Subtitle */}
-      <div className="max-w-2xl mx-auto space-y-3">
-        <p className="text-sm sm:text-base text-zinc-600 font-sans leading-relaxed">
-          AI agents shouldn&apos;t be locked into static API keys. AgentGrid dynamically selects the optimal model & GPU, negotiates <strong className="text-zinc-900 font-mono font-medium">x402 micropayments</strong>, and settles on <strong className="text-zinc-900 font-mono font-medium">Algorand</strong> in real time.
-        </p>
-      </div>
+          <div className="text-xs sm:text-sm font-mono text-emerald-700 tracking-widest font-bold uppercase">
+            Autonomous AI Infrastructure Marketplace
+          </div>
+        </div>
+
+        {/* Subtitle */}
+        <div className="max-w-2xl mx-auto space-y-3">
+          <p className="text-sm sm:text-base text-zinc-600 font-sans leading-relaxed">
+            AI agents shouldn&apos;t be locked into static API keys. AgentGrid dynamically selects the optimal model & GPU, negotiates <strong className="text-zinc-950 font-mono font-semibold">x402 micropayments</strong>, and settles on <strong className="text-zinc-950 font-mono font-semibold">Algorand</strong> in real time.
+          </p>
+        </div>
 
       {/* Enter App CTA */}
       <div className="space-y-4 pt-2">
