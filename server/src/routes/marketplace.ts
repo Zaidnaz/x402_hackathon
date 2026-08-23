@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { providerRegistry } from '../services/providerRegistry.js';
 import { registerModelBodySchema, registerComputeBodySchema, formatZodError } from '../validators.js';
+import { algorandService } from '../services/algorandService.js';
 import { z } from 'zod';
 
 const marketplaceRouter = new Hono();
@@ -22,6 +23,31 @@ marketplaceRouter.get('/catalog', (c) => {
       }
     }
   });
+});
+
+marketplaceRouter.post('/purchase', async (c) => {
+  const body = await c.req.json().catch(() => ({}));
+  const { providerId, type, amountAlgo } = body;
+
+  if (!providerId || !amountAlgo) {
+    return c.json({ success: false, error: 'Missing providerId or amountAlgo' }, 400);
+  }
+
+  try {
+    const taskId = `purchase_${Date.now()}`;
+    const result = await algorandService.executeSettlement(taskId, providerId, Number(amountAlgo));
+
+    return c.json({
+      success: true,
+      message: `${type === 'model' ? 'Model' : 'Compute node'} purchase successful`,
+      txId: result.txId,
+      round: result.round,
+      explorerUrl: result.explorerUrl,
+      loraUrl: result.loraUrl
+    });
+  } catch (err: any) {
+    return c.json({ success: false, error: err.message }, 500);
+  }
 });
 
 marketplaceRouter.post('/register-model', async (c) => {

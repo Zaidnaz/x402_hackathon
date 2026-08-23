@@ -10,6 +10,8 @@ import { AlgorandLedger } from './components/AlgorandLedger';
 import { AnalyticsHUD } from './components/AnalyticsHUD';
 import { DirectX402Demo } from './components/DirectX402Demo';
 import { ProviderRegisterModal } from './components/ProviderRegisterModal';
+import { SpendingGovernanceWidget } from './components/SpendingGovernanceWidget';
+import { DecompositionWidget } from './components/DecompositionWidget';
 import {
   TaskRequirement,
   ExecutionEvent,
@@ -18,12 +20,14 @@ import {
   ModelProvider,
   ComputeProvider,
   AlgorandAccountInfo,
-  ApprovalRequiredInfo
+  ApprovalRequiredInfo,
+  EventStepContext
 } from './types';
 import {
   fetchCatalog,
   fetchAccounts,
   subscribeTaskPlanStream,
+  subscribeTaskStream,
   FALLBACK_MODELS,
   FALLBACK_COMPUTES
 } from './utils/api';
@@ -39,6 +43,10 @@ function MainLayout() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [currentStage, setCurrentStage] = useState<ExecutionStage>('idle');
   const [pipelineEvents, setPipelineEvents] = useState<ExecutionEvent[]>([]);
+  
+  // Single-Step vs Decomposition switch
+  const [forceSingleStep, setForceSingleStep] = useState(false);
+
   // Keyed by step index - a plan is always at least one step, even a
   // "single deliverable" prompt, so this uniformly covers both cases.
   const [streamedOutputByStep, setStreamedOutputByStep] = useState<Record<number, string>>({});
@@ -83,37 +91,74 @@ function MainLayout() {
     setErrorMessage(null);
     setPendingApproval(null);
 
-    const unsub = subscribeTaskPlanStream(
-      prompt,
-      overrides,
-      simulateFailover,
-      humanApproved,
-      (event) => {
-        setCurrentStage(event.stage);
-        setPipelineEvents(prev => [...prev, event]);
-      },
-      (chunk, step) => {
-        const idx = step?.index ?? 0;
-        setStreamedOutputByStep(prev => ({ ...prev, [idx]: (prev[idx] || '') + chunk }));
-      },
-      (plan) => {
-        setCompletedPlan(plan);
-        setIsStreaming(false);
-        setCurrentStage('plan_completed');
-        fetchAccounts().then(setAccounts).catch(console.error);
-      },
-      (error) => {
-        console.error('Stream error', error);
-        setIsStreaming(false);
-        setCurrentStage('failed');
-        setErrorMessage(error || 'The agent lost connection to the server mid-task.');
-      },
-      (info) => {
-        setPendingApproval(info);
-        setIsStreaming(false);
-        setCurrentStage('awaiting_approval');
-      }
-    );
+    const onEvent = (event: ExecutionEvent) => {
+      setCurrentStage(event.stage);
+      setPipelineEvents(prev => [...prev, event]);
+    };
+
+    const onTokenChunk = (chunk: string, step?: EventStepContext) => {
+      const idx = step?.index ?? 0;
+      setStreamedOutputByStep(prev => ({ ...prev, [idx]: (prev[idx] || '') + chunk }));
+    };
+
+    const onError = (error: string) => {
+      console.error('Stream error', error);
+      setIsStreaming(false);
+      setCurrentStage('failed');
+      setErrorMessage(error || 'The agent lost connection to the server mid-task.');
+    };
+
+    let unsub: () => void;
+
+    if (forceSingleStep) {
+      // Execute single task stream, then map/normalize to completedPlan shape
+      unsub = subscribeTaskStream(
+        prompt,
+        overrides,
+        simulateFailover,
+        onEvent,
+        (chunk) => onTokenChunk(chunk),
+        (task) => {
+          const normalizedPlan: CompletedPlan = {
+            id: `plan_${task.id}`,
+            prompt: task.prompt,
+            plan: { steps: [{ title: 'Direct Execution', prompt: task.prompt }], planned: false, reasoning: 'Direct execution without planning.' },
+            steps: [task],
+            totalCostAlgo: task.actualCostAlgo,
+            totalDurationMs: task.actualDurationMs,
+            status: task.status === 'completed' || task.status === 'rerouted' ? 'completed' : 'failed',
+            completedAt: task.completedAt
+          };
+          setCompletedPlan(normalizedPlan);
+          setIsStreaming(false);
+          setCurrentStage('plan_completed');
+          fetchAccounts().then(setAccounts).catch(console.error);
+        },
+        onError
+      );
+    } else {
+      // Execute multi-step task plan stream
+      unsub = subscribeTaskPlanStream(
+        prompt,
+        overrides,
+        simulateFailover,
+        humanApproved,
+        onEvent,
+        onTokenChunk,
+        (plan) => {
+          setCompletedPlan(plan);
+          setIsStreaming(false);
+          setCurrentStage('plan_completed');
+          fetchAccounts().then(setAccounts).catch(console.error);
+        },
+        onError,
+        (info) => {
+          setPendingApproval(info);
+          setIsStreaming(false);
+          setCurrentStage('awaiting_approval');
+        }
+      );
+    }
 
     setActiveStreamUnsub(() => unsub);
   };
@@ -153,32 +198,47 @@ function MainLayout() {
         )}
 
         {activeTab === 'command' && (
-          <div className="space-y-8 animate-fadeIn max-w-5xl mx-auto">
-            <CommandCenter
-              onDispatchTask={handleDispatchTask}
-              isStreaming={isStreaming}
-            />
+          <div className="grid grid-cols-1 lg:grid-cols-[1.15fr_0.85fr] gap-8 animate-fadeIn max-w-6xl mx-auto items-start">
+            {/* Left Column: Input and Stream output */}
+            <div className="space-y-6">
+              <CommandCenter
+                onDispatchTask={handleDispatchTask}
+                isStreaming={isStreaming}
+              />
 
-            {(currentStage !== 'idle' || completedPlan || pendingApproval) && (
-              <div className="pt-6 border-t border-grid-800 animate-fadeIn">
-                <ExecutionPipeline
-                  events={pipelineEvents}
-                  currentStage={currentStage}
-                  streamedOutputByStep={streamedOutputByStep}
-                  completedPlan={completedPlan}
-                  isStreaming={isStreaming}
-                  errorMessage={errorMessage}
-                  pendingApproval={pendingApproval}
-                  onApprove={handleApprove}
-                  onReset={handleResetPipeline}
-                />
-              </div>
-            )}
+              {(currentStage !== 'idle' || completedPlan || pendingApproval) && (
+                <div className="pt-6 border-t border-grid-800 animate-fadeIn">
+                  <ExecutionPipeline
+                    events={pipelineEvents}
+                    currentStage={currentStage}
+                    streamedOutputByStep={streamedOutputByStep}
+                    completedPlan={completedPlan}
+                    isStreaming={isStreaming}
+                    errorMessage={errorMessage}
+                    pendingApproval={pendingApproval}
+                    onApprove={handleApprove}
+                    onReset={handleResetPipeline}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Right Column: Governance Sidebar widgets */}
+            <div className="space-y-6 lg:sticky lg:top-24">
+              <SpendingGovernanceWidget onPolicyUpdated={loadInitialData} />
+              
+              <DecompositionWidget
+                forceSingleStep={forceSingleStep}
+                setForceSingleStep={setForceSingleStep}
+                isStreaming={isStreaming}
+                completedPlan={completedPlan}
+              />
+            </div>
           </div>
         )}
 
         {activeTab === 'grid' && (
-          <div className="animate-fadeIn max-w-5xl mx-auto">
+          <div className="animate-fadeIn max-w-6xl mx-auto">
             <MarketplaceGrid
               models={models}
               computes={computes}
@@ -246,4 +306,3 @@ export function App() {
 }
 
 export default App;
-

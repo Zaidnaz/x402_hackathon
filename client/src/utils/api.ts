@@ -861,3 +861,21 @@ export function subscribeTaskPlanStream(
   };
 }
 
+export async function purchaseCatalogItem(providerId: string, amountAlgo: number, type: 'model' | 'compute'): Promise<{
+  success: boolean;
+  message: string;
+  txId: string;
+  round: number;
+  explorerUrl: string;
+  loraUrl: string;
+}> {
+  const res = await fetch(`${API_BASE}/marketplace/purchase`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ providerId, type, amountAlgo })
+  });
+  const data = await res.json();
+  if (!res.ok || !data?.success) throw new Error(data?.error || `HTTP ${res.status}`);
+  return data;
+}
+
