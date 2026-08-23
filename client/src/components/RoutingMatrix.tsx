@@ -56,7 +56,7 @@ export const RoutingMatrix: React.FC = () => {
       <div className="bg-grid-900 border border-grid-800 rounded-xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center space-x-2 mb-1">
-            <span className="w-2 h-2 rounded-full bg-signal-cyan animate-pulse" />
+            <span className="w-2 h-2 rounded-full bg-signal-cyan" />
             <span className="text-xs font-mono uppercase tracking-widest text-signal-cyan font-semibold">Mathematical Optimization Engine</span>
           </div>
           <h2 className="text-xl font-bold font-mono text-grid-100">

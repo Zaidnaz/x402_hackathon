@@ -102,10 +102,10 @@ export const DirectX402Demo: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-black/75 border border-white/[0.08] rounded-xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 backdrop-blur-md shadow-sm">
+      <div className="bg-black/75 border border-white/[0.08] rounded-xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center space-x-2 mb-1">
-            <span className="w-2 h-2 rounded-full bg-brand-emerald animate-pulse" />
+            <span className="w-2 h-2 rounded-full bg-brand-emerald" />
             <span className="text-xs font-mono uppercase tracking-widest text-brand-emerald font-semibold">Standardized RFC 7235 / x402 Engine</span>
           </div>
           <h2 className="text-xl font-bold font-mono text-white">

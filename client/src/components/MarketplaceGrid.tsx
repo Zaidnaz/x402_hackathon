@@ -56,7 +56,7 @@ export const MarketplaceGrid: React.FC<MarketplaceGridProps> = ({
       <div className="bg-grid-900 border border-grid-800 rounded-xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center space-x-2 mb-1">
-            <span className="w-2 h-2 rounded-full bg-signal-emerald animate-pulse" />
+            <span className="w-2 h-2 rounded-full bg-signal-emerald" />
             <span className="text-xs font-mono uppercase tracking-widest text-signal-emerald font-semibold">Live Infrastructure Grid</span>
           </div>
           <h2 className="text-xl font-bold font-mono text-grid-100">
@@ -198,7 +198,7 @@ export const MarketplaceGrid: React.FC<MarketplaceGridProps> = ({
                 {onSelectNode && (
                   <button
                     onClick={() => onSelectNode(comp.id, undefined)}
-                    className="w-full py-2 px-3 rounded-lg bg-brand-emerald text-black font-bold text-xs flex items-center justify-center space-x-1.5 hover:bg-brand-emerald/90 active:scale-[0.98] transition-all cursor-pointer shadow-glow-emerald"
+                    className="w-full py-2 px-3 rounded-lg bg-brand-emerald text-black font-bold text-xs flex items-center justify-center space-x-1.5 hover:bg-brand-emerald/90 active:scale-[0.98] transition-all cursor-pointer"
                   >
                     <Zap className="w-3.5 h-3.5 fill-black" />
                     <span>Deploy & Purchase with x402</span>
