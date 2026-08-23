@@ -59,6 +59,8 @@ import { tasksRouter } from './routes/tasks.js';
 import { marketplaceRouter } from './routes/marketplace.js';
 import { ledgerRouter } from './routes/ledger.js';
 import { x402DemoRouter } from './routes/x402Demo.js';
+import { warehouseRouter } from './routes/warehouse.js';
+import { merchantRouter } from './routes/merchant.js';
 import { providerRegistry } from './services/providerRegistry.js';
 
 const app = new Hono();
@@ -87,7 +89,10 @@ app.use('*', cors({
     'X-402-Network',
     'X-402-Nonce',
     'X-402-Facilitator',
-    'X-402-Scheme'
+    'X-402-Scheme',
+    'PAYMENT-SIGNATURE',
+    'PAYMENT-REQUIRED',
+    'PAYMENT-RESPONSE'
   ],
   exposeHeaders: [
     'WWW-Authenticate',
@@ -97,7 +102,10 @@ app.use('*', cors({
     'X-402-Network',
     'X-402-Nonce',
     'X-402-Facilitator',
-    'X-402-Scheme'
+    'X-402-Scheme',
+    'PAYMENT-SIGNATURE',
+    'PAYMENT-REQUIRED',
+    'PAYMENT-RESPONSE'
   ]
 }));
 
@@ -149,6 +157,8 @@ app.get('/', (c) => {
     endpoints: {
       tasks: '/api/tasks',
       marketplace: '/api/marketplace',
+      warehouse: '/api/warehouse',
+      merchant: '/api/merchant',
       ledger: '/api/ledger',
       x402: '/api/x402/inference/direct-endpoint'
     }
@@ -158,6 +168,8 @@ app.get('/', (c) => {
 // Mount modular sub-routers
 app.route('/api/tasks', tasksRouter);
 app.route('/api/marketplace', marketplaceRouter);
+app.route('/api/warehouse', warehouseRouter);
+app.route('/api/merchant', merchantRouter);
 app.route('/api/ledger', ledgerRouter);
 app.route('/api/x402', x402DemoRouter);
 

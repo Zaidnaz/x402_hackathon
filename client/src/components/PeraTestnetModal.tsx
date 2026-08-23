@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   X, 
   Smartphone, 
@@ -24,6 +24,15 @@ export const PeraTestnetModal: React.FC<PeraTestnetModalProps> = ({
   const { connectWallet, isConnected, walletAddress, liveBalanceAlgo, isConnecting } = useWallet();
   const [connectError, setConnectError] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && !isConnecting) onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, isConnecting, onClose]);
+
   if (!isOpen) return null;
 
   const handleConnectNow = async () => {
@@ -42,7 +51,7 @@ export const PeraTestnetModal: React.FC<PeraTestnetModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
-      <div className="bg-grid-950 border border-white/[0.12] rounded-2xl max-w-lg w-full p-6 space-y-5 shadow-2xl relative font-mono text-xs text-grid-200">
+      <div role="dialog" aria-modal="true" aria-labelledby="pera-title" className="bg-grid-950 border border-white/[0.12] rounded-2xl max-w-lg w-full p-6 space-y-5 shadow-2xl relative font-mono text-xs text-grid-200">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
           <div className="flex items-center space-x-2">
@@ -50,12 +59,13 @@ export const PeraTestnetModal: React.FC<PeraTestnetModalProps> = ({
               <Wallet className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-white">Connect Pera Wallet (TestNet)</h2>
+               <h2 id="pera-title" className="text-sm font-bold text-white">Connect Pera Wallet (TestNet)</h2>
               <p className="text-[10px] text-grid-400 font-sans">Mobile QR & Web Connection Guide</p>
             </div>
           </div>
           <button
             onClick={onClose}
+            aria-label="Close Pera wallet dialog"
             className="p-1 rounded-lg hover:bg-white/[0.06] text-grid-400 hover:text-white transition-colors"
           >
             <X className="w-4 h-4" />

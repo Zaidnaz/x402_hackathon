@@ -27,10 +27,12 @@ export const DirectX402Demo: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [peraTxInfo, setPeraTxInfo] = useState<{ txId: string; round: number; explorerUrl: string; loraUrl: string } | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   // Step 1: Send unauthenticated request (gets 402)
   const handleSendUnauthenticated = async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await testDirectX402();
       setResponseStatus(res.status);
@@ -39,6 +41,7 @@ export const DirectX402Demo: React.FC = () => {
       setStep(2);
     } catch (err) {
       console.error(err);
+      setError('Could not fetch the x402 challenge. Check that the API is running and try again.');
     } finally {
       setLoading(false);
     }
@@ -47,6 +50,7 @@ export const DirectX402Demo: React.FC = () => {
   // Step 2: Settle on Algorand & Generate Token (via Pera Wallet or Autonomous Session)
   const handleSettleAndGenerateToken = async () => {
     setLoading(true);
+    setError(null);
     try {
       const challengeAddress = responseHeaders['x-402-payment-address'] || 'A3R6WQFOLES2CTKEHALIEXFNEZ75R4KYJJ4VPWMZ63X57IZ7MIRJ7Q6HVQ';
       const amountAlgo = 0.15;
@@ -62,7 +66,7 @@ export const DirectX402Demo: React.FC = () => {
         const token = `x402_tok_PERA_${txResult.txId.substring(0, 16)}_${Date.now()}`;
         setPaymentToken(token);
       } else {
-        // Autonomous Agent Session Settlement
+        // This branch demonstrates the UI flow without claiming a blockchain payment.
         await new Promise(r => setTimeout(r, 600));
         const token = `x402_tok_ALGO_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
         setPaymentToken(token);
@@ -70,6 +74,7 @@ export const DirectX402Demo: React.FC = () => {
       setStep(3);
     } catch (err) {
       console.error('Settlement error:', err);
+      setError(isConnected ? 'Wallet payment was not completed.' : 'Simulation could not be started.');
     } finally {
       setLoading(false);
     }
@@ -78,6 +83,7 @@ export const DirectX402Demo: React.FC = () => {
   // Step 3: Re-send with Token (gets 200)
   const handleSendWithToken = async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await testDirectX402(paymentToken);
       setResponseStatus(res.status);
@@ -85,6 +91,7 @@ export const DirectX402Demo: React.FC = () => {
       setResponseBody(res.body);
     } catch (err) {
       console.error(err);
+      setError('The payment token was rejected by the endpoint. Reset the session and try again.');
     } finally {
       setLoading(false);
     }
@@ -96,6 +103,7 @@ export const DirectX402Demo: React.FC = () => {
     setResponseBody(null);
     setPaymentToken('');
     setPeraTxInfo(null);
+    setError(null);
     setStep(1);
   };
 
@@ -192,8 +200,8 @@ export const DirectX402Demo: React.FC = () => {
             <Coins className="w-4 h-4 text-brand-emerald" />
           </div>
           <div className="font-bold text-white">2. Algorand Micro-Settlement</div>
-          <p className="text-[11px] text-grid-400 mt-1">
-            {isConnected ? 'Sign 0.15 ALGO payment via connected Pera Wallet onto Algorand TestNet.' : 'Settle 0.15 ALGO on TestNet and extract x402 payment token.'}
+            <p className="text-[11px] text-grid-400 mt-1">
+             {isConnected ? 'Sign 0.15 ALGO payment via connected Pera Wallet onto Algorand TestNet.' : 'Run a clearly labeled local simulation, or connect Pera for a real TestNet payment.'}
           </p>
           <button
             onClick={handleSettleAndGenerateToken}
@@ -201,7 +209,7 @@ export const DirectX402Demo: React.FC = () => {
             className="mt-3 w-full py-2.5 px-3 rounded-lg bg-brand-emerald hover:bg-brand-emerald/90 text-black font-bold uppercase tracking-wider text-[11px] flex items-center justify-center space-x-1.5 disabled:opacity-40 shadow-glow-emerald"
           >
             <Coins className="w-3.5 h-3.5" />
-            <span>{loading ? 'Signing on TestNet...' : isConnected ? 'Sign via Pera Wallet (0.15 ALGO)' : 'Settle on TestNet'}</span>
+            <span>{loading ? 'Processing...' : isConnected ? 'Sign via Pera Wallet (0.15 ALGO)' : 'Simulate Payment Flow'}</span>
           </button>
         </div>
 
@@ -227,6 +235,8 @@ export const DirectX402Demo: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {error && <div role="alert" className="p-3 rounded-xl border border-signal-rose/30 bg-signal-roseDim text-sm text-signal-rose">{error}</div>}
 
       {/* Pera On-Chain Confirmation Pill with Lora Link */}
       {peraTxInfo && (

@@ -221,15 +221,14 @@ export const ExecutionPipeline: React.FC<ExecutionPipelineProps> = ({
         </div>
         <button
           onClick={onReset}
-          disabled={isStreaming}
           className="px-3 py-1.5 rounded-lg border border-white/[0.08] bg-black/60 text-[13px] text-grid-300 hover:text-white hover:border-white/[0.2] transition-all disabled:opacity-50 cursor-pointer"
         >
-          New Task
+          {isStreaming ? 'Cancel Task' : 'New Task'}
         </button>
       </div>
 
       {errorMessage && (
-        <div className="bg-signal-roseDim border border-signal-rose/40 rounded-xl p-4 flex items-start space-x-3 text-sm text-signal-rose animate-fadeIn">
+        <div role="alert" className="bg-signal-roseDim border border-signal-rose/40 rounded-xl p-4 flex items-start space-x-3 text-sm text-signal-rose animate-fadeIn">
           <XCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
           <div className="space-y-1">
             <div className="font-semibold">The agent couldn't complete this task</div>
@@ -239,7 +238,7 @@ export const ExecutionPipeline: React.FC<ExecutionPipelineProps> = ({
       )}
 
       {/* Live, growing feed — one card per stage, appearing the moment it starts */}
-      <div className="space-y-2.5">
+      <div className="space-y-2.5" aria-live="polite" aria-label="Execution progress">
         {activeStages.map((stage, stageIdx) => {
           const stageEvents = byStage.get(stage)!;
           const latest = stageEvents[stageEvents.length - 1];
@@ -312,7 +311,7 @@ export const ExecutionPipeline: React.FC<ExecutionPipelineProps> = ({
               <span>{copied ? 'Copied' : 'Copy'}</span>
             </button>
           </div>
-          <div className="p-4 max-h-[340px] overflow-y-auto text-[14px] text-grid-100 whitespace-pre-wrap leading-relaxed">
+          <div className="p-4 max-h-[340px] overflow-y-auto text-[14px] text-grid-100 whitespace-pre-wrap leading-relaxed" aria-live="polite">
             {streamedOutput || <span className="text-grid-500">Streaming will start once payment is confirmed...</span>}
           </div>
         </div>

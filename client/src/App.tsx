@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { WalletProvider } from './context/WalletContext';
+import { TaskProvider } from './context/TaskContext';
 import { Navbar } from './components/Navbar';
 import { LandingPage } from './components/LandingPage';
 import { CommandCenter } from './components/CommandCenter';
@@ -10,6 +11,7 @@ import { AlgorandLedger } from './components/AlgorandLedger';
 import { AnalyticsHUD } from './components/AnalyticsHUD';
 import { DirectX402Demo } from './components/DirectX402Demo';
 import { ProviderRegisterModal } from './components/ProviderRegisterModal';
+import { MerchantX402Demo } from './components/MerchantX402Demo';
 import { 
   TaskRequirement, 
   ExecutionEvent, 
@@ -28,7 +30,7 @@ import {
 } from './utils/api';
 
 function MainLayout() {
-  const [activeTab, setActiveTab] = useState<'landing' | 'command' | 'grid' | 'routing' | 'ledger' | 'analytics' | 'x402-demo'>('landing');
+  const [activeTab, setActiveTab] = useState<'landing' | 'command' | 'grid' | 'routing' | 'ledger' | 'analytics' | 'x402-demo' | 'merchant-demo'>('landing');
   const [models, setModels] = useState<ModelProvider[]>(FALLBACK_MODELS);
   const [computes, setComputes] = useState<ComputeProvider[]>(FALLBACK_COMPUTES);
   const [accounts, setAccounts] = useState<AlgorandAccountInfo[]>([]);
@@ -42,7 +44,7 @@ function MainLayout() {
   const [completedTask, setCompletedTask] = useState<CompletedTask | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const [activeStreamUnsub, setActiveStreamUnsub] = useState<(() => void) | null>(null);
+  const activeStreamUnsub = useRef<(() => void) | null>(null);
 
   const loadInitialData = async () => {
     try {
@@ -65,8 +67,8 @@ function MainLayout() {
     simulateFailover: boolean,
     customPeraTx?: { txId: string; round: number; explorerUrl: string; loraUrl: string }
   ) => {
-    if (activeStreamUnsub) {
-      activeStreamUnsub();
+    if (activeStreamUnsub.current) {
+      activeStreamUnsub.current();
     }
     setIsStreaming(true);
     setCurrentStage('analyzing_intent');
@@ -103,6 +105,7 @@ function MainLayout() {
           }
         } : task;
 
+        activeStreamUnsub.current = null;
         setCompletedTask(finalTask);
         setIsStreaming(false);
         setCurrentStage('completed');
@@ -113,20 +116,26 @@ function MainLayout() {
         setIsStreaming(false);
         setCurrentStage('failed');
         setErrorMessage(error || 'The agent lost connection to the server mid-task.');
+        activeStreamUnsub.current = null;
       }
     );
 
-    setActiveStreamUnsub(() => unsub);
+    activeStreamUnsub.current = unsub;
   };
 
   const handleResetPipeline = () => {
-    if (activeStreamUnsub) activeStreamUnsub();
+    if (activeStreamUnsub.current) activeStreamUnsub.current();
+    activeStreamUnsub.current = null;
     setIsStreaming(false);
     setCurrentStage('idle');
     setPipelineEvents([]);
     setStreamedOutput('');
     setCompletedTask(null);
     setErrorMessage(null);
+  };
+
+  const navigateToCommand = () => {
+    setActiveTab('command');
   };
 
   return (
@@ -177,7 +186,7 @@ function MainLayout() {
               computes={computes}
               onOpenRegisterModal={() => setIsRegisterModalOpen(true)}
               onRefreshCatalog={loadInitialData}
-              onSelectNode={() => setActiveTab('command')}
+              onNavigateToCommand={navigateToCommand}
             />
           </div>
         )}
@@ -203,6 +212,12 @@ function MainLayout() {
         {activeTab === 'x402-demo' && (
           <div className="animate-fadeIn max-w-4xl mx-auto">
             <DirectX402Demo />
+          </div>
+        )}
+
+        {activeTab === 'merchant-demo' && (
+          <div className="animate-fadeIn max-w-4xl mx-auto">
+            <MerchantX402Demo />
           </div>
         )}
       </main>
@@ -234,7 +249,9 @@ function MainLayout() {
 export function App() {
   return (
     <WalletProvider>
-      <MainLayout />
+      <TaskProvider>
+        <MainLayout />
+      </TaskProvider>
     </WalletProvider>
   );
 }

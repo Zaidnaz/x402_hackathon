@@ -10,7 +10,8 @@ import {
   Check,
   CheckCircle2,
   XCircle,
-  HelpCircle
+  HelpCircle,
+  RefreshCw
 } from 'lucide-react';
 import { TaskRequirement, RoutingDecision, CandidateEvaluation } from '../types';
 import { analyzePrompt, evaluateRoute, generateFallbackRoute } from '../utils/api';
@@ -24,9 +25,11 @@ export const RoutingMatrix: React.FC = () => {
   const [relWeight, setRelWeight] = useState(10);
   const [routing, setRouting] = useState<RoutingDecision | null>(() => generateFallbackRoute());
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const recompute = async () => {
     setLoading(true);
+    setError(null);
     try {
       const totalWeight = costWeight + latWeight + qualWeight + relWeight || 100;
       const req: TaskRequirement = await analyzePrompt(prompt, {
@@ -41,6 +44,7 @@ export const RoutingMatrix: React.FC = () => {
       setRouting(res);
     } catch (err) {
       console.error('Recompute error', err);
+      setError('Unable to recompute this route. Showing the last successful result.');
     } finally {
       setLoading(false);
     }
@@ -48,7 +52,7 @@ export const RoutingMatrix: React.FC = () => {
 
   useEffect(() => {
     recompute();
-  }, [costWeight, latWeight, qualWeight, relWeight]);
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -92,7 +96,28 @@ export const RoutingMatrix: React.FC = () => {
           <div className="bg-grid-950 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-lg border border-grid-800 text-[11px] sm:text-xs font-mono text-grid-300">
             Permutations: <strong className="text-signal-amber font-semibold">{routing?.evaluatedCandidatesCount || 0}</strong>
           </div>
+          <button
+            onClick={recompute}
+            disabled={loading || !prompt.trim()}
+            className="px-3 py-2 rounded-lg bg-brand-emerald text-black text-xs font-mono font-bold flex items-center gap-1.5 disabled:opacity-40"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+            {loading ? 'Computing' : 'Recompute'}
+          </button>
         </div>
+      </div>
+
+      <div className="bg-grid-900 border border-grid-800 rounded-xl p-4 space-y-2">
+        <label htmlFor="routing-prompt" className="text-xs font-mono font-semibold uppercase tracking-wider text-grid-300">Workload to evaluate</label>
+        <textarea
+          id="routing-prompt"
+          value={prompt}
+          onChange={(event) => setPrompt(event.target.value)}
+          rows={2}
+          className="w-full bg-grid-950 border border-grid-800 rounded-lg p-3 text-sm text-grid-100 focus:outline-none focus:border-brand-emerald resize-y"
+          placeholder="Describe the workload you want to route"
+        />
+        {error && <div role="alert" className="text-xs text-signal-rose">{error}</div>}
       </div>
 
       {/* Interactive Weight Controllers */}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useWallet } from '../context/WalletContext';
 import { Wallet, LogOut, Radio, ArrowUpRight, Menu, X } from 'lucide-react';
 import { PeraTestnetModal } from './PeraTestnetModal';
@@ -18,14 +18,25 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [isGuideOpen, setIsGuideOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const navLinks = [
+const navLinks = [
     { id: 'landing', label: 'About' },
     { id: 'command', label: 'Agent' },
     { id: 'grid', label: 'Marketplace' },
     { id: 'routing', label: 'Routing' },
     { id: 'ledger', label: 'Ledger' },
-    { id: 'x402-demo', label: 'x402 Testbed' }
+    { id: 'analytics', label: 'Analytics' },
+    { id: 'x402-demo', label: 'x402 Testbed' },
+    { id: 'merchant-demo', label: 'Merchant x402' }
   ];
+
+  useEffect(() => {
+    if (!isMobileMenuOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsMobileMenuOpen(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isMobileMenuOpen]);
 
   return (
     <>
@@ -64,6 +75,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <button
                   key={link.id}
                   onClick={() => setActiveTab(link.id)}
+                  aria-current={isActive ? 'page' : undefined}
                   className={`px-3.5 py-1.5 rounded-full text-xs font-mono transition-all duration-200 ${
                     isActive
                       ? 'bg-brand-emerald text-black font-bold shadow-glow-emerald'
@@ -127,39 +139,20 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
 
-        {/* Mobile Horizontal Scrollable Quick-Bar */}
-        <div className="lg:hidden flex items-center space-x-1.5 px-3 py-2 border-t border-white/[0.06] overflow-x-auto no-scrollbar bg-black/60">
-          {navLinks.map((link) => {
-            const isActive = activeTab === link.id;
-            return (
-              <button
-                key={link.id}
-                onClick={() => setActiveTab(link.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-mono whitespace-nowrap transition-all shrink-0 ${
-                  isActive
-                    ? 'bg-brand-emerald/20 text-brand-emerald border border-brand-emerald/40 font-bold shadow-sm'
-                    : 'text-grid-300 hover:text-white bg-white/[0.02] border border-white/[0.04]'
-                }`}
-              >
-                {link.label}
-              </button>
-            );
-          })}
-        </div>
-
         {/* Mobile Expanded Menu Drawer */}
         {isMobileMenuOpen && (
-          <div className="lg:hidden border-t border-white/[0.08] bg-black/98 px-4 py-4 space-y-3 animate-fadeIn font-mono text-xs shadow-2xl">
+          <div className="lg:hidden border-t border-white/[0.08] bg-black/98 px-4 py-4 space-y-3 animate-fadeIn font-mono text-xs shadow-2xl" role="dialog" aria-label="Mobile navigation">
             <div className="grid grid-cols-2 gap-2">
               {navLinks.map((link) => {
                 const isActive = activeTab === link.id;
                 return (
                   <button
-                    key={link.id}
+                     key={link.id}
                     onClick={() => {
                       setActiveTab(link.id);
                       setIsMobileMenuOpen(false);
-                    }}
+                     }}
+                    aria-current={isActive ? 'page' : undefined}
                     className={`p-3 rounded-xl text-left transition-all ${
                       isActive
                         ? 'bg-brand-emerald/20 text-brand-emerald border border-brand-emerald/40 font-bold'

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { X, Server, Cpu, Plus, Check } from 'lucide-react';
 import { registerModel, registerCompute } from '../utils/api';
 
@@ -15,6 +15,7 @@ export const ProviderRegisterModal: React.FC<ProviderRegisterModalProps> = ({
 }) => {
   const [providerType, setProviderType] = useState<'compute' | 'model'>('compute');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Compute Form State
   const [computeName, setComputeName] = useState('Nebula Cluster (B200 NVL)');
@@ -33,11 +34,21 @@ export const ProviderRegisterModal: React.FC<ProviderRegisterModalProps> = ({
   const [costPer1kOutput, setCostPer1kOutput] = useState(0.00219);
   const [typicalTps, setTypicalTps] = useState(85);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && !loading) onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, loading, onClose]);
+
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
     try {
       if (providerType === 'compute') {
         const id = `custom_compute_${Date.now()}`;
@@ -71,6 +82,7 @@ export const ProviderRegisterModal: React.FC<ProviderRegisterModalProps> = ({
       onClose();
     } catch (err) {
       console.error('Registration failed', err);
+      setError('Registration failed. Check the values and confirm the API is available.');
     } finally {
       setLoading(false);
     }
@@ -78,16 +90,17 @@ export const ProviderRegisterModal: React.FC<ProviderRegisterModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-grid-950/80 backdrop-blur-sm animate-fadeIn">
-      <div className="bg-grid-900 border border-grid-800 rounded-xl max-w-lg w-full p-6 space-y-5 shadow-2xl relative">
+      <div role="dialog" aria-modal="true" aria-labelledby="provider-register-title" className="bg-grid-900 border border-grid-800 rounded-xl max-w-lg w-full p-6 space-y-5 shadow-2xl relative">
         <div className="flex items-center justify-between border-b border-grid-800 pb-3">
           <div className="flex items-center space-x-2">
             <span className="w-2 h-2 rounded-full bg-signal-amber" />
-            <h3 className="text-sm font-bold font-mono text-grid-100 uppercase tracking-wider">
+             <h3 id="provider-register-title" className="text-sm font-bold font-mono text-grid-100 uppercase tracking-wider">
               Register Provider on AgentGrid
             </h3>
           </div>
           <button
             onClick={onClose}
+            aria-label="Close provider registration dialog"
             className="text-grid-400 hover:text-grid-200 p-1 rounded-md"
           >
             <X className="w-4 h-4" />
@@ -127,9 +140,9 @@ export const ProviderRegisterModal: React.FC<ProviderRegisterModalProps> = ({
           {providerType === 'compute' ? (
             <>
               <div>
-                <label className="text-grid-400 block mb-1">Provider Node Label</label>
+                <label htmlFor="compute-name" className="text-grid-400 block mb-1">Provider Node Label</label>
                 <input
-                  type="text"
+                  id="compute-name" type="text"
                   value={computeName}
                   onChange={(e) => setComputeName(e.target.value)}
                   className="w-full bg-grid-950 border border-grid-750 rounded p-2 text-grid-100 focus:outline-none focus:border-signal-amber"
@@ -139,9 +152,9 @@ export const ProviderRegisterModal: React.FC<ProviderRegisterModalProps> = ({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-grid-400 block mb-1">GPU Architecture</label>
+                    <label htmlFor="gpu-type" className="text-grid-400 block mb-1">GPU Architecture</label>
                   <input
-                    type="text"
+                      id="gpu-type" type="text"
                     value={gpuType}
                     onChange={(e) => setGpuType(e.target.value)}
                     className="w-full bg-grid-950 border border-grid-750 rounded p-2 text-grid-100 focus:outline-none focus:border-signal-amber"
@@ -149,9 +162,9 @@ export const ProviderRegisterModal: React.FC<ProviderRegisterModalProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="text-grid-400 block mb-1">VRAM (GB)</label>
+                    <label htmlFor="vram-gb" className="text-grid-400 block mb-1">VRAM (GB)</label>
                   <input
-                    type="number"
+                      id="vram-gb" type="number" min="1"
                     value={vramGb}
                     onChange={(e) => setVramGb(parseInt(e.target.value, 10))}
                     className="w-full bg-grid-950 border border-grid-750 rounded p-2 text-grid-100 focus:outline-none focus:border-signal-amber"
@@ -162,10 +175,9 @@ export const ProviderRegisterModal: React.FC<ProviderRegisterModalProps> = ({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-grid-400 block mb-1">Spot Rate ($/hr)</label>
+                    <label htmlFor="compute-rate" className="text-grid-400 block mb-1">Spot Rate ($/hr)</label>
                   <input
-                    type="number"
-                    step="0.01"
+                    id="compute-rate" type="number" min="0" step="0.01"
                     value={costPerHourUsd}
                     onChange={(e) => setCostPerHourUsd(parseFloat(e.target.value))}
                     className="w-full bg-grid-950 border border-grid-750 rounded p-2 text-grid-100 focus:outline-none focus:border-signal-amber"
@@ -173,9 +185,9 @@ export const ProviderRegisterModal: React.FC<ProviderRegisterModalProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="text-grid-400 block mb-1">Ping Latency (ms)</label>
+                    <label htmlFor="compute-latency" className="text-grid-400 block mb-1">Ping Latency (ms)</label>
                   <input
-                    type="number"
+                    id="compute-latency" type="number" min="0"
                     value={latencyBaseMs}
                     onChange={(e) => setLatencyBaseMs(parseInt(e.target.value, 10))}
                     className="w-full bg-grid-950 border border-grid-750 rounded p-2 text-grid-100 focus:outline-none focus:border-signal-amber"
@@ -266,7 +278,8 @@ export const ProviderRegisterModal: React.FC<ProviderRegisterModalProps> = ({
             </>
           )}
 
-          <div className="pt-3 border-t border-grid-800 flex items-center justify-end space-x-3">
+            {error && <div role="alert" className="text-signal-rose text-xs">{error}</div>}
+            <div className="pt-3 border-t border-grid-800 flex items-center justify-end space-x-3">
             <button
               type="button"
               onClick={onClose}
