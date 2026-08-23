@@ -1,19 +1,15 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { WalletProvider } from './context/WalletContext';
-import { TaskProvider } from './context/TaskContext';
-import { EscrowProvider } from './context/EscrowContext';
 import { Navbar } from './components/Navbar';
 import { LandingPage } from './components/LandingPage';
-import { CommandBarLight } from './components/CommandBarLight';
+import { CommandCenter } from './components/CommandCenter';
 import { ExecutionPipeline } from './components/ExecutionPipeline';
-import { MarketplaceOrderBook } from './components/MarketplaceOrderBook';
+import { MarketplaceGrid } from './components/MarketplaceGrid';
 import { RoutingMatrix } from './components/RoutingMatrix';
 import { AlgorandLedger } from './components/AlgorandLedger';
 import { AnalyticsHUD } from './components/AnalyticsHUD';
 import { DirectX402Demo } from './components/DirectX402Demo';
 import { ProviderRegisterModal } from './components/ProviderRegisterModal';
-import { MerchantX402Demo } from './components/MerchantX402Demo';
-import { StickySettlementBar } from './components/StickySettlementBar';
 import { 
   TaskRequirement, 
   ExecutionEvent, 
@@ -32,7 +28,7 @@ import {
 } from './utils/api';
 
 function MainLayout() {
-  const [activeTab, setActiveTab] = useState<'landing' | 'command' | 'grid' | 'routing' | 'ledger' | 'analytics' | 'x402-demo' | 'merchant-demo'>('landing');
+  const [activeTab, setActiveTab] = useState<'landing' | 'command' | 'grid' | 'routing' | 'ledger' | 'analytics' | 'x402-demo'>('command');
   const [models, setModels] = useState<ModelProvider[]>(FALLBACK_MODELS);
   const [computes, setComputes] = useState<ComputeProvider[]>(FALLBACK_COMPUTES);
   const [accounts, setAccounts] = useState<AlgorandAccountInfo[]>([]);
@@ -46,10 +42,7 @@ function MainLayout() {
   const [completedTask, setCompletedTask] = useState<CompletedTask | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Settlement bar state
-  const [showSettlementBar, setShowSettlementBar] = useState(false);
-
-  const activeStreamUnsub = useRef<(() => void) | null>(null);
+  const [activeStreamUnsub, setActiveStreamUnsub] = useState<(() => void) | null>(null);
 
   const loadInitialData = async () => {
     try {
@@ -72,8 +65,8 @@ function MainLayout() {
     simulateFailover: boolean,
     customPeraTx?: { txId: string; round: number; explorerUrl: string; loraUrl: string }
   ) => {
-    if (activeStreamUnsub.current) {
-      activeStreamUnsub.current();
+    if (activeStreamUnsub) {
+      activeStreamUnsub();
     }
     setIsStreaming(true);
     setCurrentStage('analyzing_intent');
@@ -81,7 +74,6 @@ function MainLayout() {
     setStreamedOutput('');
     setCompletedTask(null);
     setErrorMessage(null);
-    setShowSettlementBar(true);
 
     const unsub = subscribeTaskStream(
       prompt,
@@ -111,7 +103,6 @@ function MainLayout() {
           }
         } : task;
 
-        activeStreamUnsub.current = null;
         setCompletedTask(finalTask);
         setIsStreaming(false);
         setCurrentStage('completed');
@@ -122,39 +113,25 @@ function MainLayout() {
         setIsStreaming(false);
         setCurrentStage('failed');
         setErrorMessage(error || 'The agent lost connection to the server mid-task.');
-        activeStreamUnsub.current = null;
       }
     );
 
-    activeStreamUnsub.current = unsub;
+    setActiveStreamUnsub(() => unsub);
   };
 
   const handleResetPipeline = () => {
-    if (activeStreamUnsub.current) activeStreamUnsub.current();
-    activeStreamUnsub.current = null;
+    if (activeStreamUnsub) activeStreamUnsub();
     setIsStreaming(false);
     setCurrentStage('idle');
     setPipelineEvents([]);
     setStreamedOutput('');
     setCompletedTask(null);
     setErrorMessage(null);
-    setShowSettlementBar(false);
-  };
-
-  const handleSettlementDismiss = () => {
-    setShowSettlementBar(false);
-    if (!isStreaming) {
-      handleResetPipeline();
-    }
-  };
-
-  const navigateToCommand = () => {
-    setActiveTab('command');
   };
 
   return (
-    <div className="min-h-screen max-w-full overflow-x-hidden bg-surface-canvas text-text-primary flex flex-col font-sans grid-bg-pattern relative selection:bg-signal-green/20 selection:text-white">
-      {/* Navbar */}
+    <div className="min-h-screen max-w-full overflow-x-hidden bg-grid-950 text-grid-100 flex flex-col font-sans grid-bg-pattern relative selection:bg-signal-amber/20 selection:text-signal-amber">
+      {/* Floating Modern Pill Navbar */}
       <Navbar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -162,7 +139,7 @@ function MainLayout() {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-6 relative z-10 overflow-x-hidden">
+      <main className="flex-1 max-w-5xl w-full mx-auto px-3 sm:px-6 py-6 relative z-10 overflow-x-hidden">
         {activeTab === 'landing' && (
           <LandingPage
             onEnterApp={() => setActiveTab('command')}
@@ -171,19 +148,19 @@ function MainLayout() {
         )}
 
         {activeTab === 'command' && (
-          <div className="space-y-6 animate-fadeIn max-w-3xl mx-auto">
-            <CommandBarLight
+          <div className="space-y-8 animate-fadeIn max-w-4xl mx-auto">
+            <CommandCenter
               onDispatchTask={handleDispatchTask}
               isStreaming={isStreaming}
             />
 
             {(currentStage !== 'idle' || completedTask) && (
-              <div className="pt-4 animate-fadeIn">
+              <div className="pt-6 border-t border-grid-800 animate-fadeIn">
                 <ExecutionPipeline
                   events={pipelineEvents}
                   currentStage={currentStage}
                   streamedOutput={streamedOutput}
-        completedTask={completedTask}
+                  completedTask={completedTask}
                   isStreaming={isStreaming}
                   errorMessage={errorMessage}
                   onReset={handleResetPipeline}
@@ -195,12 +172,11 @@ function MainLayout() {
 
         {activeTab === 'grid' && (
           <div className="animate-fadeIn max-w-5xl mx-auto">
-            <MarketplaceOrderBook
+            <MarketplaceGrid
               models={models}
               computes={computes}
               onOpenRegisterModal={() => setIsRegisterModalOpen(true)}
               onRefreshCatalog={loadInitialData}
-              onNavigateToCommand={navigateToCommand}
             />
           </div>
         )}
@@ -228,12 +204,6 @@ function MainLayout() {
             <DirectX402Demo />
           </div>
         )}
-
-        {activeTab === 'merchant-demo' && (
-          <div className="animate-fadeIn max-w-4xl mx-auto">
-            <MerchantX402Demo />
-          </div>
-        )}
       </main>
 
       {/* Provider Registration Modal */}
@@ -243,26 +213,16 @@ function MainLayout() {
         onSuccess={loadInitialData}
       />
 
-      {/* Sticky Settlement Bar */}
-      <StickySettlementBar
-        isVisible={showSettlementBar}
-        isStreaming={isStreaming}
-        onExecute={() => {}}
-        onDismiss={handleSettlementDismiss}
-        completedTask={completedTask}
-        errorMessage={errorMessage}
-      />
-
-      {/* Footer */}
-      <footer className="border-t border-zinc-200 bg-white/80 backdrop-blur-md py-6 mt-12 relative z-10">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between text-xs font-mono text-zinc-500 gap-3">
+      {/* Minimal Clean Footer */}
+      <footer className="border-t border-grid-850 bg-grid-950/80 backdrop-blur-md py-6 mt-16 relative z-10">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between text-xs font-mono text-grid-500 gap-3">
           <div className="flex items-center space-x-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
-            <span className="text-zinc-700 font-semibold">AgentGrid</span>
-            <span className="text-zinc-400">— Autonomous Infrastructure Layer</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-signal-amber" />
+            <span className="text-grid-300 font-semibold">AgentGrid</span>
+            <span>— Autonomous Infrastructure Layer</span>
           </div>
           <div>
-            Settlement: <span className="text-zinc-600">Algorand TestNet</span> • Standard: <span className="text-zinc-600">RFC 7235 / x402</span>
+            Settlement: <span className="text-grid-300">Algorand TestNet</span> • Standard: <span className="text-grid-300">RFC 7235 / x402</span>
           </div>
         </div>
       </footer>
@@ -273,11 +233,7 @@ function MainLayout() {
 export function App() {
   return (
     <WalletProvider>
-      <EscrowProvider>
-        <TaskProvider>
-          <MainLayout />
-        </TaskProvider>
-      </EscrowProvider>
+      <MainLayout />
     </WalletProvider>
   );
 }

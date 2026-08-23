@@ -1,11 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowUp, ChevronDown, Loader2, AlertTriangle, X, Zap, Cpu, Coins, Timer, ShieldCheck } from 'lucide-react';
+import { ArrowUp, ChevronDown, Loader2, AlertTriangle } from 'lucide-react';
 import { TaskRequirement } from '../types';
 import { fetchFundingStatus } from '../utils/api';
-import { useTaskContext } from '../context/TaskContext';
-import { useEscrow } from '../context/EscrowContext';
-import { formatCostRange } from '../utils/costEstimator';
-import { EscrowPanel } from './EscrowPanel';
+
+interface CommandCenterProps {
+  onDispatchTask: (
+    prompt: string,
+    overrides: Partial<TaskRequirement>,
+    simulateFailover: boolean
+  ) => void;
+  isStreaming: boolean;
+}
 
 const EXAMPLE_PROMPTS = [
   'Write an optimized Algorand PyTeal contract for an atomic x402 escrow',
@@ -13,15 +18,10 @@ const EXAMPLE_PROMPTS = [
   'Deduce worst-case latency bounds for a Raft cluster under network partition'
 ];
 
-export const CommandCenter: React.FC<{
-  onDispatchTask: (
-    prompt: string,
-    overrides: Partial<TaskRequirement>,
-    simulateFailover: boolean
-  ) => void;
-  isStreaming: boolean;
-}> = ({ onDispatchTask, isStreaming }) => {
-  const { selectedConfig, clearSelection, isLocked } = useTaskContext();
+export const CommandCenter: React.FC<CommandCenterProps> = ({
+  onDispatchTask,
+  isStreaming
+}) => {
   const [prompt, setPrompt] = useState('');
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [priority, setPriority] = useState<'balanced' | 'cost' | 'speed' | 'quality'>('balanced');
@@ -44,19 +44,9 @@ export const CommandCenter: React.FC<{
     el.style.height = `${Math.min(el.scrollHeight, 260)}px`;
   }, [prompt]);
 
-  const { state: escrowState, canExecuteSilently, recordTaskExecution } = useEscrow();
-
   const handleDispatch = () => {
     if (!prompt.trim() || isStreaming) return;
-    const overrides: Partial<TaskRequirement> = { priority };
-    if (selectedConfig.model) overrides.modality = 'code';
-    
-    // Record task execution in escrow if active
-    if (escrowState.isActive && selectedConfig.estimate) {
-      recordTaskExecution(selectedConfig.estimate.breakdown.totalCostUsd / 0.1904); // Convert USD to ALGO
-    }
-    
-    onDispatchTask(prompt.trim(), overrides, simulateFailover);
+    onDispatchTask(prompt.trim(), { priority }, simulateFailover);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -66,85 +56,14 @@ export const CommandCenter: React.FC<{
     }
   };
 
-  const handleClearSelection = () => {
-    clearSelection();
-  };
-
   return (
     <div className="max-w-2xl mx-auto space-y-5">
-      {/* Escrow Panel */}
-      <EscrowPanel isStreaming={isStreaming} />
-
-      {/* Selection Summary Bar */}
-      {selectedConfig.model && selectedConfig.compute && (
-        <div className="bg-brand-emerald/10 border border-brand-emerald/30 rounded-xl p-4 space-y-3 animate-slideDown" role="status" aria-live="polite">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 rounded-full bg-brand-emerald" />
-              <span className="text-xs font-mono font-semibold uppercase tracking-wider text-brand-emerald">Active Selection</span>
-            </div>
-            <button
-              onClick={handleClearSelection}
-              disabled={isStreaming}
-              className="p-1.5 rounded-lg text-grid-400 hover:text-white hover:bg-white/[0.06] transition-colors disabled:opacity-50"
-              aria-label="Clear model/compute selection"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3 text-xs font-mono">
-            <div className="bg-grid-950 border border-grid-800 rounded-lg p-3">
-              <div className="flex items-center space-x-1.5 text-grid-400 mb-1">
-                <Cpu className="w-3.5 h-3.5 text-signal-cyan" />
-                <span>Model</span>
-              </div>
-              <div className="text-grid-100 font-semibold truncate">{selectedConfig.model.name}</div>
-              <div className="text-[10px] text-grid-400">{selectedConfig.model.providerOrg}</div>
-            </div>
-            <div className="bg-grid-950 border border-grid-800 rounded-lg p-3">
-              <div className="flex items-center space-x-1.5 text-grid-400 mb-1">
-                <Zap className="w-3.5 h-3.5 text-signal-amber" />
-                <span>Compute</span>
-              </div>
-              <div className="text-grid-100 font-semibold truncate">{selectedConfig.compute.name}</div>
-              <div className="text-[10px] text-grid-400">{selectedConfig.compute.gpuType}</div>
-            </div>
-            <div className="bg-grid-950 border border-grid-800 rounded-lg p-3">
-              <div className="flex items-center space-x-1.5 text-grid-400 mb-1">
-                <Coins className="w-3.5 h-3.5 text-brand-emerald" />
-                <span>Est. Cost</span>
-              </div>
-              <div className="text-brand-emerald font-bold font-mono">{formatCostRange(selectedConfig.estimate!)}</div>
-              <div className="text-[10px] text-grid-400">±30% based on actual usage</div>
-            </div>
-            <div className="bg-grid-950 border border-grid-800 rounded-lg p-3">
-              <div className="flex items-center space-x-1.5 text-grid-400 mb-1">
-                <Timer className="w-3.5 h-3.5 text-signal-amber" />
-                <span>Est. Latency</span>
-              </div>
-              <div className="text-signal-amber font-bold font-mono">{selectedConfig.estimate?.estimatedLatencyMs} ms</div>
-              <div className="text-[10px] text-grid-400">Quality: {selectedConfig.model.qualityBenchmark}/100</div>
-            </div>
-          </div>
-
-          {isLocked && (
-            <div className="text-[10px] text-grid-500 font-mono flex items-center space-x-1">
-              <ShieldCheck className="w-3 h-3 text-brand-emerald" />
-              <span>Selection locked — click ✕ to change</span>
-            </div>
-          )}
-        </div>
-      )}
-
       <div className="text-center space-y-2 mb-1">
         <h1 className="font-serif text-[2rem] sm:text-[2.5rem] leading-tight font-medium text-white tracking-tight">
           What do you need done?
         </h1>
         <p className="text-sm text-grid-400 max-w-md mx-auto leading-relaxed">
-          {selectedConfig.model && selectedConfig.compute
-            ? `Running on <strong className="text-white">{selectedConfig.model.name}</strong> + <strong className="text-white">{selectedConfig.compute.name}</strong>. Describe your task below.`
-            : 'Describe the task. The agent picks the model, pays for the compute on Algorand, and runs it — you\'ll watch every decision it makes, live.'}
+          Describe the task. The agent picks the model, pays for the compute on Algorand, and runs it — you'll watch every decision it makes, live.
         </p>
       </div>
 
@@ -153,18 +72,10 @@ export const CommandCenter: React.FC<{
           href={funding.fundUrl}
           target="_blank"
           rel="noreferrer"
-          className="flex items-start space-x-2.5 text-[13px] text-signal-amber bg-signal-amber/10 border border-signal-amber/30 rounded-xl p-3.5 hover:bg-signal-amber/15 transition-all group"
+          className="flex items-center space-x-2 text-[13px] text-signal-amber bg-signal-amber/10 border border-signal-amber/25 rounded-xl px-3.5 py-2.5"
         >
-          <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-          <div className="space-y-1 text-left">
-            <div className="font-semibold text-white flex items-center space-x-1.5">
-              <span>Fund Autonomous Agent Wallet on TestNet</span>
-              <span className="text-[11px] font-mono text-signal-amber underline group-hover:text-white">Tap to get free ALGO ›</span>
-            </div>
-            <p className="text-[12px] text-grid-300 leading-snug">
-              AgentGrid's autonomous backend agent signs and settles compute payments on-chain on your behalf. Please fund the <strong className="text-white">Agent Wallet</strong> (<code className="text-signal-amber font-mono text-[11px]">{funding.agentAddress.slice(0, 8)}...{funding.agentAddress.slice(-6)}</code>) via the AlgoKit dispenser, not just your personal connected wallet.
-            </p>
-          </div>
+          <AlertTriangle className="w-4 h-4 shrink-0" />
+          <span>Agent wallet has no TestNet ALGO — tasks will fail to settle. Tap to fund it.</span>
         </a>
       )}
 
@@ -209,12 +120,11 @@ export const CommandCenter: React.FC<{
                   <button
                     key={opt}
                     onClick={() => setPriority(opt)}
-                    disabled={isLocked}
                     className={`py-1.5 rounded-lg text-[13px] font-medium capitalize transition-all cursor-pointer ${
                       priority === opt
                         ? 'bg-brand-emerald/15 border border-brand-emerald/40 text-brand-emerald'
                         : 'bg-white/[0.03] border border-white/[0.06] text-grid-400 hover:text-white'
-                    } ${isLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    }`}
                   >
                     {opt}
                   </button>
@@ -227,23 +137,15 @@ export const CommandCenter: React.FC<{
                 type="checkbox"
                 checked={simulateFailover}
                 onChange={(e) => setSimulateFailover(e.target.checked)}
-                disabled={isLocked}
                 className="accent-brand-emerald"
               />
               <span>Simulate a mid-task provider failure</span>
-              {isLocked && <span className="text-[10px] text-grid-500">(locked)</span>}
             </label>
-
-            {isLocked && (
-              <div className="text-[11px] text-grid-500 font-mono bg-grid-950 border border-grid-800 rounded-lg p-2">
-                Model and compute are pre-selected from Marketplace. Unlock to let the agent choose automatically.
-              </div>
-            )}
           </div>
         )}
       </div>
 
-      {!prompt && !selectedConfig.model && (
+      {!prompt && (
         <div className="flex flex-wrap items-center justify-center gap-1.5 pt-1">
           {EXAMPLE_PROMPTS.map((ex) => (
             <button

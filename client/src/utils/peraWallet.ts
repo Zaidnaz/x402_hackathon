@@ -1,7 +1,6 @@
 import { PeraWalletConnect } from '@perawallet/connect';
 import algosdk from 'algosdk';
 import { Buffer } from 'buffer';
-import { PaymentTerms } from './x402Client';
 
 if (typeof window !== 'undefined' && !(window as any).Buffer) {
   (window as any).Buffer = Buffer;
@@ -112,12 +111,14 @@ export async function sendPeraTestnetPayment({
   noteText: string;
 }): Promise<{ txId: string; round: number; explorerUrl: string; loraUrl: string }> {
   try {
+    // 1. Get live suggested parameters from TestNet Algod node
     const suggestedParams = await algodClient.getTransactionParams().do();
 
     const microAlgos = Math.max(1000, Math.round(amountAlgo * 1_000_000));
     const enc = new TextEncoder();
     const note = enc.encode(noteText);
 
+    // 2. Construct payment transaction object using algosdk
     const txn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
       sender: senderAddress,
       receiver: receiverAddress,
@@ -126,12 +127,15 @@ export async function sendPeraTestnetPayment({
       suggestedParams
     });
 
+    // 3. Request Pera Wallet signature (opens modal / triggers mobile push)
     const singleTxnGroup = [{ txn, signers: [senderAddress] }];
     const signedTxns = await peraWallet.signTransaction([singleTxnGroup]);
 
+    // 4. Send raw signed transaction to Algorand TestNet
     const sendResponse = await algodClient.sendRawTransaction(signedTxns).do();
     const txId = sendResponse.txid || txn.txID();
 
+    // 5. Wait for confirmation on Algorand TestNet (usually ~2.8s)
     const confirmedTxn: any = await algosdk.waitForConfirmation(algodClient, txId, 4);
     const confirmedRound = Number(confirmedTxn.confirmedRound || confirmedTxn['confirmed-round'] || 0);
 
@@ -148,54 +152,4 @@ export async function sendPeraTestnetPayment({
     console.error('Pera transaction error:', error);
     throw error;
   }
-}
-
-/**
- * Signs an x402 payment transaction using Pera Wallet.
- * Returns base64-encoded signed transaction bytes for the merchant to verify and submit.
- * Does NOT broadcast - the merchant handles submission after verification.
- */
-export async function signX402Payment(
-  senderAddress: string,
-  terms: PaymentTerms
-): Promise<string> {
-  const suggestedParams = await algodClient.getTransactionParams().do();
-
-  const txn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
-    sender: senderAddress,
-    receiver: terms.payee,
-    amount: terms.price,
-    note: new TextEncoder().encode(terms.memo || `x402:${Date.now()}`),
-    suggestedParams
-  });
-
-  const singleTxnGroup = [{ txn, signers: [senderAddress] }];
-  const signedTxns = await peraWallet.signTransaction([singleTxnGroup]);
-
-  return Buffer.from(signedTxns).toString('base64');
-}
-
-/**
- * Signs an x402 payment using the autonomous agent wallet (server-side).
- * This is used when the AgentGrid agent pays on behalf of the user.
- * Returns base64-encoded signed transaction bytes.
- */
-export async function signX402PaymentAgent(
-  senderMnemonic: string,
-  terms: PaymentTerms
-): Promise<string> {
-  const account = algosdk.mnemonicToSecretKey(senderMnemonic);
-  const suggestedParams = await algodClient.getTransactionParams().do();
-
-  const txn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
-    sender: account.addr,
-    receiver: terms.payee,
-    amount: terms.price,
-    note: new TextEncoder().encode(terms.memo || `x402:${Date.now()}`),
-    suggestedParams
-  });
-
-  const signedTxn = txn.signTxn(account.sk);
-
-  return Buffer.from(signedTxn).toString('base64');
 }

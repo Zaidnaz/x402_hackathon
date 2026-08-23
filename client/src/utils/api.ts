@@ -627,7 +627,6 @@ export async function registerModel(model: Partial<ModelProvider>) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(model)
   });
-  if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || `Registration failed (${res.status})`);
   return res.json();
 }
 
@@ -637,7 +636,6 @@ export async function registerCompute(compute: Partial<ComputeProvider>) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(compute)
   });
-  if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || `Registration failed (${res.status})`);
   return res.json();
 }
 
@@ -647,7 +645,6 @@ export async function toggleComputeStatus(computeId: string, status: string) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ computeId, status })
   });
-  if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || `Status update failed (${res.status})`);
   return res.json();
 }
 
@@ -669,95 +666,6 @@ export async function testDirectX402(token?: string) {
     headers: rawHeaders,
     body
   };
-}
-
-export interface WarehouseProvider {
-  id: string;
-  name: string;
-  category: 'MODEL_API' | 'COMPUTE_GPU';
-  providerType: 'ENTERPRISE' | 'COMMUNITY_P2P';
-  specs: string;
-  pricePerUnit: number;
-  unit: '1M_TOKENS' | 'HOUR' | 'MINUTE';
-  avgLatencyMs: number;
-  uptimeScore: number;
-  availability: 'AVAILABLE' | 'BUSY' | 'OFFLINE';
-  isRealEndpoint?: boolean;
-  registeredAt: number;
-  registeredBy?: string;
-}
-
-export interface RouteRecommendation {
-  recommended: WarehouseProvider;
-  alternatives: WarehouseProvider[];
-}
-
-export async function fetchWarehouseProviders(filters?: {
-  category?: 'MODEL_API' | 'COMPUTE_GPU';
-  providerType?: 'ENTERPRISE' | 'COMMUNITY_P2P';
-  availability?: 'AVAILABLE' | 'BUSY' | 'OFFLINE';
-}): Promise<WarehouseProvider[]> {
-  try {
-    const params = new URLSearchParams();
-    if (filters?.category) params.append('category', filters.category);
-    if (filters?.providerType) params.append('providerType', filters.providerType);
-    if (filters?.availability) params.append('availability', filters.availability);
-    
-    const res = await fetch(`${API_BASE}/warehouse/providers?${params.toString()}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    return data.data || [];
-  } catch (err) {
-    console.warn('Failed to fetch warehouse providers:', err);
-    return [];
-  }
-}
-
-export async function registerP2PProvider(provider: {
-  nodeName?: string;
-  category: 'MODEL_API' | 'COMPUTE_GPU';
-  specs?: string;
-  pricePerUnit: number;
-  unit: 'HOUR' | '1M_TOKENS' | 'MINUTE';
-}): Promise<WarehouseProvider> {
-  const res = await fetch(`${API_BASE}/warehouse/providers/register`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(provider)
-  });
-  if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || `Registration failed (${res.status})`);
-  const data = await res.json();
-  return data.data;
-}
-
-export async function updateProviderAvailability(providerId: string, availability: 'AVAILABLE' | 'BUSY' | 'OFFLINE'): Promise<WarehouseProvider> {
-  const res = await fetch(`${API_BASE}/warehouse/providers/${providerId}/availability`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ availability })
-  });
-  if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || `Update failed (${res.status})`);
-  const data = await res.json();
-  return data.data;
-}
-
-export async function queryRouteRecommendation(params: {
-  taskType: 'MODEL_API' | 'COMPUTE_GPU';
-  maxBudget: number;
-  maxLatency?: number;
-  minUptime?: number;
-}): Promise<RouteRecommendation> {
-  const res = await fetch(`${API_BASE}/warehouse/route`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(params)
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: 'No providers matched your SLA constraints' }));
-    throw new Error(err.error || `Route query failed (${res.status})`);
-  }
-  const data = await res.json();
-  return data.data;
 }
 
 export function subscribeTaskStream(
