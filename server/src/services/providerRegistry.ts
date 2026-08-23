@@ -254,33 +254,49 @@ class ProviderRegistry {
   public async init(): Promise<void> {
     if (this.initialized) return;
 
-    const [{ data: modelRows, error: modelErr }, { data: computeRows, error: computeErr }] = await Promise.all([
-      supabase.from('model_providers').select('*'),
-      supabase.from('compute_providers').select('*')
-    ]);
-
-    if (modelErr) console.error('[ProviderRegistry] Failed to load model_providers:', modelErr.message);
-    if (computeErr) console.error('[ProviderRegistry] Failed to load compute_providers:', computeErr.message);
-
-    if (modelRows && modelRows.length > 0) {
-      for (const row of modelRows) this.models.set(row.id, rowToModel(row));
-    } else {
-      const { error } = await supabase.from('model_providers').insert(DEFAULT_MODELS.map(modelToRow));
-      if (error) console.error('[ProviderRegistry] Failed to seed model_providers:', error.message);
+    if (!supabase) {
       for (const m of DEFAULT_MODELS) this.models.set(m.id, m);
+      const defaults = buildDefaultComputes();
+      for (const c of defaults) this.computes.set(c.id, c);
+      this.initialized = true;
+      console.log(`[ProviderRegistry] Initialized ${this.models.size} models and ${this.computes.size} compute providers in-memory.`);
+      return;
     }
 
-    if (computeRows && computeRows.length > 0) {
-      for (const row of computeRows) this.computes.set(row.id, rowToCompute(row));
-    } else {
+    try {
+      const [{ data: modelRows, error: modelErr }, { data: computeRows, error: computeErr }] = await Promise.all([
+        supabase.from('model_providers').select('*'),
+        supabase.from('compute_providers').select('*')
+      ]);
+
+      if (modelErr) console.warn('[ProviderRegistry] Failed to load model_providers from Supabase:', modelErr.message);
+      if (computeErr) console.warn('[ProviderRegistry] Failed to load compute_providers from Supabase:', computeErr.message);
+
+      if (modelRows && modelRows.length > 0) {
+        for (const row of modelRows) this.models.set(row.id, rowToModel(row));
+      } else {
+        const { error } = await supabase.from('model_providers').insert(DEFAULT_MODELS.map(modelToRow));
+        if (error) console.warn('[ProviderRegistry] Failed to seed model_providers:', error.message);
+        for (const m of DEFAULT_MODELS) this.models.set(m.id, m);
+      }
+
+      if (computeRows && computeRows.length > 0) {
+        for (const row of computeRows) this.computes.set(row.id, rowToCompute(row));
+      } else {
+        const defaults = buildDefaultComputes();
+        const { error } = await supabase.from('compute_providers').insert(defaults.map(computeToRow));
+        if (error) console.warn('[ProviderRegistry] Failed to seed compute_providers:', error.message);
+        for (const c of defaults) this.computes.set(c.id, c);
+      }
+    } catch (err: any) {
+      console.warn('[ProviderRegistry] Supabase load error, falling back to in-memory defaults:', err?.message || err);
+      for (const m of DEFAULT_MODELS) this.models.set(m.id, m);
       const defaults = buildDefaultComputes();
-      const { error } = await supabase.from('compute_providers').insert(defaults.map(computeToRow));
-      if (error) console.error('[ProviderRegistry] Failed to seed compute_providers:', error.message);
       for (const c of defaults) this.computes.set(c.id, c);
     }
 
     this.initialized = true;
-    console.log(`[ProviderRegistry] Loaded ${this.models.size} models, ${this.computes.size} compute providers from Postgres.`);
+    console.log(`[ProviderRegistry] Loaded ${this.models.size} models, ${this.computes.size} compute providers.`);
   }
 
   public getAllModels(): ModelProvider[] {
@@ -300,18 +316,26 @@ class ProviderRegistry {
   }
 
   public async registerCustomModel(model: ModelProvider): Promise<ModelProvider> {
-    const { error } = await supabase.from('model_providers').upsert(modelToRow(model));
-    if (error) console.error('[ProviderRegistry] Failed to persist custom model:', error.message);
     this.models.set(model.id, model);
+    if (supabase) {
+      try {
+        const { error } = await supabase.from('model_providers').upsert(modelToRow(model));
+        if (error) console.warn('[ProviderRegistry] Failed to persist custom model to Supabase:', error.message);
+      } catch {}
+    }
     return model;
   }
 
   public async registerCustomCompute(compute: ComputeProvider): Promise<ComputeProvider> {
     const payoutAddr = compute.algorandPayoutAddress || algorandService.getProviderAddress(compute.id);
     const updated = { ...compute, algorandPayoutAddress: payoutAddr };
-    const { error } = await supabase.from('compute_providers').upsert(computeToRow(updated));
-    if (error) console.error('[ProviderRegistry] Failed to persist custom compute:', error.message);
     this.computes.set(compute.id, updated);
+    if (supabase) {
+      try {
+        const { error } = await supabase.from('compute_providers').upsert(computeToRow(updated));
+        if (error) console.warn('[ProviderRegistry] Failed to persist custom compute to Supabase:', error.message);
+      } catch {}
+    }
     return updated;
   }
 
@@ -320,8 +344,12 @@ class ProviderRegistry {
     if (!comp) return false;
 
     comp.status = status;
-    const { error } = await supabase.from('compute_providers').update({ status }).eq('id', id);
-    if (error) console.error('[ProviderRegistry] Failed to persist compute status:', error.message);
+    if (supabase) {
+      try {
+        const { error } = await supabase.from('compute_providers').update({ status }).eq('id', id);
+        if (error) console.warn('[ProviderRegistry] Failed to persist compute status to Supabase:', error.message);
+      } catch {}
+    }
     return true;
   }
 }

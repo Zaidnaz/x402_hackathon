@@ -110,6 +110,7 @@ class AlgorandService {
 
   private balanceCache: Map<string, { algo: number; ts: number }> = new Map();
   private openedAddresses: Set<string> = new Set();
+  private memoryTxHistory: AlgorandTransactionRecord[] = [];
   private walletMutex = new AsyncMutex();
 
   constructor() {
@@ -417,25 +418,34 @@ class AlgorandService {
       note: noteContent
     };
 
-    const { error: txInsertError } = await supabase.from('algorand_transactions').insert({
-      tx_id: txRecord.txId,
-      task_id: txRecord.taskId,
-      sender: txRecord.sender,
-      receiver: txRecord.receiver,
-      amount_algo: txRecord.amountAlgo,
-      fee_algo: txRecord.feeAlgo,
-      protocol_fee_algo: txRecord.protocolFeeAlgo,
-      type: txRecord.type,
-      round: txRecord.round,
-      status: txRecord.status,
-      ts: txRecord.timestamp,
-      explorer_url: txRecord.explorerUrl,
-      lora_url: txRecord.loraUrl,
-      facilitator: txRecord.facilitator,
-      note: txRecord.note
-    });
-    if (txInsertError) {
-      console.error('[AlgorandService] Settlement confirmed on-chain but failed to persist ledger row:', txInsertError.message);
+    this.memoryTxHistory.unshift(txRecord);
+    if (this.memoryTxHistory.length > 200) this.memoryTxHistory.pop();
+
+    if (supabase) {
+      try {
+        const { error: txInsertError } = await supabase.from('algorand_transactions').insert({
+          tx_id: txRecord.txId,
+          task_id: txRecord.taskId,
+          sender: txRecord.sender,
+          receiver: txRecord.receiver,
+          amount_algo: txRecord.amountAlgo,
+          fee_algo: txRecord.feeAlgo,
+          protocol_fee_algo: txRecord.protocolFeeAlgo,
+          type: txRecord.type,
+          round: txRecord.round,
+          status: txRecord.status,
+          ts: txRecord.timestamp,
+          explorer_url: txRecord.explorerUrl,
+          lora_url: txRecord.loraUrl,
+          facilitator: txRecord.facilitator,
+          note: txRecord.note
+        });
+        if (txInsertError) {
+          console.warn('[AlgorandService] Settlement confirmed on-chain, saved in memory:', txInsertError.message);
+        }
+      } catch (err: any) {
+        console.warn('[AlgorandService] Failed to persist transaction to Supabase, saved in memory:', err?.message || err);
+      }
     }
 
     return {
@@ -451,35 +461,40 @@ class AlgorandService {
   }
 
   public async getTransactionHistory(limit: number = 30): Promise<AlgorandTransactionRecord[]> {
-    const { data, error } = await supabase
-      .from('algorand_transactions')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(limit);
+    if (!supabase) return this.memoryTxHistory.slice(0, limit);
 
-    if (error || !data) {
-      console.error('[AlgorandService] Failed to load ledger history:', error?.message);
-      return [];
+    try {
+      const { data, error } = await supabase
+        .from('algorand_transactions')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(limit);
+
+      if (error || !data || data.length === 0) {
+        return this.memoryTxHistory.slice(0, limit);
+      }
+
+      return data.map((row: any) => ({
+        id: row.id,
+        txId: row.tx_id,
+        taskId: row.task_id,
+        sender: row.sender,
+        receiver: row.receiver,
+        amountAlgo: Number(row.amount_algo),
+        feeAlgo: Number(row.fee_algo),
+        protocolFeeAlgo: Number(row.protocol_fee_algo),
+        type: row.type,
+        round: Number(row.round),
+        status: row.status,
+        timestamp: Number(row.ts),
+        explorerUrl: row.explorer_url,
+        loraUrl: row.lora_url,
+        facilitator: row.facilitator,
+        note: row.note
+      }));
+    } catch {
+      return this.memoryTxHistory.slice(0, limit);
     }
-
-    return data.map((row: any) => ({
-      id: row.id,
-      txId: row.tx_id,
-      taskId: row.task_id,
-      sender: row.sender,
-      receiver: row.receiver,
-      amountAlgo: Number(row.amount_algo),
-      feeAlgo: Number(row.fee_algo),
-      protocolFeeAlgo: Number(row.protocol_fee_algo),
-      type: row.type,
-      round: Number(row.round),
-      status: row.status,
-      timestamp: Number(row.ts),
-      explorerUrl: row.explorer_url,
-      loraUrl: row.lora_url,
-      facilitator: row.facilitator,
-      note: row.note
-    }));
   }
 }
 

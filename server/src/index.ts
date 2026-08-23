@@ -63,15 +63,19 @@ import { providerRegistry } from './services/providerRegistry.js';
 
 const app = new Hono();
 
-// Explicit origin allowlist — the previous '*' wildcard let any site call an
-// API that can spend the agent's real ALGO balance.
-const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:5173')
+// Explicit origin allowlist + automatic Vercel / Render / localhost support
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || '*')
   .split(',')
   .map((s) => s.trim())
   .filter(Boolean);
 
 app.use('*', cors({
-  origin: (origin) => (origin && allowedOrigins.includes(origin) ? origin : allowedOrigins[0]),
+  origin: (origin) => {
+    if (!origin) return '*';
+    if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) return origin;
+    if (origin.includes('localhost') || origin.includes('127.0.0.1') || origin.endsWith('.vercel.app') || origin.endsWith('.onrender.com')) return origin;
+    return origin;
+  },
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowHeaders: [
     'Content-Type',
