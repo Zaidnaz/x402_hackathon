@@ -8,9 +8,10 @@ import { formatCostRange } from '../utils/costEstimator';
 import { EscrowPanel } from './EscrowPanel';
 
 const EXAMPLE_PROMPTS = [
-  'Write an optimized Algorand PyTeal contract for an atomic x402 escrow',
-  'Summarize the tradeoffs between Pareto-optimal routing and greedy cost minimization',
-  'Deduce worst-case latency bounds for a Raft cluster under network partition'
+  'Generate an optimized Algorand ARC-4 smart contract for high-throughput x402 escrow settlements',
+  'Benchmark latency vs cost trade-offs for deep reasoning LLMs across H100 and RTX 4090 GPU clusters',
+  'Analyze a multi-hop DEX arbitrage algorithm with slippage protection on Algorand',
+  'Design an autonomous AI agent failover state machine with zero token loss'
 ];
 
 interface CommandBarLightProps {
