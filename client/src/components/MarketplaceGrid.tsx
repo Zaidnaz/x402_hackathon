@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { 
+import {
   Cpu, 
   Layers, 
   Server, 
@@ -34,14 +34,30 @@ export const MarketplaceGrid: React.FC<MarketplaceGridProps> = ({
   const safeComputes = computes && computes.length > 0 ? computes : FALLBACK_COMPUTES;
   const [selectedTab, setSelectedTab] = useState<'all' | 'models' | 'computes'>('all');
   const [isUpdatingStatus, setIsUpdatingStatus] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    setErrorMessage(null);
+    try {
+      await onRefreshCatalog();
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : 'Could not refresh the provider directory.');
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   const handleToggleStatus = async (computeId: string, currentStatus: ComputeProvider['status']) => {
     setIsUpdatingStatus(computeId);
+    setErrorMessage(null);
     try {
       const nextStatus = currentStatus === 'active' ? 'degraded' : currentStatus === 'degraded' ? 'offline' : 'active';
       await toggleComputeStatus(computeId, nextStatus);
-      onRefreshCatalog();
+      await onRefreshCatalog();
     } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : 'Could not update provider status.');
       console.error('Status toggle failed', err);
     } finally {
       setIsUpdatingStatus(null);
@@ -54,14 +70,14 @@ export const MarketplaceGrid: React.FC<MarketplaceGridProps> = ({
       <div className="bg-grid-900 border border-grid-800 rounded-xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center space-x-2 mb-1">
-            <span className="w-2 h-2 rounded-full bg-signal-emerald animate-pulse" />
-            <span className="text-xs font-mono uppercase tracking-widest text-signal-emerald font-semibold">Live Infrastructure Grid</span>
+            <span className="w-2 h-2 rounded-full bg-signal-emerald " />
+            <span className="text-xs font-medium tracking-wide text-signal-emerald font-semibold">Provider directory</span>
           </div>
           <h2 className="text-xl font-bold font-mono text-grid-100">
-            Decentralized Model & GPU Compute Fleet
+            Model and compute providers
           </h2>
           <p className="text-xs font-mono text-grid-400 mt-1 max-w-2xl">
-            Autonomous nodes register via standard <span className="text-grid-200">x402 paywall endpoints</span> and settle payouts directly in <span className="text-grid-200">ALGO</span>. Toggle status to test router adaptation.
+            Providers register standard <span className="text-grid-200">x402 paywall endpoints</span> and settle payouts directly in <span className="text-grid-200">ALGO</span>. Toggle status to test router adaptation.
           </p>
         </div>
 
@@ -88,7 +104,7 @@ export const MarketplaceGrid: React.FC<MarketplaceGridProps> = ({
               {
                 targetSelector: '[data-tour="node-status-toggle"]',
                 title: "4. Dynamic Node Degradation",
-                description: "Click any status badge (Active ➔ Degraded ➔ Offline) to simulate real-time cluster failures and watch the Pareto router adapt!"
+                description: "Click any status badge (Active -> Degraded -> Offline) to simulate real-time cluster failures and watch the Pareto router adapt!"
               },
               {
                 targetSelector: '[data-tour="model-catalog-cards"]',
@@ -99,16 +115,18 @@ export const MarketplaceGrid: React.FC<MarketplaceGridProps> = ({
           />
 
           <button
-            onClick={onRefreshCatalog}
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            aria-label="Refresh provider directory"
             className="p-2 sm:p-2.5 rounded-lg bg-grid-950 border border-grid-800 hover:border-grid-700 text-grid-400 hover:text-grid-200 text-xs font-mono flex items-center space-x-1.5 transition-all cursor-pointer"
           >
-            <RefreshCw className="w-3.5 h-3.5" />
+            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
             <span className="hidden sm:inline">Sync</span>
           </button>
           <div data-tour="register-provider-btn">
             <button
               onClick={onOpenRegisterModal}
-              className="px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-lg bg-signal-amber hover:bg-signal-amber/90 text-grid-950 text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider flex items-center space-x-1.5 shadow-glow-amber transition-all cursor-pointer"
+              className="px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-lg bg-signal-amber hover:bg-signal-amber/90 text-white text-[11px] sm:text-xs font-mono font-semibold flex items-center space-x-1.5 shadow-glow-amber transition-all cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               <span>Register</span>
@@ -116,6 +134,13 @@ export const MarketplaceGrid: React.FC<MarketplaceGridProps> = ({
           </div>
         </div>
       </div>
+
+      {errorMessage && (
+        <div role="alert" className="flex items-start gap-2 rounded-xl border border-signal-rose/30 bg-signal-roseDim p-3 text-xs text-signal-rose">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>{errorMessage}</span>
+        </div>
+      )}
 
       {/* Tab Filter */}
       <div className="flex items-center space-x-1.5 sm:space-x-2 border-b border-grid-800 pb-3 overflow-x-auto no-scrollbar">
@@ -172,7 +197,7 @@ export const MarketplaceGrid: React.FC<MarketplaceGridProps> = ({
                     onClick={() => handleToggleStatus(comp.id, comp.status)}
                     disabled={isUpdatingStatus === comp.id}
                     title="Click to cycle status (Active -> Degraded -> Offline)"
-                    className={`px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-tight border flex items-center space-x-1 cursor-pointer transition-all ${
+                    className={`px-2 py-0.5 rounded text-[10px] font-medium tracking-tight border flex items-center space-x-1 cursor-pointer transition-all ${
                       comp.status === 'active'
                         ? 'bg-signal-emeraldDim text-signal-emerald border-signal-emerald/30 hover:bg-signal-emerald/20'
                         : comp.status === 'degraded'
@@ -192,7 +217,7 @@ export const MarketplaceGrid: React.FC<MarketplaceGridProps> = ({
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-grid-500">VRAM / Bus</span>
-                    <span className="text-grid-300">{comp.vramGb} GB • {comp.interconnect}</span>
+                    <span className="text-grid-300">{comp.vramGb} GB · {comp.interconnect}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-grid-500">Spot Rate</span>
@@ -262,7 +287,7 @@ export const MarketplaceGrid: React.FC<MarketplaceGridProps> = ({
 
                 <div className="flex flex-wrap gap-1 pt-1">
                   {m.supportedModalities.map((mod, i) => (
-                    <span key={i} className="px-1.5 py-0.5 rounded text-[9px] font-mono uppercase bg-grid-800 text-grid-400">
+                    <span key={i} className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-grid-800 text-grid-400">
                       {mod}
                     </span>
                   ))}
@@ -275,3 +300,4 @@ export const MarketplaceGrid: React.FC<MarketplaceGridProps> = ({
     </div>
   );
 };
+

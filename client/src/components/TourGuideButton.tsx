@@ -137,7 +137,7 @@ export const TourGuideButton: React.FC<TourGuideProps> = ({
         className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full bg-brand-emerald/15 hover:bg-brand-emerald/25 border border-brand-emerald/40 hover:border-brand-emerald/70 text-brand-emerald text-xs font-mono font-bold transition-all shadow-glow-emerald active:scale-95 cursor-pointer"
         title="Start interactive guided tour"
       >
-        <Sparkles className="w-3.5 h-3.5 text-brand-emerald animate-pulse" />
+        <Sparkles className="w-3.5 h-3.5 text-brand-emerald " />
         <span>{buttonLabel}</span>
       </button>
 
@@ -146,7 +146,7 @@ export const TourGuideButton: React.FC<TourGuideProps> = ({
         <div className="fixed inset-0 z-[100] pointer-events-none font-mono">
           {/* High-Contrast Frosted Dimmer Backdrop */}
           <div 
-            className="absolute inset-0 bg-black/85 backdrop-blur-md transition-opacity duration-300 pointer-events-auto" 
+            className="absolute inset-0 bg-grid-900/85 backdrop-blur-md transition-opacity duration-300 pointer-events-auto" 
             onClick={endTour} 
           />
 
@@ -159,7 +159,7 @@ export const TourGuideButton: React.FC<TourGuideProps> = ({
                 width: `${Math.min(window.innerWidth - 8, targetRect.width + 12)}px`,
                 height: `${targetRect.height + 12}px`,
               }}
-              className="fixed rounded-xl border-2 border-brand-emerald bg-brand-emerald/10 shadow-[0_0_35px_rgba(16,185,129,0.8),0_0_0_9999px_rgba(0,0,0,0.65)] transition-all duration-200 pointer-events-none z-[101] animate-pulse"
+              className="fixed rounded-xl border-2 border-brand-emerald bg-brand-emerald/10 shadow-[0_0_35px_rgba(16,185,129,0.8),0_0_0_9999px_rgba(0,0,0,0.65)] transition-all duration-200 pointer-events-none z-[101] "
             />
           )}
 
@@ -171,17 +171,17 @@ export const TourGuideButton: React.FC<TourGuideProps> = ({
             {/* Popover Header */}
             <div className="flex items-center justify-between border-b border-brand-emerald/20 pb-2.5">
               <div className="flex items-center space-x-2">
-                <span className="px-2 py-0.5 rounded-full bg-brand-emerald text-black font-extrabold text-xs">
+                <span className="px-2 py-0.5 rounded-full bg-brand-emerald text-white font-extrabold text-xs">
                   {currentStepIndex + 1}/{steps.length}
                 </span>
-                <span className="text-xs text-brand-emerald font-bold uppercase tracking-wider">
+                <span className="text-xs text-brand-emerald font-semibold">
                   How This Works
                 </span>
               </div>
 
               <button
                 onClick={endTour}
-                className="p-1 rounded-lg bg-white/[0.05] hover:bg-white/[0.15] text-grid-300 hover:text-white transition-colors cursor-pointer"
+                className="p-1 rounded-lg bg-grid-850 hover:bg-white/[0.15] text-grid-300 hover:text-grid-100 transition-colors cursor-pointer"
                 title="Close Tour"
               >
                 <X className="w-4 h-4" />
@@ -190,7 +190,7 @@ export const TourGuideButton: React.FC<TourGuideProps> = ({
 
             {/* Step Body */}
             <div className="space-y-1.5">
-              <h4 className="text-sm font-bold text-white tracking-tight flex items-center space-x-1.5">
+              <h4 className="text-sm font-bold text-grid-100 tracking-tight flex items-center space-x-1.5">
                 <Sparkles className="w-4 h-4 text-brand-emerald shrink-0" />
                 <span className="truncate">{currentStep?.title}</span>
               </h4>
@@ -203,7 +203,7 @@ export const TourGuideButton: React.FC<TourGuideProps> = ({
             <div className="flex items-center justify-between pt-3 border-t border-brand-emerald/20">
               <button
                 onClick={endTour}
-                className="text-grid-400 hover:text-white text-xs font-mono underline cursor-pointer py-1"
+                className="text-grid-400 hover:text-grid-100 text-xs font-mono underline cursor-pointer py-1"
               >
                 Skip Tour
               </button>
@@ -212,7 +212,7 @@ export const TourGuideButton: React.FC<TourGuideProps> = ({
                 {currentStepIndex > 0 && (
                   <button
                     onClick={prevStep}
-                    className="px-3 py-1.5 rounded-lg bg-white/[0.08] hover:bg-white/[0.15] border border-white/[0.15] text-white flex items-center space-x-1 transition-all text-xs font-bold cursor-pointer active:scale-95"
+                    className="px-3 py-1.5 rounded-lg bg-white/[0.08] hover:bg-white/[0.15] border border-white/[0.15] text-grid-100 flex items-center space-x-1 transition-all text-xs font-bold cursor-pointer active:scale-95"
                   >
                     <ArrowLeft className="w-3.5 h-3.5" />
                     <span>Back</span>
@@ -221,13 +221,13 @@ export const TourGuideButton: React.FC<TourGuideProps> = ({
 
                 <button
                   onClick={nextStep}
-                  className="px-4 py-2 rounded-xl bg-brand-emerald hover:bg-brand-emerald/90 text-black font-extrabold flex items-center space-x-1.5 shadow-[0_0_20px_rgba(16,185,129,0.5)] transition-all active:scale-95 text-xs uppercase tracking-wide cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-brand-emerald hover:bg-brand-mint text-white font-extrabold flex items-center space-x-1.5 shadow-[0_0_20px_rgba(16,185,129,0.5)] transition-all active:scale-95 text-xs uppercase tracking-wide cursor-pointer"
                 >
                   <span>{currentStepIndex === steps.length - 1 ? 'Finish' : 'Next'}</span>
                   {currentStepIndex === steps.length - 1 ? (
-                    <Check className="w-4 h-4 text-black" />
+                    <Check className="w-4 h-4 text-white" />
                   ) : (
-                    <ArrowRight className="w-4 h-4 text-black" />
+                    <ArrowRight className="w-4 h-4 text-white" />
                   )}
                 </button>
               </div>
@@ -240,3 +240,4 @@ export const TourGuideButton: React.FC<TourGuideProps> = ({
 };
 
 export default TourGuideButton;
+

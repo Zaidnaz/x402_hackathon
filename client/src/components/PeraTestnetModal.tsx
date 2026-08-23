@@ -41,58 +41,58 @@ export const PeraTestnetModal: React.FC<PeraTestnetModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
-      <div className="bg-grid-950 border border-white/[0.12] rounded-2xl max-w-lg w-full p-6 space-y-5 shadow-2xl relative font-mono text-xs text-grid-200">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-grid-900/80 backdrop-blur-md animate-fadeIn">
+      <div className="bg-grid-950 border border-grid-750 rounded-2xl max-w-lg w-full p-6 space-y-5 shadow-2xl relative font-mono text-xs text-grid-200">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
+        <div className="flex items-center justify-between border-b border-grid-800 pb-3">
           <div className="flex items-center space-x-2">
             <div className="w-7 h-7 rounded-lg bg-brand-emerald/15 border border-brand-emerald/30 flex items-center justify-center text-brand-emerald">
               <Wallet className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-white">Connect Pera Wallet (TestNet)</h2>
+              <h2 className="text-sm font-bold text-grid-100">Connect Pera Wallet (TestNet)</h2>
               <p className="text-[10px] text-grid-400 font-sans">Mobile QR & Web Connection Guide</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg hover:bg-white/[0.06] text-grid-400 hover:text-white transition-colors"
+            className="p-1 rounded-lg hover:bg-grid-850 text-grid-400 hover:text-grid-100 transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* 3 Step Setup Guide */}
-        <div className="space-y-3 bg-black/60 p-4 rounded-xl border border-white/[0.06]">
+        <div className="space-y-3 bg-grid-900/60 p-4 rounded-xl border border-grid-800">
           <div className="text-[11px] font-bold uppercase text-brand-emerald tracking-wide">
-            ⚠️ Important: Switch Pera App to TestNet
+            âš ï¸ Important: Switch Pera App to TestNet
           </div>
 
           <div className="space-y-2.5 text-[11px] font-sans text-grid-300">
             <div className="flex items-start space-x-2">
-              <span className="w-5 h-5 rounded-full bg-white/[0.06] text-white flex items-center justify-center font-mono text-[10px] font-bold shrink-0 mt-0.5">
+              <span className="w-5 h-5 rounded-full bg-grid-850 text-grid-100 flex items-center justify-center font-mono text-[10px] font-bold shrink-0 mt-0.5">
                 1
               </span>
               <div>
-                Open the <strong className="text-white">Pera Wallet</strong> app on your mobile device.
+                Open the <strong className="text-grid-100">Pera Wallet</strong> app on your mobile device.
               </div>
             </div>
 
             <div className="flex items-start space-x-2">
-              <span className="w-5 h-5 rounded-full bg-white/[0.06] text-white flex items-center justify-center font-mono text-[10px] font-bold shrink-0 mt-0.5">
+              <span className="w-5 h-5 rounded-full bg-grid-850 text-grid-100 flex items-center justify-center font-mono text-[10px] font-bold shrink-0 mt-0.5">
                 2
               </span>
               <div>
-                Go to <strong className="text-white">Settings</strong> (bottom right icon) ➔ <strong className="text-white">Developer Settings</strong> (or <em>Node Settings</em>) ➔ Select <strong className="text-brand-emerald">TestNet</strong>.
+                Go to <strong className="text-grid-100">Settings</strong> (bottom right icon) -&gt; <strong className="text-grid-100">Developer Settings</strong> (or <em>Node Settings</em>) -&gt; Select <strong className="text-brand-emerald">TestNet</strong>.
               </div>
             </div>
 
             <div className="flex items-start space-x-2">
-              <span className="w-5 h-5 rounded-full bg-white/[0.06] text-white flex items-center justify-center font-mono text-[10px] font-bold shrink-0 mt-0.5">
+              <span className="w-5 h-5 rounded-full bg-grid-850 text-grid-100 flex items-center justify-center font-mono text-[10px] font-bold shrink-0 mt-0.5">
                 3
               </span>
               <div>
-                Click the <strong className="text-white">Connect Pera Wallet</strong> button below and scan the QR code using your Pera mobile camera.
+                Click the <strong className="text-grid-100">Connect Pera Wallet</strong> button below and scan the QR code using your Pera mobile camera.
               </div>
             </div>
           </div>
@@ -101,7 +101,7 @@ export const PeraTestnetModal: React.FC<PeraTestnetModalProps> = ({
         {/* TestNet Faucet Callout */}
         <div className="p-3 bg-brand-emerald/10 border border-brand-emerald/20 rounded-xl flex items-center justify-between">
           <div className="space-y-0.5">
-            <div className="text-[11px] font-bold text-white flex items-center space-x-1.5">
+            <div className="text-[11px] font-bold text-grid-100 flex items-center space-x-1.5">
               <Coins className="w-3.5 h-3.5 text-brand-emerald" />
               <span>Need Free TestNet ALGO?</span>
             </div>
@@ -113,7 +113,7 @@ export const PeraTestnetModal: React.FC<PeraTestnetModalProps> = ({
             href="https://bank.testnet.algorand.network/"
             target="_blank"
             rel="noreferrer"
-            className="px-3 py-1.5 rounded-lg bg-black/60 hover:bg-black border border-brand-emerald/30 text-brand-emerald hover:text-white text-[11px] flex items-center space-x-1 transition-all"
+            className="px-3 py-1.5 rounded-lg bg-grid-900/60 hover:bg-grid-900 border border-brand-emerald/30 text-brand-emerald hover:text-grid-100 text-[11px] flex items-center space-x-1 transition-all"
           >
             <span>Get ALGO</span>
             <ExternalLink className="w-3 h-3" />
@@ -132,9 +132,9 @@ export const PeraTestnetModal: React.FC<PeraTestnetModalProps> = ({
         <button
           onClick={handleConnectNow}
           disabled={isConnecting}
-          className="w-full py-3.5 px-4 rounded-xl bg-brand-emerald hover:bg-brand-emerald/90 text-black font-bold uppercase tracking-wider flex items-center justify-center space-x-2 shadow-glow-emerald transition-all active:scale-95 disabled:opacity-50"
+          className="w-full py-3.5 px-4 rounded-xl bg-brand-emerald hover:bg-brand-mint text-white font-semibold flex items-center justify-center space-x-2 shadow-glow-emerald transition-all active:scale-95 disabled:opacity-50"
         >
-          <QrCode className="w-4 h-4 text-black" />
+          <QrCode className="w-4 h-4 text-white" />
           <span>{isConnecting ? 'Opening Pera QR Modal...' : 'Connect With Pera Wallet'}</span>
         </button>
       </div>
@@ -143,3 +143,4 @@ export const PeraTestnetModal: React.FC<PeraTestnetModalProps> = ({
 };
 
 export default PeraTestnetModal;
+

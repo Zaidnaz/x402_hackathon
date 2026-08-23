@@ -14,7 +14,7 @@ export const ScrambledText: React.FC<ScrambledTextProps> = ({
   radius = 120,
   duration = 1.0,
   speed = 0.5,
-  scrambleChars = '.:!<>-_/[]{}—=+*^?#',
+  scrambleChars = '.:!<>-_/[]{}-=+*^?#',
   className = '',
   style = {},
   children
@@ -123,3 +123,4 @@ export const ScrambledText: React.FC<ScrambledTextProps> = ({
 };
 
 export default ScrambledText;
+

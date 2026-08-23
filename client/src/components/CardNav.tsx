@@ -161,7 +161,7 @@ export const CardNav: React.FC<CardNavProps> = ({
     >
       <nav
         ref={navRef}
-        className={`card-nav ${isExpanded ? 'open' : ''} block h-[60px] p-0 rounded-2xl border border-white/[0.08] shadow-2xl backdrop-blur-xl relative overflow-hidden will-change-[height]`}
+        className={`card-nav ${isExpanded ? 'open' : ''} block h-[60px] p-0 rounded-2xl border border-grid-800 shadow-2xl backdrop-blur-xl relative overflow-hidden will-change-[height]`}
         style={{ backgroundColor: baseColor }}
       >
         <div className="card-nav-top absolute inset-x-0 top-0 h-[60px] flex items-center justify-between px-4 z-[2]">
@@ -202,7 +202,7 @@ export const CardNav: React.FC<CardNavProps> = ({
                 AG
               </div>
             )}
-            <span className="font-mono font-bold tracking-tight text-white text-sm">
+            <span className="font-mono font-bold tracking-tight text-grid-100 text-sm">
               {logoText}
             </span>
           </div>
@@ -228,7 +228,7 @@ export const CardNav: React.FC<CardNavProps> = ({
           {(items || []).slice(0, 3).map((item, idx) => (
             <div
               key={`${item.label}-${idx}`}
-              className="nav-card select-none relative flex flex-col justify-between p-4 rounded-xl border border-white/[0.08] min-w-0 flex-[1_1_auto] transition-transform hover:scale-[1.01]"
+              className="nav-card select-none relative flex flex-col justify-between p-4 rounded-xl border border-grid-800 min-w-0 flex-[1_1_auto] transition-transform hover:scale-[1.01]"
               ref={setCardRef(idx)}
               style={{ backgroundColor: item.bgColor, color: item.textColor }}
             >
@@ -243,7 +243,7 @@ export const CardNav: React.FC<CardNavProps> = ({
                       if (lnk.onClick) lnk.onClick();
                       toggleMenu();
                     }}
-                    className="nav-card-link inline-flex items-center justify-between w-full p-1.5 rounded-lg text-left text-xs font-mono text-grid-300 hover:text-white hover:bg-white/[0.05] transition-all"
+                    className="nav-card-link inline-flex items-center justify-between w-full p-1.5 rounded-lg text-left text-xs font-mono text-grid-300 hover:text-grid-100 hover:bg-grid-850 transition-all"
                   >
                     <span>{lnk.label}</span>
                     <ArrowUpRight className="w-3.5 h-3.5 text-signal-amber shrink-0 ml-1" />
@@ -259,3 +259,4 @@ export const CardNav: React.FC<CardNavProps> = ({
 };
 
 export default CardNav;
+

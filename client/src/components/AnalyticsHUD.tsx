@@ -52,14 +52,14 @@ export const AnalyticsHUD: React.FC = () => {
       <div className="bg-grid-900 border border-grid-800 rounded-xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center space-x-2 mb-1">
-            <span className="w-2 h-2 rounded-full bg-signal-amber animate-pulse" />
-            <span className="text-xs font-mono uppercase tracking-widest text-signal-amber font-semibold">Real-Time Telemetry & Economics</span>
+            <span className="w-2 h-2 rounded-full bg-signal-amber " />
+            <span className="text-xs font-medium tracking-wide text-signal-amber font-semibold">Usage and cost summary</span>
           </div>
           <h2 className="text-xl font-bold font-mono text-grid-100">
-            AgentGrid Network Efficiency HUD
+            Network efficiency
           </h2>
           <p className="text-xs font-mono text-grid-400 mt-1 max-w-2xl">
-            Continuous analytics comparing autonomous multi-objective routing against static single-provider cloud models.
+            Track completed tasks, total spend, latency, and routing outcomes in one place.
           </p>
         </div>
 
@@ -152,7 +152,7 @@ export const AnalyticsHUD: React.FC = () => {
                   <span className="text-xs font-bold font-mono text-grid-200">
                     {t.requirement.modality.toUpperCase()}
                   </span>
-                  <span className="text-[11px] font-mono text-grid-500">•</span>
+                  <span className="text-[11px] font-mono text-grid-500">·</span>
                   <span className="text-xs font-mono text-grid-300 truncate max-w-[300px]">
                     {t.prompt}
                   </span>
@@ -160,9 +160,9 @@ export const AnalyticsHUD: React.FC = () => {
 
                 <div className="flex items-center space-x-3 text-xs font-mono">
                   <span className="text-signal-emerald font-semibold">{t.actualCostAlgo} ALGO</span>
-                  <span className="text-grid-500">•</span>
+                  <span className="text-grid-500">·</span>
                   <span className="text-signal-amber">{t.actualDurationMs} ms</span>
-                  <span className="text-grid-500">•</span>
+                  <span className="text-grid-500">·</span>
                   <button
                     onClick={() => exportReceiptJson(t)}
                     className="p-1 rounded bg-grid-950 hover:bg-grid-800 border border-grid-800 text-grid-400 hover:text-grid-200 text-[10px] flex items-center space-x-1"
@@ -176,11 +176,11 @@ export const AnalyticsHUD: React.FC = () => {
 
               <div className="flex flex-wrap items-center gap-3 text-[11px] font-mono text-grid-500">
                 <span>Selected: <strong className="text-grid-300">{t.routing.selectedCandidate.modelName}</strong> on <strong className="text-grid-300">{t.routing.selectedCandidate.computeName}</strong></span>
-                <span>•</span>
+                <span>·</span>
                 <span>Algorand Tx: <code className="text-grid-400">{t.algorandTx.txId.substring(0, 16)}...</code></span>
                 {t.failoverOccurred && (
                   <>
-                    <span>•</span>
+                    <span>·</span>
                     <span className="text-signal-rose font-semibold">Auto-Rerouted</span>
                   </>
                 )}
@@ -198,3 +198,4 @@ export const AnalyticsHUD: React.FC = () => {
     </div>
   );
 };
+

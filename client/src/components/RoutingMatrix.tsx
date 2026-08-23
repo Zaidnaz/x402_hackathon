@@ -56,14 +56,14 @@ export const RoutingMatrix: React.FC = () => {
       <div className="bg-grid-900 border border-grid-800 rounded-xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center space-x-2 mb-1">
-            <span className="w-2 h-2 rounded-full bg-signal-cyan animate-pulse" />
-            <span className="text-xs font-mono uppercase tracking-widest text-signal-cyan font-semibold">Mathematical Optimization Engine</span>
+            <span className="w-2 h-2 rounded-full bg-signal-cyan " />
+            <span className="text-xs font-medium tracking-wide text-signal-cyan font-semibold">Route comparison</span>
           </div>
           <h2 className="text-xl font-bold font-mono text-grid-100">
-            Multi-Objective Pareto Frontier & Matrix
+            Route scoring matrix
           </h2>
           <p className="text-xs font-mono text-grid-400 mt-1 max-w-2xl">
-            AgentGrid evaluates all active combinatorial permutations of <span className="text-grid-200">Model $\times$ Compute</span> nodes to find non-dominated Pareto-optimal choices.
+            AgentGrid compares active <span className="text-grid-200">Model $\times$ Compute</span> nodes to find non-dominated Pareto-optimal choices.
           </p>
         </div>
         <div className="flex items-center space-x-2">
@@ -188,7 +188,7 @@ export const RoutingMatrix: React.FC = () => {
             Combinatorial Candidate Matrix (Ranked by Score)
           </div>
           <div className="text-[11px] font-mono text-grid-400">
-            Formula: <code className="text-signal-amber font-semibold">Score = w_q·Q - w_c·C - w_l·L + w_r·R - Penalties</code>
+            Formula: <code className="text-signal-amber font-semibold">Score = w_q*Q - w_c*C - w_l*L + w_r*R - Penalties</code>
           </div>
         </div>
 
@@ -282,3 +282,4 @@ export const RoutingMatrix: React.FC = () => {
     </div>
   );
 };
+

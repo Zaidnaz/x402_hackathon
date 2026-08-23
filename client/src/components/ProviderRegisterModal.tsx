@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Server, Cpu, Plus, Check } from 'lucide-react';
+import { X, Server, Cpu, Plus, AlertTriangle, Loader2 } from 'lucide-react';
 import { registerModel, registerCompute } from '../utils/api';
 
 interface ProviderRegisterModalProps {
@@ -15,6 +15,7 @@ export const ProviderRegisterModal: React.FC<ProviderRegisterModalProps> = ({
 }) => {
   const [providerType, setProviderType] = useState<'compute' | 'model'>('compute');
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Compute Form State
   const [computeName, setComputeName] = useState('Nebula Cluster (B200 NVL)');
@@ -38,6 +39,7 @@ export const ProviderRegisterModal: React.FC<ProviderRegisterModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setErrorMessage(null);
     try {
       if (providerType === 'compute') {
         const id = `custom_compute_${Date.now()}`;
@@ -70,6 +72,7 @@ export const ProviderRegisterModal: React.FC<ProviderRegisterModalProps> = ({
       onSuccess();
       onClose();
     } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : 'Could not register this provider.');
       console.error('Registration failed', err);
     } finally {
       setLoading(false);
@@ -78,11 +81,11 @@ export const ProviderRegisterModal: React.FC<ProviderRegisterModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-grid-950/80 backdrop-blur-sm animate-fadeIn">
-      <div className="bg-grid-900 border border-grid-800 rounded-xl max-w-lg w-full p-6 space-y-5 shadow-2xl relative">
+      <div role="dialog" aria-modal="true" aria-labelledby="provider-register-title" className="bg-grid-900 border border-grid-800 rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 space-y-5 shadow-2xl relative">
         <div className="flex items-center justify-between border-b border-grid-800 pb-3">
           <div className="flex items-center space-x-2">
             <span className="w-2 h-2 rounded-full bg-signal-amber" />
-            <h3 className="text-sm font-bold font-mono text-grid-100 uppercase tracking-wider">
+            <h3 id="provider-register-title" className="text-sm font-bold font-mono text-grid-100 uppercase tracking-wider">
               Register Provider on AgentGrid
             </h3>
           </div>
@@ -93,6 +96,13 @@ export const ProviderRegisterModal: React.FC<ProviderRegisterModalProps> = ({
             <X className="w-4 h-4" />
           </button>
         </div>
+
+        {errorMessage && (
+          <div role="alert" className="flex items-start gap-2 rounded-lg border border-signal-rose/30 bg-signal-roseDim p-3 text-xs text-signal-rose">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>{errorMessage}</span>
+          </div>
+        )}
 
         {/* Type Toggle */}
         <div className="grid grid-cols-2 gap-2 p-1 bg-grid-950 rounded-lg border border-grid-800 text-xs font-mono">
@@ -279,8 +289,8 @@ export const ProviderRegisterModal: React.FC<ProviderRegisterModalProps> = ({
               disabled={loading}
               className="px-4 py-2 rounded bg-signal-amber text-grid-950 font-bold uppercase tracking-wider flex items-center space-x-1.5 shadow-glow-amber disabled:opacity-40"
             >
-              <Plus className="w-4 h-4" />
-              <span>Register Node</span>
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+              <span>{loading ? 'Registering...' : 'Register Node'}</span>
             </button>
           </div>
         </form>
@@ -288,3 +298,4 @@ export const ProviderRegisterModal: React.FC<ProviderRegisterModalProps> = ({
     </div>
   );
 };
+

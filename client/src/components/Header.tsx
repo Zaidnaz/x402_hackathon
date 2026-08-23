@@ -29,7 +29,7 @@ export const Header: React.FC<HeaderProps> = ({
   ];
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/[0.06] bg-grid-950/80 backdrop-blur-xl transition-all">
+    <header className="sticky top-0 z-50 border-b border-grid-800 bg-grid-950/80 backdrop-blur-xl transition-all">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
         {/* Brand */}
         <button
@@ -54,8 +54,8 @@ export const Header: React.FC<HeaderProps> = ({
                 onClick={() => setActiveTab(item.id)}
                 className={`px-3 py-1.5 rounded-full text-xs font-mono transition-all ${
                   isActive
-                    ? 'bg-white/[0.08] text-white font-medium shadow-sm'
-                    : 'text-grid-400 hover:text-grid-200 hover:bg-white/[0.03]'
+                    ? 'bg-white/[0.08] text-grid-100 font-medium shadow-sm'
+                    : 'text-grid-400 hover:text-grid-200 hover:bg-grid-850'
                 }`}
               >
                 {item.label}
@@ -75,7 +75,7 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Pera Wallet Connect Button / Connected Badge */}
           {isConnected && walletAddress ? (
-            <div className="flex items-center space-x-1.5 bg-white/[0.03] border border-white/[0.08] rounded-full p-1 pl-3 text-xs font-mono">
+            <div className="flex items-center space-x-1.5 bg-grid-850 border border-grid-800 rounded-full p-1 pl-3 text-xs font-mono">
               <div className="flex items-center space-x-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-signal-emerald animate-pulse" />
                 <span className="text-grid-200 font-semibold">
@@ -117,3 +117,4 @@ export const Header: React.FC<HeaderProps> = ({
     </header>
   );
 };
+

@@ -9,48 +9,72 @@ export default {
     extend: {
       colors: {
         grid: {
-          950: '#040605',
-          900: '#080C0A',
-          850: '#0D1310',
-          800: '#141D18',
-          750: '#1B2620',
-          700: '#26362E',
-          600: '#3A5245',
-          500: '#6B8777',
-          400: '#9FB3A8',
-          300: '#D1DDD6',
-          200: '#E8EFEA',
-          100: '#F5F8F6'
+          950: '#F7F4EE',
+          900: '#FFFFFF',
+          850: '#F1EDE5',
+          800: '#E4DDD1',
+          750: '#D8CFC0',
+          700: '#C6BBAA',
+          600: '#9A8F7F',
+          500: '#756B5F',
+          400: '#5E564E',
+          300: '#403A35',
+          200: '#2F2B27',
+          100: '#181614'
         },
         brand: {
-          emerald: '#00DC82',
-          emeraldDim: 'rgba(0, 220, 130, 0.10)',
-          mint: '#10B981',
-          lime: '#4ADE80',
+          emerald: '#0F766E',
+          emeraldDim: 'rgba(15, 118, 110, 0.10)',
+          mint: '#2A9D8F',
+          lime: '#8A9A5B',
           white: '#FFFFFF',
-          silver: '#E2E8F0',
-          dark: '#050706'
+          silver: '#E9E2D8',
+          dark: '#181614'
         },
         signal: {
-          emerald: '#00DC82',
-          emeraldDim: 'rgba(0, 220, 130, 0.12)',
-          amber: '#00DC82', // unified to luxury mint-green
-          amberDim: 'rgba(0, 220, 130, 0.12)',
-          cyan: '#10B981',
-          cyanDim: 'rgba(16, 185, 129, 0.12)',
-          rose: '#EF4444',
-          roseDim: 'rgba(239, 68, 68, 0.12)',
+          emerald: '#0F766E',
+          emeraldDim: 'rgba(15, 118, 110, 0.12)',
+          amber: '#B7791F',
+          amberDim: 'rgba(183, 121, 31, 0.13)',
+          cyan: '#2563EB',
+          cyanDim: 'rgba(37, 99, 235, 0.10)',
+          rose: '#C2410C',
+          roseDim: 'rgba(194, 65, 12, 0.11)'
         }
       },
       fontFamily: {
-        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
-        serif: ['"Source Serif 4"', 'Georgia', 'Cambria', 'serif'],
-        mono: ['JetBrains Mono', 'Fira Code', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace']
+        sans: ['"Plus Jakarta Sans"', 'Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+        serif: ['"Newsreader"', 'Georgia', 'Cambria', 'serif'],
+        mono: ['"IBM Plex Mono"', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace']
+      },
+      // A real type scale — reused everywhere instead of one-off text-[Npx]
+      // values sprinkled per component.
+      fontSize: {
+        micro: ['11px', { lineHeight: '15px' }],
+        caption: ['12px', { lineHeight: '16px' }],
+        'body-sm': ['13px', { lineHeight: '19px' }],
+        body: ['14px', { lineHeight: '21px' }],
+        'body-lg': ['15px', { lineHeight: '23px' }],
+        'heading-sm': ['16px', { lineHeight: '22px', fontWeight: '600' }],
+        heading: ['20px', { lineHeight: '27px', fontWeight: '600' }],
+        display: ['32px', { lineHeight: '38px', fontWeight: '500' }]
+      },
+      // Additive radius tokens for new/updated surfaces — doesn't touch
+      // Tailwind's default rounded-lg/xl/2xl scale, so untouched pages
+      // that already use those keep working unchanged.
+      borderRadius: {
+        control: '8px',
+        card: '12px',
+        panel: '16px'
       },
       boxShadow: {
-        'glow-emerald': '0 0 25px -4px rgba(0, 220, 130, 0.35)',
-        'glow-white': '0 0 20px -5px rgba(255, 255, 255, 0.25)',
-        'subtle-panel': '0 4px 24px -2px rgba(0, 0, 0, 0.85)'
+        'glow-emerald': '0 1px 2px rgba(24, 22, 20, 0.10), 0 0 0 1px rgba(15, 118, 110, 0.18)',
+        'glow-amber': '0 1px 2px rgba(24, 22, 20, 0.10), 0 0 0 1px rgba(183, 121, 31, 0.18)',
+        'glow-white': '0 1px 2px rgba(24, 22, 20, 0.08), 0 0 0 1px rgba(24, 22, 20, 0.08)',
+        'subtle-panel': '0 14px 38px -28px rgba(24, 22, 20, 0.38)',
+        xs: '0 1px 2px rgba(24, 22, 20, 0.08)',
+        sm: '0 4px 14px rgba(24, 22, 20, 0.08)',
+        md: '0 18px 46px -30px rgba(24, 22, 20, 0.30)'
       }
     },
   },

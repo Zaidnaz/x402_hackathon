@@ -48,14 +48,14 @@ export const AlgorandLedger: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-black/75 border border-white/[0.08] rounded-xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 backdrop-blur-md shadow-sm">
+      <div className="bg-grid-900/75 border border-grid-800 rounded-xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 backdrop-blur-md shadow-sm">
         <div>
           <div className="flex items-center space-x-2 mb-1">
-            <span className="w-2 h-2 rounded-full bg-brand-emerald animate-pulse" />
-            <span className="text-xs font-mono uppercase tracking-widest text-brand-emerald font-semibold">Algorand TestNet Settlement Layer</span>
+            <span className="w-2 h-2 rounded-full bg-brand-emerald " />
+            <span className="text-xs font-medium tracking-wide text-brand-emerald font-semibold">Algorand settlement</span>
           </div>
           <p className="text-xs font-mono text-grid-300 mt-1 max-w-2xl">
-            Autonomous agent wallets pay compute providers on a per-task basis. AgentGrid smart escrow enforces atomic settlements with a <span className="text-white font-semibold">1.5% protocol fee</span> routed to treasury.
+            Agent wallets pay compute providers on a per-task basis. AgentGrid smart escrow enforces atomic settlements with a <span className="text-grid-100 font-semibold">1.5% protocol fee</span> routed to treasury.
           </p>
         </div>
 
@@ -85,7 +85,7 @@ export const AlgorandLedger: React.FC = () => {
           <button
             onClick={loadData}
             disabled={loading}
-            className="p-2.5 rounded-lg bg-black/60 border border-white/[0.08] hover:border-white/[0.2] text-grid-300 hover:text-white text-xs font-mono flex items-center space-x-1.5 transition-all"
+            className="p-2.5 rounded-lg bg-grid-900/60 border border-grid-800 hover:border-grid-700 text-grid-300 hover:text-grid-100 text-xs font-mono flex items-center space-x-1.5 transition-all"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-brand-emerald' : ''}`} />
             <span>Sync Ledger</span>
@@ -104,15 +104,15 @@ export const AlgorandLedger: React.FC = () => {
           {accounts.map((acc, idx) => (
             <div
               key={idx}
-              className="bg-black/60 border border-white/[0.08] rounded-xl p-4 space-y-3 hover:border-brand-emerald/40 transition-all shadow-sm"
+              className="bg-grid-900/60 border border-grid-800 rounded-xl p-4 space-y-3 hover:border-brand-emerald/40 transition-all shadow-sm"
             >
               <div className="flex items-center justify-between">
-                <span className={`px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-tight ${
+                <span className={`px-2 py-0.5 rounded text-[10px] font-medium tracking-tight ${
                   acc.role === 'agent'
                     ? 'bg-brand-emerald/15 text-brand-emerald border border-brand-emerald/30'
                     : acc.role === 'treasury'
-                    ? 'bg-white/[0.1] text-white border border-white/[0.2]'
-                    : 'bg-black text-grid-300 border border-white/[0.06]'
+                    ? 'bg-grid-800 text-grid-100 border border-grid-700'
+                    : 'bg-grid-900 text-grid-300 border border-grid-800'
                 }`}>
                   {acc.role.toUpperCase()}
                 </span>
@@ -122,12 +122,12 @@ export const AlgorandLedger: React.FC = () => {
               </div>
 
               <div>
-                <div className="text-xs font-semibold text-white truncate">{acc.label}</div>
-                <div className="flex items-center justify-between mt-1 text-[11px] font-mono text-grid-400 bg-black p-2 rounded border border-white/[0.08]">
+                <div className="text-xs font-semibold text-grid-100 truncate">{acc.label}</div>
+                <div className="flex items-center justify-between mt-1 text-[11px] font-mono text-grid-400 bg-grid-900 p-2 rounded border border-grid-800">
                   <span className="truncate max-w-[200px]">{acc.address}</span>
                   <button
                     onClick={() => copyAddress(acc.address)}
-                    className="text-grid-400 hover:text-white ml-1"
+                    className="text-grid-400 hover:text-grid-100 ml-1"
                     title="Copy Address"
                   >
                     {copiedAddress === acc.address ? <Check className="w-3 h-3 text-brand-emerald" /> : <Copy className="w-3 h-3" />}
@@ -151,7 +151,7 @@ export const AlgorandLedger: React.FC = () => {
                   href={acc.testnetExplorerUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-grid-400 hover:text-white flex items-center space-x-1"
+                  className="text-grid-400 hover:text-grid-100 flex items-center space-x-1"
                 >
                   <span>Pera Explorer</span>
                   <ExternalLink className="w-2.5 h-2.5" />
@@ -163,22 +163,22 @@ export const AlgorandLedger: React.FC = () => {
       </div>
 
       {/* Transaction History Table */}
-      <div data-tour="settlement-history-table" className="bg-black/75 border border-white/[0.08] rounded-xl overflow-hidden shadow-sm">
-        <div className="p-4 bg-black border-b border-white/[0.08] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div className="text-xs font-mono font-semibold uppercase tracking-wider text-white flex items-center space-x-2">
+      <div data-tour="settlement-history-table" className="bg-grid-900/75 border border-grid-800 rounded-xl overflow-hidden shadow-sm">
+        <div className="p-4 bg-grid-900 border-b border-grid-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="text-xs font-mono font-semibold uppercase tracking-wider text-grid-100 flex items-center space-x-2">
             <Coins className="w-3.5 h-3.5 text-brand-emerald" />
             <span>On-Chain Settlement History ({transactions.length} Transactions)</span>
           </div>
           <div className="flex items-center space-x-2 text-[11px] font-mono">
             <span className="text-brand-emerald font-semibold">Facilitator: GoPlausible</span>
-            <span className="text-grid-600">•</span>
+            <span className="text-grid-600">·</span>
             <span className="text-grid-400">Network: TestNet</span>
           </div>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left font-mono text-xs">
-            <thead className="bg-black/80 text-grid-400 text-[10px] uppercase border-b border-white/[0.08]">
+            <thead className="bg-grid-900/80 text-grid-400 text-[10px] uppercase border-b border-grid-800">
               <tr>
                 <th className="py-3 px-4">Tx ID</th>
                 <th className="py-3 px-4">Round</th>
@@ -193,9 +193,9 @@ export const AlgorandLedger: React.FC = () => {
               {transactions.map((tx, idx) => {
                 const loraUrl = tx.loraUrl || `https://lora.algokit.io/testnet/transaction/${tx.txId}`;
                 return (
-                  <tr key={tx.id} className="hover:bg-white/[0.02] transition-all">
+                  <tr key={tx.id} className="hover:bg-grid-850 transition-all">
                     <td className="py-3 px-4">
-                      <span className="font-semibold text-white truncate max-w-[160px] block">
+                      <span className="font-semibold text-grid-100 truncate max-w-[160px] block">
                         {tx.txId}
                       </span>
                     </td>
@@ -206,7 +206,7 @@ export const AlgorandLedger: React.FC = () => {
 
                     <td className="py-3 px-4">
                       <span className="text-brand-emerald font-semibold">{tx.amountAlgo.toFixed(6)} ALGO</span>
-                      <span className="text-[10px] text-grid-400 block">({Math.round(tx.amountAlgo * 1_000_000)} µALGO)</span>
+                      <span className="text-[10px] text-grid-400 block">({Math.round(tx.amountAlgo * 1_000_000)} uALGO)</span>
                     </td>
 
                     <td className="py-3 px-4">
@@ -258,3 +258,4 @@ export const AlgorandLedger: React.FC = () => {
 };
 
 export default AlgorandLedger;
+

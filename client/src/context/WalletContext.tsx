@@ -56,7 +56,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       return address;
     } catch (err) {
       console.error('Wallet connection failed:', err);
-      return null;
+      throw err;
     } finally {
       setIsConnecting(false);
     }
@@ -117,3 +117,4 @@ export function useWallet() {
   }
   return context;
 }
+

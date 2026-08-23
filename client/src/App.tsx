@@ -39,7 +39,7 @@ function MainLayout() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [currentStage, setCurrentStage] = useState<ExecutionStage>('idle');
   const [pipelineEvents, setPipelineEvents] = useState<ExecutionEvent[]>([]);
-  // Keyed by step index — a plan is always at least one step, even a
+  // Keyed by step index - a plan is always at least one step, even a
   // "single deliverable" prompt, so this uniformly covers both cases.
   const [streamedOutputByStep, setStreamedOutputByStep] = useState<Record<number, string>>({});
   const [completedPlan, setCompletedPlan] = useState<CompletedPlan | null>(null);
@@ -135,7 +135,7 @@ function MainLayout() {
   };
 
   return (
-    <div className="min-h-screen max-w-full overflow-x-hidden bg-grid-950 text-grid-100 flex flex-col font-sans grid-bg-pattern relative selection:bg-signal-amber/20 selection:text-signal-amber">
+    <div className="min-h-screen max-w-full overflow-x-hidden bg-grid-950 text-grid-100 flex flex-col font-sans grid-bg-pattern relative selection:bg-brand-emerald/15 selection:text-brand-emerald">
       {/* Floating Modern Pill Navbar */}
       <Navbar
         activeTab={activeTab}
@@ -144,7 +144,7 @@ function MainLayout() {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-5xl w-full mx-auto px-3 sm:px-6 py-6 relative z-10 overflow-x-hidden">
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 relative z-10 overflow-x-hidden">
         {activeTab === 'landing' && (
           <LandingPage
             onEnterApp={() => setActiveTab('command')}
@@ -153,7 +153,7 @@ function MainLayout() {
         )}
 
         {activeTab === 'command' && (
-          <div className="space-y-8 animate-fadeIn max-w-4xl mx-auto">
+          <div className="space-y-8 animate-fadeIn max-w-5xl mx-auto">
             <CommandCenter
               onDispatchTask={handleDispatchTask}
               isStreaming={isStreaming}
@@ -221,15 +221,15 @@ function MainLayout() {
       />
 
       {/* Minimal Clean Footer */}
-      <footer className="border-t border-grid-850 bg-grid-950/80 backdrop-blur-md py-6 mt-16 relative z-10">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between text-xs font-mono text-grid-500 gap-3">
+      <footer className="border-t border-grid-800 bg-grid-950/85 backdrop-blur-md py-6 mt-16 relative z-10">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between text-caption text-grid-500 gap-3">
           <div className="flex items-center space-x-2">
             <span className="w-1.5 h-1.5 rounded-full bg-signal-amber" />
             <span className="text-grid-300 font-semibold">AgentGrid</span>
-            <span>— Autonomous Infrastructure Layer</span>
+            <span>Compute routing and settlement workspace</span>
           </div>
           <div>
-            Settlement: <span className="text-grid-300">Algorand TestNet</span> • Standard: <span className="text-grid-300">RFC 7235 / x402</span>
+            Settlement: <span className="text-grid-300">Algorand TestNet</span> · Standard: <span className="text-grid-300">RFC 7235 / x402</span>
           </div>
         </div>
       </footer>
@@ -246,3 +246,4 @@ export function App() {
 }
 
 export default App;
+

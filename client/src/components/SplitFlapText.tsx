@@ -361,3 +361,4 @@ export const SplitFlapText: React.FC<SplitFlapTextProps> = ({
 };
 
 export default SplitFlapText;
+

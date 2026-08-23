@@ -24,17 +24,17 @@ export const HowItWorksBanner: React.FC<HowItWorksProps> = ({
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="bg-black/60 border border-white/[0.08] hover:border-brand-emerald/30 rounded-xl overflow-hidden transition-all shadow-sm">
+    <div className="bg-grid-900/60 border border-grid-800 hover:border-brand-emerald/30 rounded-xl overflow-hidden transition-all shadow-sm">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-4 py-3 flex items-center justify-between text-left font-mono text-xs hover:bg-white/[0.02] transition-colors"
+        className="w-full px-4 py-3 flex items-center justify-between text-left font-mono text-xs hover:bg-grid-850 transition-colors"
       >
         <div className="flex items-center space-x-2.5">
           <div className="w-5 h-5 rounded-full bg-brand-emerald/15 border border-brand-emerald/30 flex items-center justify-center text-brand-emerald shrink-0">
             <HelpCircle className="w-3.5 h-3.5" />
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="font-bold text-white uppercase tracking-wider">How This Works:</span>
+            <span className="font-bold text-grid-100 uppercase tracking-wider">How This Works:</span>
             <span className="text-grid-300">{pageTitle}</span>
             <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-brand-emerald/15 text-brand-emerald border border-brand-emerald/25">
               {badgeText}
@@ -49,7 +49,7 @@ export const HowItWorksBanner: React.FC<HowItWorksProps> = ({
       </button>
 
       {isOpen && (
-        <div className="p-4 sm:p-5 border-t border-white/[0.08] bg-black/80 space-y-4 font-mono text-xs animate-fadeIn">
+        <div className="p-4 sm:p-5 border-t border-grid-800 bg-grid-900/80 space-y-4 font-mono text-xs animate-fadeIn">
           <p className="text-grid-200 leading-relaxed font-sans text-xs sm:text-sm">
             {summary}
           </p>
@@ -58,7 +58,7 @@ export const HowItWorksBanner: React.FC<HowItWorksProps> = ({
             {steps.map((step, idx) => (
               <div
                 key={idx}
-                className="bg-grid-950 p-3.5 rounded-lg border border-white/[0.08] space-y-1.5"
+                className="bg-grid-950 p-3.5 rounded-lg border border-grid-800 space-y-1.5"
               >
                 <div className="flex items-center space-x-2 text-[11px] font-bold text-brand-emerald">
                   <span className="w-4 h-4 rounded-full bg-brand-emerald/20 flex items-center justify-center text-[10px]">
@@ -88,3 +88,4 @@ export const HowItWorksBanner: React.FC<HowItWorksProps> = ({
 };
 
 export default HowItWorksBanner;
+

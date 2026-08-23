@@ -650,8 +650,9 @@ export async function updatePolicy(patch: Partial<SpendingPolicy>): Promise<Spen
 
 export async function fetchTaskHistory(): Promise<CompletedTask[]> {
   const res = await fetch(`${API_BASE}/tasks/history`);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const data = await res.json();
-  return data.tasks;
+  return Array.isArray(data?.tasks) ? data.tasks : [];
 }
 
 export async function registerModel(model: Partial<ModelProvider>) {
@@ -660,7 +661,9 @@ export async function registerModel(model: Partial<ModelProvider>) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(model)
   });
-  return res.json();
+  const data = await res.json();
+  if (!res.ok || !data?.success) throw new Error(data?.error || `HTTP ${res.status}`);
+  return data;
 }
 
 export async function registerCompute(compute: Partial<ComputeProvider>) {
@@ -669,7 +672,9 @@ export async function registerCompute(compute: Partial<ComputeProvider>) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(compute)
   });
-  return res.json();
+  const data = await res.json();
+  if (!res.ok || !data?.success) throw new Error(data?.error || `HTTP ${res.status}`);
+  return data;
 }
 
 export async function toggleComputeStatus(computeId: string, status: string) {
@@ -678,7 +683,9 @@ export async function toggleComputeStatus(computeId: string, status: string) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ computeId, status })
   });
-  return res.json();
+  const data = await res.json();
+  if (!res.ok || !data?.success) throw new Error(data?.error || `HTTP ${res.status}`);
+  return data;
 }
 
 export async function testDirectX402(token?: string) {
@@ -723,7 +730,7 @@ export function subscribeTaskStream(
   const eventSource = new EventSource(`${API_BASE}/tasks/stream?${params.toString()}`);
   // The stream ends by the server closing the HTTP response after 'completed'
   // (or 'error'). Native EventSource treats any connection drop it didn't
-  // initiate itself as reconnect-worthy and fires a generic 'error' event —
+  // initiate itself as reconnect-worthy and fires a generic 'error' event -
   // including right after a perfectly successful completion. Without this
   // flag, that spurious event would overwrite a successful result with a
   // false "task failed" state.
@@ -773,7 +780,7 @@ export function subscribeTaskStream(
 /**
  * Same real-time contract as subscribeTaskStream, but the agent first
  * decides whether the prompt is one deliverable or several genuinely
- * distinct ones — each step then runs the full route→pay→execute pipeline
+ * distinct ones - each step then runs the full route->pay->execute pipeline
  * independently, so a single prompt can produce multiple real on-chain
  * settlements. A prompt that isn't multi-part behaves identically to a
  * single subscribeTaskStream call.
@@ -853,3 +860,4 @@ export function subscribeTaskPlanStream(
     eventSource.close();
   };
 }
+
