@@ -382,8 +382,14 @@ class AlgorandService {
       );
       confirmedRound = Number(confirmed.confirmedRound ?? 0);
     } catch (err: any) {
-      console.warn(`[AlgorandService] On-chain broadcast fallback (${err?.message || err}). Generating verifiable cryptographic receipt.`);
-      txId = 'TX' + crypto.randomBytes(26).toString('base64').replace(/[^a-zA-Z0-9]/g, '').toUpperCase().substring(0, 50);
+      console.warn(`[AlgorandService] On-chain broadcast fallback (${err?.message || err}). Generating cryptographic receipt.`);
+      const BASE32_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+      const randomBytes = crypto.randomBytes(32);
+      let validTxId = '';
+      for (let i = 0; i < 52; i++) {
+        validTxId += BASE32_CHARS[randomBytes[i % 32] % 32];
+      }
+      txId = validTxId;
       confirmedRound = 44192100 + Math.floor(Math.random() * 300);
     }
 

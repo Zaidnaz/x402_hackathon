@@ -177,6 +177,7 @@ function MainLayout() {
               computes={computes}
               onOpenRegisterModal={() => setIsRegisterModalOpen(true)}
               onRefreshCatalog={loadInitialData}
+              onSelectNode={() => setActiveTab('command')}
             />
           </div>
         )}

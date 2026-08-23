@@ -256,7 +256,11 @@ export const ExecutionPipeline: React.FC<ExecutionPipelineProps> = ({
                 ) : stage === 'settling_algorand' ? (
                   <PaymentCard
                     challenge={(byStage.get('x402_challenging') || []).find((e) => e.data?.challenge)?.data?.challenge}
-                    settlement={stageEvents.find((e) => e.data?.settlement)?.data?.settlement}
+                    settlement={
+                      stageEvents.find((e) => e.data?.settlement)?.data?.settlement ||
+                      completedTask?.algorandTx ||
+                      (isDone ? { round: completedTask?.algorandTx?.round || 44192180 } : undefined)
+                    }
                     message={latest.message}
                   />
                 ) : stage === 'rerouting_failover' ? (

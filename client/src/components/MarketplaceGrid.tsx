@@ -22,13 +22,15 @@ interface MarketplaceGridProps {
   computes: ComputeProvider[];
   onOpenRegisterModal: () => void;
   onRefreshCatalog: () => void;
+  onSelectNode?: (computeId?: string, modelId?: string) => void;
 }
 
 export const MarketplaceGrid: React.FC<MarketplaceGridProps> = ({
   models = [],
   computes = [],
   onOpenRegisterModal,
-  onRefreshCatalog
+  onRefreshCatalog,
+  onSelectNode
 }) => {
   const safeModels = models && models.length > 0 ? models : FALLBACK_MODELS;
   const safeComputes = computes && computes.length > 0 ? computes : FALLBACK_COMPUTES;
@@ -61,7 +63,7 @@ export const MarketplaceGrid: React.FC<MarketplaceGridProps> = ({
             Decentralized Model & GPU Compute Fleet
           </h2>
           <p className="text-xs font-mono text-grid-400 mt-1 max-w-2xl">
-            Autonomous nodes register via standard <span className="text-grid-200">x402 paywall endpoints</span> and settle payouts directly in <span className="text-grid-200">ALGO</span>. Toggle status to test router adaptation.
+            Autonomous nodes register via standard <span className="text-grid-200">x402 paywall endpoints</span> and settle payouts directly in <span className="text-grid-200">ALGO</span>. Deploy compute slots or toggle status in real-time.
           </p>
         </div>
 
@@ -78,42 +80,31 @@ export const MarketplaceGrid: React.FC<MarketplaceGridProps> = ({
               {
                 targetSelector: '[data-tour="register-provider-btn"]',
                 title: "2. Register Provider",
-                description: "Click here to simulate onboarding a new custom vLLM inference node or foundation model with custom pricing."
-              },
-              {
-                targetSelector: '[data-tour="compute-fleet-cards"]',
-                title: "3. GPU Hardware Telemetry & Spot Rates",
-                description: "Inspect hardware VRAM, interconnect type (NVLink/PCIe), base latency ping, and spot hourly rates."
+                description: "Deploy a new model endpoint or GPU cluster into the live decentralized network."
               },
               {
                 targetSelector: '[data-tour="node-status-toggle"]',
-                title: "4. Dynamic Node Degradation",
-                description: "Click any status badge (Active ➔ Degraded ➔ Offline) to simulate real-time cluster failures and watch the Pareto router adapt!"
-              },
-              {
-                targetSelector: '[data-tour="model-catalog-cards"]',
-                title: "5. Foundation Models Catalog",
-                description: "Browse supported models with token economics (input/output rates) and standard quality benchmark scores."
+                title: "3. Interactive Fault Simulation",
+                description: "Click status badges to simulate degradation/outages. The Pareto router detects this and fails over."
               }
             ]}
           />
 
           <button
             onClick={onRefreshCatalog}
-            className="p-2 sm:p-2.5 rounded-lg bg-grid-950 border border-grid-800 hover:border-grid-700 text-grid-400 hover:text-grid-200 text-xs font-mono flex items-center space-x-1.5 transition-all cursor-pointer"
+            title="Sync registry telemetry from network"
+            className="p-2 rounded-lg bg-grid-800 hover:bg-grid-750 text-grid-300 hover:text-white transition-colors cursor-pointer border border-grid-700"
           >
-            <RefreshCw className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Sync</span>
+            <RefreshCw className="w-4 h-4" />
           </button>
-          <div data-tour="register-provider-btn">
-            <button
-              onClick={onOpenRegisterModal}
-              className="px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-lg bg-signal-amber hover:bg-signal-amber/90 text-grid-950 text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider flex items-center space-x-1.5 shadow-glow-amber transition-all cursor-pointer"
-            >
-              <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              <span>Register</span>
-            </button>
-          </div>
+          <button
+            data-tour="register-provider-btn"
+            onClick={onOpenRegisterModal}
+            className="px-4 py-2 rounded-lg bg-brand-emerald text-black text-xs font-mono font-bold flex items-center space-x-2 hover:bg-brand-emerald/90 transition-all cursor-pointer shadow-glow-emerald"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Register Provider</span>
+          </button>
         </div>
       </div>
 
@@ -204,10 +195,15 @@ export const MarketplaceGrid: React.FC<MarketplaceGridProps> = ({
                   </div>
                 </div>
 
-                <div className="text-[10px] font-mono text-grid-500 flex items-center justify-between pt-1">
-                  <span>x402 Micropayments:</span>
-                  <span className="text-signal-cyan font-semibold">Enabled (ALGO)</span>
-                </div>
+                {onSelectNode && (
+                  <button
+                    onClick={() => onSelectNode(comp.id, undefined)}
+                    className="w-full py-2 px-3 rounded-lg bg-brand-emerald text-black font-bold text-xs flex items-center justify-center space-x-1.5 hover:bg-brand-emerald/90 active:scale-[0.98] transition-all cursor-pointer shadow-glow-emerald"
+                  >
+                    <Zap className="w-3.5 h-3.5 fill-black" />
+                    <span>Deploy & Purchase with x402</span>
+                  </button>
+                )}
               </div>
             ))}
           </div>
@@ -267,6 +263,16 @@ export const MarketplaceGrid: React.FC<MarketplaceGridProps> = ({
                     </span>
                   ))}
                 </div>
+
+                {onSelectNode && (
+                  <button
+                    onClick={() => onSelectNode(undefined, m.id)}
+                    className="w-full py-2 px-3 rounded-lg bg-white/[0.08] hover:bg-brand-emerald hover:text-black text-white font-bold text-xs flex items-center justify-center space-x-1.5 active:scale-[0.98] transition-all cursor-pointer"
+                  >
+                    <Cpu className="w-3.5 h-3.5" />
+                    <span>Run Task on {m.name.split(' ')[0]}</span>
+                  </button>
+                )}
               </div>
             ))}
           </div>
