@@ -8,6 +8,33 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Light Minimalist Palette (Swiss Technical)
+        surface: {
+          canvas: '#FBFBFD',      // Soft off-white page background
+          card: '#FFFFFF',         // Crisp white panel
+          border: '#E4E4E7',       // Subtle 1px structural dividers
+        },
+        text: {
+          primary: '#09090B',      // Deep charcoal for high legibility
+          secondary: '#71717A',    // Muted labels, metadata, hints
+          muted: '#A1A1AA',        // Even more muted
+        },
+        action: {
+          primary: '#09090B',      // High-contrast primary CTA (zinc-950)
+          primaryHover: '#18181B', // zinc-900
+          secondary: '#F4F4F5',    // Subtle secondary (zinc-100)
+          secondaryHover: '#E4E4E7', // zinc-200
+          secondaryText: '#18181B', // zinc-900
+        },
+        signal: {
+          green: '#059669',        // Low latency, healthy routes, low cost (emerald-600)
+          greenBg: '#ECFDF5',      // emerald-50
+          amber: '#D97706',        // Degraded routes, high load (amber-600)
+          amberBg: '#FFFAEB',      // amber-50
+          red: '#DC2626',          // Provider offline, error (red-600)
+          redBg: '#FEF2F2',        // red-50
+        },
+        // Keep existing dark theme for fallback
         grid: {
           950: '#040605',
           900: '#080C0A',
@@ -31,16 +58,6 @@ export default {
           silver: '#E2E8F0',
           dark: '#050706'
         },
-        signal: {
-          emerald: '#00DC82',
-          emeraldDim: 'rgba(0, 220, 130, 0.12)',
-          amber: '#00DC82', // unified to luxury mint-green
-          amberDim: 'rgba(0, 220, 130, 0.12)',
-          cyan: '#10B981',
-          cyanDim: 'rgba(16, 185, 129, 0.12)',
-          rose: '#EF4444',
-          roseDim: 'rgba(239, 68, 68, 0.12)',
-        }
       },
       fontFamily: {
         sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
@@ -48,11 +65,14 @@ export default {
         mono: ['JetBrains Mono', 'Fira Code', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace']
       },
       boxShadow: {
-        'glow-emerald': 'none',
-        'glow-white': 'none',
-        'glow-amber': 'none',
-        'subtle-panel': '0 4px 24px -2px rgba(0, 0, 0, 0.85)'
-      }
+        'subtle': '0 1px 2px 0 rgba(0, 0, 0, 0.03)',
+        'panel': '0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.03)',
+        'card': '0 4px 6px -1px rgba(0, 0, 0, 0.04), 0 2px 4px -2px rgba(0, 0, 0, 0.02)',
+        'drawer': '0 10px 40px -10px rgba(0, 0, 0, 0.08)',
+      },
+      backgroundImage: {
+        'grid-pattern': 'linear-gradient(to right, #f1f1f4 1px, transparent 1px), linear-gradient(to bottom, #f1f1f4 1px, transparent 1px)',
+      },
     },
   },
   plugins: [],

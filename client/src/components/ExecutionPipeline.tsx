@@ -65,23 +65,23 @@ const RoutingDecisionCard: React.FC<{ routing: RoutingDecision }> = ({ routing }
   const top = routing.paretoFrontier.slice(0, 4);
   return (
     <div className="space-y-3">
-      <div className="bg-brand-emerald/10 border border-brand-emerald/30 rounded-xl p-3 space-y-1.5">
-        <div className="text-[10px] uppercase tracking-wide text-grid-400">Selected</div>
-        <div className="text-sm font-bold text-white">
-          {routing.selectedCandidate.modelName} <span className="text-grid-400 font-normal">on</span> {routing.selectedCandidate.computeName}
+      <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 space-y-1.5">
+        <div className="text-[10px] uppercase tracking-wide text-zinc-500">Selected</div>
+        <div className="text-sm font-bold text-zinc-950">
+          {routing.selectedCandidate.modelName} <span className="text-zinc-500 font-normal">on</span> {routing.selectedCandidate.computeName}
         </div>
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-grid-300">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-zinc-500">
           <span>{routing.selectedCandidate.gpuType}</span>
-          <span className="text-brand-emerald font-bold">{routing.selectedCandidate.estimatedCostAlgo} ALGO</span>
+          <span className="text-emerald-600 font-bold">{routing.selectedCandidate.estimatedCostAlgo} ALGO</span>
           <span>{routing.selectedCandidate.estimatedLatencyMs}ms</span>
-          <span className="text-signal-cyan">Quality {routing.selectedCandidate.projectedQualityScore}/100</span>
+          <span className="text-emerald-600">Quality {routing.selectedCandidate.projectedQualityScore}/100</span>
         </div>
       </div>
 
-      <div className="text-[11px] text-grid-300 font-sans space-y-1">
+      <div className="text-[11px] text-zinc-500 font-sans space-y-1">
         {routing.decisionReasoning.slice(0, 3).map((r, i) => (
           <div key={i} className="flex items-start space-x-1.5">
-            <span className="text-brand-emerald mt-0.5">›</span>
+            <span className="text-emerald-600 mt-0.5">›</span>
             <span>{r}</span>
           </div>
         ))}
@@ -89,7 +89,7 @@ const RoutingDecisionCard: React.FC<{ routing: RoutingDecision }> = ({ routing }
 
       {top.length > 1 && (
         <div className="space-y-1.5">
-          <div className="text-[10px] uppercase tracking-wide text-grid-500">
+          <div className="text-[10px] uppercase tracking-wide text-zinc-500">
             Evaluated {routing.evaluatedCandidatesCount} combinations — top alternatives:
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
@@ -99,12 +99,12 @@ const RoutingDecisionCard: React.FC<{ routing: RoutingDecision }> = ({ routing }
                 <div
                   key={idx}
                   className={`p-2 rounded-lg border text-left ${
-                    isSelected ? 'bg-brand-emerald/15 border-brand-emerald/50' : 'bg-black/50 border-white/[0.08]'
+                    isSelected ? 'bg-emerald-50 border-emerald-200' : 'bg-zinc-50 border-zinc-200'
                   }`}
                 >
-                  <div className="text-[10px] font-bold text-white truncate">{c.modelName}</div>
-                  <div className="text-[9px] text-grid-400 truncate">{c.computeName}</div>
-                  <div className="text-[9px] text-grid-400 mt-0.5">{c.estimatedCostAlgo} ALGO · {c.estimatedLatencyMs}ms</div>
+                  <div className="text-[10px] font-bold text-zinc-950 truncate">{c.modelName}</div>
+                  <div className="text-[9px] text-zinc-500 truncate">{c.computeName}</div>
+                  <div className="text-[9px] text-zinc-500 mt-0.5">{c.estimatedCostAlgo} ALGO · {c.estimatedLatencyMs}ms</div>
                 </div>
               );
             })}
@@ -116,16 +116,16 @@ const RoutingDecisionCard: React.FC<{ routing: RoutingDecision }> = ({ routing }
 };
 
 const ChallengeCard: React.FC<{ challenge?: X402PaymentChallenge; message: string }> = ({ challenge, message }) => {
-  if (!challenge) return <div className="text-[11px] text-grid-400 font-sans">{message}</div>;
+  if (!challenge) return <div className="text-[11px] text-zinc-500 font-sans">{message}</div>;
   return (
     <div className="space-y-1 text-[11px]">
-      <div className="text-grid-300 font-sans">
-        Standard HTTP 402 challenge: <span className="text-white font-bold">{challenge.amountAlgo} ALGO</span> ({challenge.amountMicroAlgo} µALGO) via <code className="text-brand-emerald">avm:exact</code>
+      <div className="text-zinc-600 font-sans">
+        Standard HTTP 402 challenge: <span className="text-zinc-950 font-bold">{challenge.amountAlgo} ALGO</span> ({challenge.amountMicroAlgo} µALGO) via <code className="text-emerald-600">avm:exact</code>
       </div>
-      <div className="flex items-center space-x-2 text-grid-400 text-[10px]">
-        <span>Payee: <code className="text-grid-300">{challenge.destinationAddress.slice(0, 10)}...</code></span>
+      <div className="flex items-center space-x-2 text-zinc-500 text-[10px]">
+        <span>Payee: <code className="text-zinc-700">{challenge.destinationAddress.slice(0, 10)}...</code></span>
         <span>•</span>
-        <span className="text-signal-cyan">Protocol Fee (1.5%): {challenge.agentGridFeeAlgo} ALGO</span>
+        <span className="text-emerald-600">Protocol Fee (1.5%): {challenge.agentGridFeeAlgo} ALGO</span>
       </div>
     </div>
   );
@@ -135,19 +135,19 @@ const SettlementCard: React.FC<{ challenge?: X402PaymentChallenge; settlement?: 
   return (
     <div className="space-y-1.5">
       {challenge && (
-        <div className="text-[11px] text-grid-300 font-sans">
-          Micro-settlement of <span className="text-white font-bold">{challenge.amountAlgo} ALGO</span> to{' '}
-          <code className="text-grid-400">{challenge.destinationAddress.slice(0, 10)}...</code>
+        <div className="text-[11px] text-zinc-600 font-sans">
+          Micro-settlement of <span className="text-zinc-950 font-bold">{challenge.amountAlgo} ALGO</span> to{' '}
+          <code className="text-zinc-500">{challenge.destinationAddress.slice(0, 10)}...</code>
         </div>
       )}
       {settlement || isDone ? (
-        <div className="flex items-center space-x-1.5 text-[11px] text-brand-emerald font-bold">
+        <div className="flex items-center space-x-1.5 text-[11px] text-emerald-600 font-bold">
           <CheckCircle2 className="w-3.5 h-3.5" />
           <span>Confirmed on-chain in round #{settlement?.round || 66578631}</span>
         </div>
       ) : (
-        <div className="flex items-center space-x-1.5 text-[11px] text-grid-400">
-          <Loader2 className="w-3.5 h-3.5 animate-spin text-brand-emerald" />
+        <div className="flex items-center space-x-1.5 text-[11px] text-zinc-500">
+          <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-600" />
           <span>Signing and broadcasting to Algorand TestNet...</span>
         </div>
       )}
@@ -214,25 +214,26 @@ export const ExecutionPipeline: React.FC<ExecutionPipelineProps> = ({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
-          <span className={`w-2 h-2 rounded-full ${isStreaming ? 'bg-brand-emerald animate-ping' : errorMessage ? 'bg-signal-rose' : 'bg-brand-emerald'}`} />
-          <span className="text-sm font-medium text-white">
+          <span className={`w-2 h-2 rounded-full ${isStreaming ? 'bg-emerald-600 animate-pulse' : errorMessage ? 'bg-red-600' : 'bg-emerald-600'}`} />
+          <span className="text-sm font-medium text-zinc-950">
             {errorMessage ? 'Task failed' : isStreaming ? 'Agent is working...' : completedTask ? `Done in ${completedTask.actualDurationMs}ms` : ''}
           </span>
         </div>
         <button
           onClick={onReset}
-          className="px-3 py-1.5 rounded-lg border border-white/[0.08] bg-black/60 text-[13px] text-grid-300 hover:text-white hover:border-white/[0.2] transition-all disabled:opacity-50 cursor-pointer"
+          disabled={isStreaming}
+          className="px-3 py-1.5 rounded-lg border border-zinc-200 bg-white text-[13px] text-zinc-600 hover:text-zinc-900 hover:border-zinc-300 transition-colors disabled:opacity-50 cursor-pointer"
         >
           {isStreaming ? 'Cancel Task' : 'New Task'}
         </button>
       </div>
 
       {errorMessage && (
-        <div role="alert" className="bg-signal-roseDim border border-signal-rose/40 rounded-xl p-4 flex items-start space-x-3 text-sm text-signal-rose animate-fadeIn">
+        <div role="alert" className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start space-x-3 text-sm text-red-600 animate-fadeIn">
           <XCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
           <div className="space-y-1">
-            <div className="font-semibold">The agent couldn't complete this task</div>
-            <div className="text-grid-300 text-[13px]">{errorMessage}</div>
+            <div className="font-semibold text-red-700">The agent couldn't complete this task</div>
+            <div className="text-zinc-600 text-[13px]">{errorMessage}</div>
           </div>
         </div>
       )}
@@ -249,19 +250,19 @@ export const ExecutionPipeline: React.FC<ExecutionPipelineProps> = ({
           return (
             <div
               key={stage}
-              className={`bg-black/70 border rounded-xl p-3.5 animate-fadeIn transition-colors ${
-                isActive ? 'border-brand-emerald/50' : 'border-white/[0.08]'
+              className={`card-light p-3.5 animate-fadeIn transition-colors ${
+                isActive ? 'border-emerald-200' : 'border-zinc-200'
               }`}
             >
               <div className="flex items-center space-x-2 mb-1.5">
                 {isActive ? (
-                  <Loader2 className="w-3.5 h-3.5 text-brand-emerald animate-spin shrink-0" />
+                  <Loader2 className="w-3.5 h-3.5 text-emerald-600 animate-spin shrink-0" />
                 ) : isDone ? (
-                  <CheckCircle2 className="w-3.5 h-3.5 text-brand-emerald shrink-0" />
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                 ) : (
-                  <div className="w-3.5 h-3.5 rounded-full bg-grid-700 shrink-0" />
+                  <div className="w-3.5 h-3.5 rounded-full bg-zinc-200 shrink-0" />
                 )}
-                <span className="text-sm font-medium text-white">{STAGE_LABEL[stage] || stage}</span>
+                <span className="text-sm font-medium text-zinc-950">{STAGE_LABEL[stage] || stage}</span>
               </div>
 
               <div className="pl-5.5 ml-0.5">
@@ -281,12 +282,12 @@ export const ExecutionPipeline: React.FC<ExecutionPipelineProps> = ({
                     message={latest.message}
                   />
                 ) : stage === 'rerouting_failover' ? (
-                  <div className="flex items-start space-x-2 text-[11px] font-sans text-signal-rose">
+                  <div className="flex items-start space-x-2 text-[11px] font-sans text-amber-600">
                     <ArrowRightLeft className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                     <span>{latest.message}</span>
                   </div>
                 ) : (
-                  <div className="text-[11px] text-grid-400 font-sans">{latest.message}</div>
+                  <div className="text-[11px] text-zinc-500 font-sans">{latest.message}</div>
                 )}
               </div>
             </div>
@@ -296,32 +297,32 @@ export const ExecutionPipeline: React.FC<ExecutionPipelineProps> = ({
 
       {/* Live output stream */}
       {(streamedOutput || currentStage === 'executing_workload' || completedTask) && (
-        <div className="bg-black/85 border border-white/[0.1] rounded-2xl overflow-hidden">
-          <div className="bg-black px-3.5 py-2.5 border-b border-white/[0.08] flex items-center justify-between">
+        <div className="card-light border-zinc-200 rounded-xl overflow-hidden">
+          <div className="bg-zinc-50 px-3.5 py-2.5 border-b border-zinc-200 flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <Terminal className="w-4 h-4 text-brand-emerald shrink-0" />
-              <span className="text-[13px] font-medium text-white">Result</span>
+              <Terminal className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span className="text-[13px] font-medium text-zinc-950">Result</span>
             </div>
             <button
               onClick={() => copyToClipboard(streamedOutput)}
               disabled={!streamedOutput}
-              className="flex items-center space-x-1 text-[13px] text-grid-400 hover:text-white disabled:opacity-30 transition-all cursor-pointer"
+              className="flex items-center space-x-1 text-[13px] text-zinc-500 hover:text-zinc-900 disabled:opacity-30 transition-colors cursor-pointer"
             >
-              {copied ? <Check className="w-3.5 h-3.5 text-brand-emerald" /> : <Copy className="w-3.5 h-3.5" />}
+              {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
               <span>{copied ? 'Copied' : 'Copy'}</span>
             </button>
           </div>
-          <div className="p-4 max-h-[340px] overflow-y-auto text-[14px] text-grid-100 whitespace-pre-wrap leading-relaxed" aria-live="polite">
-            {streamedOutput || <span className="text-grid-500">Streaming will start once payment is confirmed...</span>}
+          <div className="p-4 max-h-[340px] overflow-y-auto text-[14px] text-zinc-900 whitespace-pre-wrap leading-relaxed" aria-live="polite">
+            {streamedOutput || <span className="text-zinc-400">Streaming will start once payment is confirmed...</span>}
           </div>
         </div>
       )}
 
       {/* Final receipt */}
       {completedTask && (
-        <div className="bg-black/70 border border-white/[0.08] rounded-xl p-3.5 space-y-2.5">
+        <div className="card-light p-3.5 space-y-2.5">
           {completedTask.failoverOccurred && completedTask.failoverDetails && (
-            <div className="flex items-start space-x-2 text-[11px] text-signal-rose bg-signal-roseDim border border-signal-rose/30 rounded-lg p-2.5">
+            <div className="flex items-start space-x-2 text-[11px] text-amber-600 bg-amber-50 border border-amber-200 rounded-lg p-2.5">
               <AlertOctagon className="w-3.5 h-3.5 shrink-0 mt-0.5" />
               <span>
                 Rerouted from {completedTask.failoverDetails.originalProvider} to{' '}
@@ -331,15 +332,15 @@ export const ExecutionPipeline: React.FC<ExecutionPipelineProps> = ({
           )}
 
           <div className="flex items-center justify-between text-[13px]">
-            <span className="flex items-center space-x-1.5 text-grid-400">
+            <span className="flex items-center space-x-1.5 text-zinc-500">
               <Coins className="w-3.5 h-3.5" />
-              <span>Paid <strong className="text-brand-emerald font-mono">{completedTask.actualCostAlgo} ALGO</strong> on Algorand TestNet</span>
+              <span>Paid <strong className="text-emerald-600 font-mono">{completedTask.actualCostAlgo} ALGO</strong> on Algorand TestNet</span>
             </span>
             <a
               href={completedTask.algorandTx.loraUrl}
               target="_blank"
               rel="noreferrer"
-              className="flex items-center space-x-1 px-2.5 py-1 rounded-full bg-brand-emerald text-black font-medium text-[12px] hover:bg-brand-emerald/90 transition-all"
+              className="flex items-center space-x-1 px-2.5 py-1 rounded-full bg-emerald-600 text-white font-medium text-[12px] hover:bg-emerald-700 transition-all"
             >
               <Search className="w-3 h-3" />
               <span>View on-chain receipt</span>
@@ -349,7 +350,7 @@ export const ExecutionPipeline: React.FC<ExecutionPipelineProps> = ({
 
           <button
             onClick={exportReceipt}
-            className="w-full py-1.5 px-3 rounded-lg bg-black hover:bg-white/[0.05] border border-white/[0.1] text-[13px] text-grid-300 hover:text-white flex items-center justify-center space-x-2 transition-all cursor-pointer"
+            className="w-full py-1.5 px-3 rounded-lg bg-zinc-50 hover:bg-zinc-100 border border-zinc-200 text-[13px] text-zinc-600 hover:text-zinc-900 flex items-center justify-center space-x-2 transition-colors cursor-pointer"
           >
             <FileText className="w-3.5 h-3.5" />
             <span>Download receipt (.json)</span>
@@ -362,7 +363,7 @@ export const ExecutionPipeline: React.FC<ExecutionPipelineProps> = ({
         <div>
           <button
             onClick={() => setShowRawEvents((v) => !v)}
-            className="flex items-center space-x-1 text-[10px] text-grid-500 hover:text-grid-300 transition-colors cursor-pointer"
+            className="flex items-center space-x-1 text-[10px] text-zinc-500 hover:text-zinc-700 transition-colors cursor-pointer"
           >
             <Cpu className="w-3 h-3" />
             <span>Raw event log ({events.length})</span>
@@ -371,12 +372,12 @@ export const ExecutionPipeline: React.FC<ExecutionPipelineProps> = ({
           {showRawEvents && (
             <div className="mt-2 space-y-1.5 max-h-[240px] overflow-y-auto">
               {events.map((ev, i) => (
-                <div key={i} className="p-2 bg-black rounded border border-white/[0.08] text-[10px]">
-                  <div className="flex items-center justify-between text-grid-500 mb-0.5">
-                    <span className="font-bold text-brand-emerald uppercase">{ev.stage}</span>
+                <div key={i} className="p-2 bg-zinc-50 rounded border border-zinc-200 text-[10px]">
+                  <div className="flex items-center justify-between text-zinc-500 mb-0.5">
+                    <span className="font-bold text-emerald-600 uppercase">{ev.stage}</span>
                     <span>{new Date(ev.timestamp).toLocaleTimeString()}</span>
                   </div>
-                  <div className="text-grid-300">{ev.message}</div>
+                  <div className="text-zinc-600">{ev.message}</div>
                 </div>
               ))}
             </div>

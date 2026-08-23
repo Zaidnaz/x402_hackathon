@@ -25,6 +25,7 @@ import { TourGuideButton } from './TourGuideButton';
 import { PurchaseConfirmModal } from './PurchaseConfirmModal';
 import { RegisterGpuModal } from './RegisterGpuModal';
 import { estimateTaskCost, formatCostRange, getSupportedModalitiesDisplay } from '../utils/costEstimator';
+import { useTaskContext } from '../context/TaskContext';
 
 interface MarketplaceGridProps {
   models: ModelProvider[];
@@ -43,6 +44,7 @@ export const MarketplaceGrid: React.FC<MarketplaceGridProps> = ({
 }) => {
   const safeModels = models && models.length > 0 ? models : FALLBACK_MODELS;
   const safeComputes = computes && computes.length > 0 ? computes : FALLBACK_COMPUTES;
+  const { setSelection } = useTaskContext();
   const [selectedTab, setSelectedTab] = useState<'all' | 'models' | 'computes'>('all');
   const [isUpdatingStatus, setIsUpdatingStatus] = useState<string | null>(null);
   
@@ -84,6 +86,10 @@ export const MarketplaceGrid: React.FC<MarketplaceGridProps> = ({
   };
 
   const handlePurchaseConfirm = () => {
+    if (purchaseModal.model && purchaseModal.compute) {
+      const estimate = getEstimatedTaskCost(purchaseModal.model, purchaseModal.compute);
+      setSelection(purchaseModal.model, purchaseModal.compute, estimate);
+    }
     setPurchaseModal({ isOpen: false, model: null, compute: null });
     onNavigateToCommand();
   };

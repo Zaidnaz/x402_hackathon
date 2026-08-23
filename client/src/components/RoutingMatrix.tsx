@@ -57,17 +57,17 @@ export const RoutingMatrix: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-grid-900 border border-grid-800 rounded-xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="card-light p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center space-x-2 mb-1">
-            <span className="w-2 h-2 rounded-full bg-signal-cyan" />
-            <span className="text-xs font-mono uppercase tracking-widest text-signal-cyan font-semibold">Mathematical Optimization Engine</span>
+            <span className="w-2 h-2 rounded-full bg-emerald-600" />
+            <span className="text-xs font-mono uppercase tracking-widest text-emerald-600 font-semibold">Mathematical Optimization Engine</span>
           </div>
-          <h2 className="text-xl font-bold font-mono text-grid-100">
+          <h2 className="text-xl font-bold font-mono text-zinc-950">
             Multi-Objective Pareto Frontier & Matrix
           </h2>
-          <p className="text-xs font-mono text-grid-400 mt-1 max-w-2xl">
-            AgentGrid evaluates all active combinatorial permutations of <span className="text-grid-200">Model $\times$ Compute</span> nodes to find non-dominated Pareto-optimal choices.
+          <p className="text-xs font-mono text-zinc-500 mt-1 max-w-2xl">
+            AgentGrid evaluates all active combinatorial permutations of <span className="text-zinc-700">Model $\times$ Compute</span> nodes to find non-dominated Pareto-optimal choices.
           </p>
         </div>
         <div className="flex items-center space-x-2">
@@ -93,13 +93,13 @@ export const RoutingMatrix: React.FC = () => {
             ]}
           />
 
-          <div className="bg-grid-950 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-lg border border-grid-800 text-[11px] sm:text-xs font-mono text-grid-300">
-            Permutations: <strong className="text-signal-amber font-semibold">{routing?.evaluatedCandidatesCount || 0}</strong>
+          <div className="bg-zinc-100 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-lg border border-zinc-200 text-[11px] sm:text-xs font-mono text-zinc-500">
+            Permutations: <strong className="text-emerald-600 font-semibold">{routing?.evaluatedCandidatesCount || 0}</strong>
           </div>
           <button
             onClick={recompute}
             disabled={loading || !prompt.trim()}
-            className="px-3 py-2 rounded-lg bg-brand-emerald text-black text-xs font-mono font-bold flex items-center gap-1.5 disabled:opacity-40"
+            className="px-3 py-2 rounded-lg bg-zinc-950 text-white text-xs font-mono font-bold flex items-center gap-1.5 disabled:opacity-40 hover:bg-zinc-900"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
             {loading ? 'Computing' : 'Recompute'}
@@ -107,35 +107,35 @@ export const RoutingMatrix: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-grid-900 border border-grid-800 rounded-xl p-4 space-y-2">
-        <label htmlFor="routing-prompt" className="text-xs font-mono font-semibold uppercase tracking-wider text-grid-300">Workload to evaluate</label>
+      <div className="card-light p-4 space-y-2">
+        <label htmlFor="routing-prompt" className="text-xs font-mono font-semibold uppercase tracking-wider text-zinc-500">Workload to evaluate</label>
         <textarea
           id="routing-prompt"
           value={prompt}
           onChange={(event) => setPrompt(event.target.value)}
           rows={2}
-          className="w-full bg-grid-950 border border-grid-800 rounded-lg p-3 text-sm text-grid-100 focus:outline-none focus:border-brand-emerald resize-y"
+          className="input-light resize-y"
           placeholder="Describe the workload you want to route"
         />
-        {error && <div role="alert" className="text-xs text-signal-rose">{error}</div>}
+        {error && <div role="alert" className="text-xs text-red-600">{error}</div>}
       </div>
 
       {/* Interactive Weight Controllers */}
-      <div data-tour="weight-sliders" className="bg-grid-900 border border-grid-800 rounded-xl p-4 sm:p-5 space-y-3 sm:space-y-4">
-        <div className="text-xs font-mono font-semibold uppercase tracking-wider text-grid-300 flex items-center space-x-2">
-          <SlidersHorizontal className="w-3.5 h-3.5 text-signal-amber" />
+      <div data-tour="weight-sliders" className="card-light p-4 sm:p-5 space-y-3 sm:space-y-4">
+        <div className="text-xs font-mono font-semibold uppercase tracking-wider text-zinc-500 flex items-center space-x-2">
+          <SlidersHorizontal className="w-3.5 h-3.5 text-amber-600" />
           <span>Interactive Objective Weight Tuners</span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 text-xs font-mono">
           {/* Cost Weight */}
-          <div className="bg-grid-950 p-3.5 rounded-lg border border-grid-800 space-y-2">
+          <div className="bg-zinc-50 p-3.5 rounded-lg border border-zinc-200 space-y-2">
             <div className="flex justify-between">
-              <span className="text-grid-400 flex items-center space-x-1">
-                <Coins className="w-3 h-3 text-signal-emerald" />
+              <span className="text-zinc-500 flex items-center space-x-1">
+                <Coins className="w-3 h-3 text-emerald-600" />
                 <span>Cost Weight (w_c)</span>
               </span>
-              <span className="text-signal-emerald font-semibold">{costWeight}%</span>
+              <span className="text-emerald-600 font-semibold">{costWeight}%</span>
             </div>
             <input
               type="range"
@@ -143,18 +143,18 @@ export const RoutingMatrix: React.FC = () => {
               max="100"
               value={costWeight}
               onChange={(e) => setCostWeight(parseInt(e.target.value, 10))}
-              className="w-full h-1.5 bg-grid-800 rounded-lg appearance-none cursor-pointer accent-signal-emerald"
+              className="w-full h-1.5 bg-zinc-200 rounded-lg appearance-none cursor-pointer accent-emerald-600"
             />
           </div>
 
           {/* Latency Weight */}
-          <div className="bg-grid-950 p-3.5 rounded-lg border border-grid-800 space-y-2">
+          <div className="bg-zinc-50 p-3.5 rounded-lg border border-zinc-200 space-y-2">
             <div className="flex justify-between">
-              <span className="text-grid-400 flex items-center space-x-1">
-                <Clock className="w-3 h-3 text-signal-amber" />
+              <span className="text-zinc-500 flex items-center space-x-1">
+                <Clock className="w-3 h-3 text-amber-600" />
                 <span>Latency Weight (w_l)</span>
               </span>
-              <span className="text-signal-amber font-semibold">{latWeight}%</span>
+              <span className="text-amber-600 font-semibold">{latWeight}%</span>
             </div>
             <input
               type="range"
@@ -162,18 +162,18 @@ export const RoutingMatrix: React.FC = () => {
               max="100"
               value={latWeight}
               onChange={(e) => setLatWeight(parseInt(e.target.value, 10))}
-              className="w-full h-1.5 bg-grid-800 rounded-lg appearance-none cursor-pointer accent-signal-amber"
+              className="w-full h-1.5 bg-zinc-200 rounded-lg appearance-none cursor-pointer accent-amber-600"
             />
           </div>
 
           {/* Quality Weight */}
-          <div className="bg-grid-950 p-3.5 rounded-lg border border-grid-800 space-y-2">
+          <div className="bg-zinc-50 p-3.5 rounded-lg border border-zinc-200 space-y-2">
             <div className="flex justify-between">
-              <span className="text-grid-400 flex items-center space-x-1">
-                <TrendingUp className="w-3 h-3 text-signal-cyan" />
+              <span className="text-zinc-500 flex items-center space-x-1">
+                <TrendingUp className="w-3 h-3 text-emerald-600" />
                 <span>Quality Weight (w_q)</span>
               </span>
-              <span className="text-signal-cyan font-semibold">{qualWeight}%</span>
+              <span className="text-emerald-600 font-semibold">{qualWeight}%</span>
             </div>
             <input
               type="range"
@@ -181,18 +181,18 @@ export const RoutingMatrix: React.FC = () => {
               max="100"
               value={qualWeight}
               onChange={(e) => setQualWeight(parseInt(e.target.value, 10))}
-              className="w-full h-1.5 bg-grid-800 rounded-lg appearance-none cursor-pointer accent-signal-cyan"
+              className="w-full h-1.5 bg-zinc-200 rounded-lg appearance-none cursor-pointer accent-emerald-600"
             />
           </div>
 
           {/* Reliability Weight */}
-          <div className="bg-grid-950 p-3.5 rounded-lg border border-grid-800 space-y-2">
+          <div className="bg-zinc-50 p-3.5 rounded-lg border border-zinc-200 space-y-2">
             <div className="flex justify-between">
-              <span className="text-grid-400 flex items-center space-x-1">
-                <ShieldCheck className="w-3 h-3 text-grid-300" />
+              <span className="text-zinc-500 flex items-center space-x-1">
+                <ShieldCheck className="w-3 h-3 text-zinc-400" />
                 <span>Reliability Weight (w_r)</span>
               </span>
-              <span className="text-grid-200 font-semibold">{relWeight}%</span>
+              <span className="text-zinc-600 font-semibold">{relWeight}%</span>
             </div>
             <input
               type="range"
@@ -200,81 +200,97 @@ export const RoutingMatrix: React.FC = () => {
               max="100"
               value={relWeight}
               onChange={(e) => setRelWeight(parseInt(e.target.value, 10))}
-              className="w-full h-1.5 bg-grid-800 rounded-lg appearance-none cursor-pointer accent-grid-400"
+              className="w-full h-1.5 bg-zinc-200 rounded-lg appearance-none cursor-pointer accent-zinc-400"
             />
           </div>
         </div>
       </div>
 
       {/* Candidate Ranking & Score Table */}
-      <div data-tour="candidate-table" className="bg-grid-900 border border-grid-800 rounded-xl overflow-hidden">
-        <div className="p-4 bg-grid-950 border-b border-grid-800 flex items-center justify-between">
-          <div className="text-xs font-mono font-semibold uppercase tracking-wider text-grid-200">
+      <div data-tour="candidate-table" className="card-light overflow-hidden">
+        <div className="p-4 bg-zinc-50 border-b border-zinc-200 flex items-center justify-between">
+          <div className="text-xs font-mono font-semibold uppercase tracking-wider text-zinc-600">
             Combinatorial Candidate Matrix (Ranked by Score)
           </div>
-          <div className="text-[11px] font-mono text-grid-400">
-            Formula: <code className="text-signal-amber font-semibold">Score = w_q·Q - w_c·C - w_l·L + w_r·R - Penalties</code>
+          <div className="text-[11px] font-mono text-zinc-500">
+            Formula: <code className="text-emerald-600 font-semibold">Score = w_q·Q - w_c·C - w_l·L + w_r·R - Penalties</code>
           </div>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left font-mono text-xs">
-            <thead className="bg-grid-950/60 text-grid-400 text-[10px] uppercase border-b border-grid-800">
+          <table className="table-light">
+            <thead>
               <tr>
-                <th className="py-3 px-4">Rank</th>
-                <th className="py-3 px-4">Model & Compute Node</th>
-                <th className="py-3 px-4">Est. Latency</th>
-                <th className="py-3 px-4">Est. Cost (ALGO)</th>
-                <th className="py-3 px-4">Quality Score</th>
-                <th className="py-3 px-4">SLA / Budget</th>
-                <th className="py-3 px-4">Pareto Front</th>
-                <th className="py-3 px-4 text-right">Composite Score</th>
+                <th className="py-2.5 px-4 font-medium" style={{ cursor: 'pointer' }}>
+                  Rank
+                </th>
+                <th className="py-2.5 px-4 font-medium" style={{ cursor: 'pointer' }}>
+                  Model & Compute Node
+                </th>
+                <th className="py-2.5 px-4 font-medium" style={{ cursor: 'pointer' }}>
+                  Est. Latency
+                </th>
+                <th className="py-2.5 px-4 font-medium" style={{ cursor: 'pointer' }}>
+                  Est. Cost (ALGO)
+                </th>
+                <th className="py-2.5 px-4 font-medium" style={{ cursor: 'pointer' }}>
+                  Quality Score
+                </th>
+                <th className="py-2.5 px-4 font-medium" style={{ cursor: 'pointer' }}>
+                  SLA / Budget
+                </th>
+                <th className="py-2.5 px-4 font-medium" style={{ cursor: 'pointer' }}>
+                  Pareto Front
+                </th>
+                <th className="py-2.5 px-4 text-right font-medium">
+                  Composite Score
+                </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-grid-800/60">
+            <tbody>
               {routing?.paretoFrontier && routing.paretoFrontier.map((c, idx) => (
                 <tr
                   key={idx}
-                  className={`hover:bg-grid-850/50 transition-all ${
-                    idx === 0 ? 'bg-signal-amberDim/10 border-l-2 border-signal-amber' : ''
+                  className={`transition-colors ${
+                    idx === 0 ? 'bg-emerald-50 border-l-2 border-emerald-600' : ''
                   }`}
                 >
                   <td className="py-3 px-4">
                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                      idx === 0 ? 'bg-signal-amber text-grid-950' : idx === 1 ? 'bg-grid-750 text-grid-200' : 'text-grid-500'
+                      idx === 0 ? 'bg-emerald-600 text-white' : idx === 1 ? 'bg-zinc-200 text-zinc-700' : 'text-zinc-500'
                     }`}>
                       #{c.rank}
                     </span>
                   </td>
 
                   <td className="py-3 px-4">
-                    <div className="font-semibold text-grid-100">{c.modelName}</div>
-                    <div className="text-[10px] text-grid-400">{c.computeName} ({c.gpuType})</div>
+                    <div className="font-semibold text-zinc-950">{c.modelName}</div>
+                    <div className="text-[10px] text-zinc-500">{c.computeName} ({c.gpuType})</div>
                   </td>
 
                   <td className="py-3 px-4">
-                    <span className="text-grid-200 font-medium">{c.estimatedLatencyMs} ms</span>
+                    <span className="text-zinc-700 font-medium">{c.estimatedLatencyMs} ms</span>
                   </td>
 
                   <td className="py-3 px-4">
-                    <span className="text-signal-emerald font-semibold">{c.estimatedCostAlgo} ALGO</span>
-                    <span className="text-[10px] text-grid-500 block">(${c.estimatedCostUsd.toFixed(4)})</span>
+                    <span className="text-emerald-600 font-semibold">{c.estimatedCostAlgo} ALGO</span>
+                    <span className="text-[10px] text-zinc-500 block">(${c.estimatedCostUsd.toFixed(4)})</span>
                   </td>
 
                   <td className="py-3 px-4">
-                    <span className="text-signal-cyan font-semibold">{c.projectedQualityScore}</span>
-                    <span className="text-grid-500 text-[10px]"> / 100</span>
+                    <span className="text-emerald-600 font-semibold">{c.projectedQualityScore}</span>
+                    <span className="text-zinc-500 text-[10px]"> / 100</span>
                   </td>
 
                   <td className="py-3 px-4">
                     <div className="flex items-center space-x-1.5">
                       {c.slaAdherent ? (
-                        <span className="text-signal-emerald flex items-center space-x-0.5 text-[10px]">
+                        <span className="text-emerald-600 flex items-center space-x-0.5 text-[10px]">
                           <CheckCircle2 className="w-3 h-3" />
                           <span>SLA OK</span>
                         </span>
                       ) : (
-                        <span className="text-signal-rose flex items-center space-x-0.5 text-[10px]">
+                        <span className="text-red-600 flex items-center space-x-0.5 text-[10px]">
                           <XCircle className="w-3 h-3" />
                           <span>SLA Exceeded</span>
                         </span>
@@ -284,19 +300,19 @@ export const RoutingMatrix: React.FC = () => {
 
                   <td data-tour={idx === 0 ? "pareto-badge" : undefined} className="py-3 px-4">
                     {c.paretoOptimal ? (
-                      <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-signal-cyanDim text-signal-cyan border border-signal-cyan/30">
+                      <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
                         NON-DOMINATED
                       </span>
                     ) : (
-                      <span className="text-grid-600 text-[10px]">Dominated</span>
+                      <span className="text-zinc-500 text-[10px]">Dominated</span>
                     )}
                   </td>
 
                   <td className="py-3 px-4 text-right">
-                    <span className="text-sm font-bold text-signal-amber mono-tabular">
+                    <span className="text-sm font-bold text-emerald-600 mono-tabular">
                       {c.compositeScore}
                     </span>
-                    <span className="text-[10px] text-grid-500 block">pts</span>
+                    <span className="text-[10px] text-zinc-500 block">pts</span>
                   </td>
                 </tr>
               ))}
@@ -307,3 +323,5 @@ export const RoutingMatrix: React.FC = () => {
     </div>
   );
 };
+
+export default RoutingMatrix;

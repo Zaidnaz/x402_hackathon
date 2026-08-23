@@ -4,7 +4,7 @@
 
 @layer base {
   *, ::before, ::after {
-    border-color: rgba(255, 255, 255, 0.08);
+    border-color: #E4E4E7;
     box-sizing: border-box;
   }
   
@@ -16,13 +16,14 @@
   }
 
   body {
-    background-color: #040605;
-    color: #F1F5F9;
+    background-color: #FBFBFD;
+    color: #09090B;
     max-width: 100vw;
     overflow-x: hidden;
     margin: 0;
     padding: 0;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11", "tnum";
+    font-variant-numeric: tabular-nums;
   }
 
   #root {
@@ -44,20 +45,111 @@
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Sleek custom scrollbars */
+  /* Light theme scrollbars */
   ::-webkit-scrollbar {
-    width: 5px;
-    height: 5px;
+    width: 6px;
+    height: 6px;
   }
   ::-webkit-scrollbar-track {
-    background: #080C0A;
+    background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: #1B2620;
+    background: #E4E4E7;
     border-radius: 3px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #00DC82;
+    background: #D4D4D8;
+  }
+
+  /* Selection */
+  ::selection {
+    background-color: #059669;
+    color: white;
+  }
+
+  /* Focus visible */
+  :focus-visible {
+    outline: none;
+    ring: 2px;
+    ring-color: #059669;
+    ring-offset: 2px;
+    ring-offset-color: #FBFBFD;
+  }
+}
+
+@layer components {
+  /* Light theme card */
+  .card-light {
+    @apply bg-white border border-zinc-200 rounded-lg shadow-subtle;
+  }
+
+  .card-light-hover {
+    @apply card-light transition-shadow hover:shadow-panel;
+  }
+
+  /* Light theme input */
+  .input-light {
+    @apply w-full bg-white border border-zinc-300 rounded-md px-3 py-2 text-sm text-zinc-950 
+           placeholder:text-zinc-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600
+           transition-colors;
+  }
+
+  /* Primary button */
+  .btn-primary {
+    @apply bg-zinc-950 hover:bg-zinc-900 text-white text-sm font-medium px-4 py-2 rounded-lg 
+           transition-colors active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2;
+  }
+
+  /* Secondary button */
+  .btn-secondary {
+    @apply bg-zinc-100 hover:bg-zinc-200 text-zinc-950 text-sm font-medium px-4 py-2 rounded-lg 
+           border border-zinc-200 transition-colors active:scale-[0.98];
+  }
+
+  /* Ghost button */
+  .btn-ghost {
+    @apply text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 text-sm font-medium px-3 py-1.5 rounded-md 
+           transition-colors active:scale-[0.98];
+  }
+
+  /* Signal badges */
+  .badge-green {
+    @apply px-2 py-0.5 text-[10px] font-medium rounded bg-emerald-50 text-emerald-700 border border-emerald-100;
+  }
+  .badge-amber {
+    @apply px-2 py-0.5 text-[10px] font-medium rounded bg-amber-50 text-amber-700 border border-amber-100;
+  }
+  .badge-red {
+    @apply px-2 py-0.5 text-[10px] font-medium rounded bg-red-50 text-red-700 border border-red-100;
+  }
+  .badge-gray {
+    @apply px-2 py-0.5 text-[10px] font-medium rounded bg-zinc-100 text-zinc-700 border border-zinc-200;
+  }
+
+  /* Table styles */
+  .table-light {
+    @apply w-full text-left text-sm font-mono;
+  }
+  .table-light thead {
+    @apply bg-zinc-50 border-b border-zinc-200 text-zinc-500 uppercase text-[10px];
+  }
+  .table-light th {
+    @apply py-2.5 px-4 font-medium;
+  }
+  .table-light tbody {
+    @apply divide-y divide-zinc-100 text-zinc-800;
+  }
+  .table-light td {
+    @apply py-3 px-4;
+  }
+  .table-light tbody tr {
+    @apply hover:bg-zinc-50/80 transition-colors;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
   }
 }
 
@@ -71,6 +163,11 @@
   100% { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
 .animate-slideDown {
   animation: slideDown 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
@@ -79,11 +176,37 @@
   animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out;
+}
+
 .mono-tabular {
   font-feature-settings: "tnum";
   font-variant-numeric: tabular-nums;
 }
 
 .grid-bg-pattern {
-  background-color: #040605;
+  background-color: #FBFBFD;
+  background-image: linear-gradient(to right, #f1f1f4 1px, transparent 1px), linear-gradient(to bottom, #f1f1f4 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Dark mode overrides (when explicitly enabled via class) */
+.dark {
+  .grid-bg-pattern {
+    background-color: #040605;
+    background-image: none;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse-subtle,
+  .animate-slideDown,
+  .animate-fadeIn {
+    animation: none !important;
+  }
+  * {
+    transition-duration: 0.01ms !important;
+  }
 }
