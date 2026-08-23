@@ -95,7 +95,7 @@ export const EscrowPanel: React.FC<{ isStreaming: boolean }> = ({ isStreaming })
 
         <div className="text-[11px] text-zinc-500 font-sans">
           Estimated: <strong className="text-zinc-800">{depositAmount} ALGO</strong> for <strong className="text-zinc-800">{taskCount}</strong> tasks
-          <span className="text-amber-700"> (~{ (depositAmount / taskCount).toFixed(4) } ALGO/task)</span>
+          <span className="text-amber-700"> (~{(depositAmount / taskCount).toFixed(4)} ALGO/task)</span>
         </div>
 
         {funding && !funding.isFunded && (
@@ -185,7 +185,7 @@ export const EscrowPanel: React.FC<{ isStreaming: boolean }> = ({ isStreaming })
       {walletAddress && liveBalanceAlgo !== null && liveBalanceAlgo < 1 && (
         <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-[11px] text-amber-700 font-sans">
           <AlertTriangle className="w-3.5 h-3.5 inline mr-1" />
-          Your wallet balance is low (<strong>{liveBalanceAlgo.toFixed(2)} ALGO</strong>). 
+          Your wallet balance is low (<strong>{liveBalanceAlgo.toFixed(2)} ALGO</strong>).
           <a href="https://bank.testnet.algorand.network/" target="_blank" rel="noreferrer" className="underline font-semibold">Get TestNet ALGO</a>
         </div>
       )}
