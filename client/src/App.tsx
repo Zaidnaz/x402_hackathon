@@ -28,7 +28,7 @@ import {
 } from './utils/api';
 
 function MainLayout() {
-  const [activeTab, setActiveTab] = useState<'landing' | 'command' | 'grid' | 'routing' | 'ledger' | 'analytics' | 'x402-demo'>('command');
+  const [activeTab, setActiveTab] = useState<'landing' | 'command' | 'grid' | 'routing' | 'ledger' | 'analytics' | 'x402-demo'>('landing');
   const [models, setModels] = useState<ModelProvider[]>(FALLBACK_MODELS);
   const [computes, setComputes] = useState<ComputeProvider[]>(FALLBACK_COMPUTES);
   const [accounts, setAccounts] = useState<AlgorandAccountInfo[]>([]);

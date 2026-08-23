@@ -18,18 +18,14 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [isGuideOpen, setIsGuideOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const primaryLink = { id: 'command', label: 'Agent' };
-  // Secondary/developer views — real detail behind the scenes, deliberately
-  // not competing for attention with the one thing most people need: the
-  // prompt box.
-  const secondaryLinks = [
-    { id: 'ledger', label: 'Ledger' },
+  const navLinks = [
+    { id: 'landing', label: 'About' },
+    { id: 'command', label: 'Agent' },
     { id: 'grid', label: 'Marketplace' },
     { id: 'routing', label: 'Routing' },
-    { id: 'x402-demo', label: 'x402 Testbed' },
-    { id: 'landing', label: 'About' },
+    { id: 'ledger', label: 'Ledger' },
+    { id: 'x402-demo', label: 'x402 Testbed' }
   ];
-  const navLinks = [primaryLink, ...secondaryLinks];
 
   return (
     <>
@@ -60,36 +56,24 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
           </div>
 
-          {/* Desktop Navigation — one primary destination, the rest muted/secondary */}
-          <nav className="hidden lg:flex items-center space-x-3">
-            <button
-              onClick={() => setActiveTab(primaryLink.id)}
-              className={`px-4 py-1.5 rounded-full text-xs font-mono font-bold transition-all duration-200 ${
-                activeTab === primaryLink.id
-                  ? 'bg-brand-emerald text-black shadow-glow-emerald'
-                  : 'bg-white/[0.06] text-white hover:bg-white/[0.1]'
-              }`}
-            >
-              {primaryLink.label}
-            </button>
-            <div className="flex items-center space-x-0.5 pl-2 border-l border-white/[0.08]">
-              {secondaryLinks.map((link) => {
-                const isActive = activeTab === link.id;
-                return (
-                  <button
-                    key={link.id}
-                    onClick={() => setActiveTab(link.id)}
-                    className={`px-2.5 py-1 rounded-full text-[11px] font-mono transition-all duration-200 ${
-                      isActive
-                        ? 'text-brand-emerald font-semibold'
-                        : 'text-grid-500 hover:text-grid-300'
-                    }`}
-                  >
-                    {link.label}
-                  </button>
-                );
-              })}
-            </div>
+          {/* Desktop Navigation */}
+          <nav className="hidden lg:flex items-center space-x-1 bg-white/[0.03] border border-white/[0.08] p-1 rounded-full">
+            {navLinks.map((link) => {
+              const isActive = activeTab === link.id;
+              return (
+                <button
+                  key={link.id}
+                  onClick={() => setActiveTab(link.id)}
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-mono transition-all duration-200 ${
+                    isActive
+                      ? 'bg-brand-emerald text-black font-bold shadow-glow-emerald'
+                      : 'text-grid-300 hover:text-white hover:bg-white/[0.06]'
+                  }`}
+                >
+                  {link.label}
+                </button>
+              );
+            })}
           </nav>
 
           {/* Right Action & Pera Wallet */}
