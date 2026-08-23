@@ -3,7 +3,9 @@ import { ArrowUp, ChevronDown, Loader2, AlertTriangle, X, Zap, Cpu, Coins, Timer
 import { TaskRequirement } from '../types';
 import { fetchFundingStatus } from '../utils/api';
 import { useTaskContext } from '../context/TaskContext';
+import { useEscrow } from '../context/EscrowContext';
 import { formatCostRange } from '../utils/costEstimator';
+import { EscrowPanel } from './EscrowPanel';
 
 const EXAMPLE_PROMPTS = [
   'Write an optimized Algorand PyTeal contract for an atomic x402 escrow',
@@ -42,10 +44,18 @@ export const CommandCenter: React.FC<{
     el.style.height = `${Math.min(el.scrollHeight, 260)}px`;
   }, [prompt]);
 
+  const { state: escrowState, canExecuteSilently, recordTaskExecution } = useEscrow();
+
   const handleDispatch = () => {
     if (!prompt.trim() || isStreaming) return;
     const overrides: Partial<TaskRequirement> = { priority };
     if (selectedConfig.model) overrides.modality = 'code';
+    
+    // Record task execution in escrow if active
+    if (escrowState.isActive && selectedConfig.estimate) {
+      recordTaskExecution(selectedConfig.estimate.breakdown.totalCostUsd / 0.1904); // Convert USD to ALGO
+    }
+    
     onDispatchTask(prompt.trim(), overrides, simulateFailover);
   };
 
@@ -62,6 +72,9 @@ export const CommandCenter: React.FC<{
 
   return (
     <div className="max-w-2xl mx-auto space-y-5">
+      {/* Escrow Panel */}
+      <EscrowPanel isStreaming={isStreaming} />
+
       {/* Selection Summary Bar */}
       {selectedConfig.model && selectedConfig.compute && (
         <div className="bg-brand-emerald/10 border border-brand-emerald/30 rounded-xl p-4 space-y-3 animate-slideDown" role="status" aria-live="polite">

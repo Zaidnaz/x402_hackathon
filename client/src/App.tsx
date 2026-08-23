@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { WalletProvider } from './context/WalletContext';
 import { TaskProvider } from './context/TaskContext';
+import { EscrowProvider } from './context/EscrowContext';
 import { Navbar } from './components/Navbar';
 import { LandingPage } from './components/LandingPage';
 import { CommandCenter } from './components/CommandCenter';
@@ -249,9 +250,11 @@ function MainLayout() {
 export function App() {
   return (
     <WalletProvider>
-      <TaskProvider>
-        <MainLayout />
-      </TaskProvider>
+      <EscrowProvider>
+        <TaskProvider>
+          <MainLayout />
+        </TaskProvider>
+      </EscrowProvider>
     </WalletProvider>
   );
 }

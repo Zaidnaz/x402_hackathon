@@ -10,12 +10,14 @@ import {
   Wallet,
   ExternalLink,
   Search,
-  Zap
+  Zap,
+  Globe
 } from 'lucide-react';
 import { useWallet } from '../context/WalletContext';
 import { fetchWithX402, signWithAgentWallet, PaymentTerms, PaymentResponse } from '../utils/x402Client';
 import { signX402Payment } from '../utils/peraWallet';
 import { TourGuideButton } from './TourGuideButton';
+import { BazaarRegistrationModal } from './BazaarRegistrationModal';
 
 export const MerchantX402Demo: React.FC = () => {
   const { isConnected, walletAddress, connectWallet } = useWallet();
@@ -29,6 +31,7 @@ export const MerchantX402Demo: React.FC = () => {
   const [paymentResponse, setPaymentResponse] = useState<PaymentResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [prompt, setPrompt] = useState('Generate a TypeScript function for Algorand atomic transfer');
+  const [showBazaarModal, setShowBazaarModal] = useState(false);
 
   const handleFetchTerms = async () => {
     setLoading(true);
@@ -192,6 +195,13 @@ export const MerchantX402Demo: React.FC = () => {
           >
             <RefreshCw className="w-3.5 h-3.5" />
             <span>Reset Demo</span>
+          </button>
+          <button
+            onClick={() => setShowBazaarModal(true)}
+            className="px-3 py-2 rounded-lg bg-signal-amber/20 hover:bg-signal-amber/30 border border-signal-amber/30 text-signal-amber text-xs font-mono flex items-center space-x-1.5 transition-all"
+          >
+            <Globe className="w-3.5 h-3.5" />
+            <span>Register on Bazaar</span>
           </button>
         </div>
       </div>
@@ -365,6 +375,15 @@ export const MerchantX402Demo: React.FC = () => {
           )}
         </div>
       </div>
+    <BazaarRegistrationModal
+        isOpen={showBazaarModal}
+        onClose={() => setShowBazaarModal(false)}
+        defaultPayload={{
+          endpointUrl: 'https://your-domain.com/api/merchant/compute/run',
+          paymentAddress: 'MERCHANT_ALGO_ADDRESS_HERE',
+          price: 500000,
+        }}
+      />
     </div>
   );
 };
