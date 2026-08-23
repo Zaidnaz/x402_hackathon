@@ -87,7 +87,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
         </a>
       )}
 
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl focus-within:border-zinc-700 transition-colors">
+      <div className="bg-[#0a0d0b] border border-white/[0.09] rounded-[28px] shadow-[0_8px_40px_-12px_rgba(0,0,0,0.6)] focus-within:border-brand-emerald/40 transition-colors">
         <textarea
           ref={textareaRef}
           value={prompt}
@@ -96,14 +96,14 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
           disabled={isStreaming}
           placeholder="Ask the agent to do something..."
           rows={1}
-          className="w-full bg-transparent text-white placeholder-zinc-500 text-[15px] sm:text-base resize-none focus:outline-none disabled:opacity-50 px-5 pt-4 pb-1 leading-relaxed"
+          className="w-full bg-transparent text-white placeholder-grid-500 text-[15px] sm:text-base resize-none focus:outline-none disabled:opacity-50 px-5 pt-4.5 pb-1 leading-relaxed"
         />
 
         <div className="flex items-center justify-between px-3.5 pb-3.5 pt-1.5">
           <button
             type="button"
             onClick={() => setShowAdvanced((v) => !v)}
-            className="flex items-center space-x-1 text-[13px] text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer px-1.5 py-1 rounded-lg hover:bg-zinc-800/50"
+            className="flex items-center space-x-1 text-[13px] text-grid-500 hover:text-grid-300 transition-colors cursor-pointer px-1.5 py-1 rounded-lg hover:bg-white/[0.04]"
           >
             <span>Advanced</span>
             <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showAdvanced ? 'rotate-180' : ''}`} />
@@ -113,16 +113,16 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
             onClick={handleDispatch}
             disabled={isStreaming || !prompt.trim()}
             aria-label="Run agent"
-            className="flex items-center justify-center w-8 h-8 rounded-full bg-zinc-100 text-zinc-900 hover:bg-white active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+            className="flex items-center justify-center w-9 h-9 rounded-full bg-brand-emerald text-black shadow-glow-emerald hover:bg-brand-emerald/90 active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:shadow-none cursor-pointer"
           >
-            {isStreaming ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowUp className="w-4 h-4" />}
+            {isStreaming ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowUp className="w-4.5 h-4.5" />}
           </button>
         </div>
 
         {showAdvanced && (
-          <div className="px-4 pb-4 pt-1 border-t border-zinc-800 space-y-3 animate-fadeIn">
+          <div className="px-4 pb-4 pt-1 border-t border-white/[0.06] space-y-3 animate-fadeIn">
             <div className="space-y-1.5 pt-3">
-              <div className="text-[11px] text-zinc-500 uppercase tracking-wide">Optimize for</div>
+              <div className="text-[11px] text-grid-500 uppercase tracking-wide">Optimize for</div>
               <div className="grid grid-cols-4 gap-1.5">
                 {(['balanced', 'cost', 'speed', 'quality'] as const).map((opt) => (
                   <button
@@ -130,8 +130,8 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
                     onClick={() => setPriority(opt)}
                     className={`py-1.5 rounded-lg text-[13px] font-medium capitalize transition-all cursor-pointer ${
                       priority === opt
-                        ? 'bg-zinc-800 border border-zinc-700 text-white'
-                        : 'bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white'
+                        ? 'bg-brand-emerald/15 border border-brand-emerald/40 text-brand-emerald'
+                        : 'bg-white/[0.03] border border-white/[0.06] text-grid-400 hover:text-white'
                     }`}
                   >
                     {opt}
@@ -140,14 +140,14 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
               </div>
             </div>
 
-            <label className="flex items-center justify-between py-1 cursor-pointer">
-              <span className="text-[13px] text-zinc-300">Simulate GPU failover mid-task</span>
+            <label className="flex items-center space-x-2 text-[13px] text-grid-400 cursor-pointer">
               <input
                 type="checkbox"
                 checked={simulateFailover}
                 onChange={(e) => setSimulateFailover(e.target.checked)}
-                className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 accent-emerald-500 cursor-pointer"
+                className="accent-brand-emerald"
               />
+              <span>Simulate a mid-task provider failure</span>
             </label>
           </div>
         )}

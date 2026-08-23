@@ -9,37 +9,37 @@ export default {
     extend: {
       colors: {
         grid: {
-          950: '#09090b',
-          900: '#121215',
-          850: '#18181b',
-          800: '#27272a',
-          750: '#3f3f46',
-          700: '#52525b',
-          600: '#71717a',
-          500: '#a1a1aa',
-          400: '#d4d4d8',
-          300: '#e4e4e7',
-          200: '#f4f4f5',
-          100: '#fafafa'
+          950: '#040605',
+          900: '#080C0A',
+          850: '#0D1310',
+          800: '#141D18',
+          750: '#1B2620',
+          700: '#26362E',
+          600: '#3A5245',
+          500: '#6B8777',
+          400: '#9FB3A8',
+          300: '#D1DDD6',
+          200: '#E8EFEA',
+          100: '#F5F8F6'
         },
         brand: {
-          emerald: '#10B981',
-          emeraldDim: 'rgba(16, 185, 129, 0.08)',
-          mint: '#059669',
-          lime: '#22c55e',
+          emerald: '#00DC82',
+          emeraldDim: 'rgba(0, 220, 130, 0.10)',
+          mint: '#10B981',
+          lime: '#4ADE80',
           white: '#FFFFFF',
           silver: '#E2E8F0',
-          dark: '#09090b'
+          dark: '#050706'
         },
         signal: {
-          emerald: '#10B981',
-          emeraldDim: 'rgba(16, 185, 129, 0.08)',
-          amber: '#F59E0B',
-          amberDim: 'rgba(245, 158, 11, 0.08)',
-          cyan: '#06B6D4',
-          cyanDim: 'rgba(6, 182, 212, 0.08)',
+          emerald: '#00DC82',
+          emeraldDim: 'rgba(0, 220, 130, 0.12)',
+          amber: '#00DC82', // unified to luxury mint-green
+          amberDim: 'rgba(0, 220, 130, 0.12)',
+          cyan: '#10B981',
+          cyanDim: 'rgba(16, 185, 129, 0.12)',
           rose: '#EF4444',
-          roseDim: 'rgba(239, 68, 68, 0.08)',
+          roseDim: 'rgba(239, 68, 68, 0.12)',
         }
       },
       fontFamily: {
@@ -51,7 +51,7 @@ export default {
         'glow-emerald': 'none',
         'glow-white': 'none',
         'glow-amber': 'none',
-        'subtle-panel': '0 2px 12px rgba(0, 0, 0, 0.5)'
+        'subtle-panel': '0 4px 24px -2px rgba(0, 0, 0, 0.85)'
       }
     },
   },
