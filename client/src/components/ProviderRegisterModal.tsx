@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { X, Server, Cpu, Plus, Check } from 'lucide-react';
 import { registerModel, registerCompute } from '../utils/api';
 
@@ -15,6 +15,7 @@ export const ProviderRegisterModal: React.FC<ProviderRegisterModalProps> = ({
 }) => {
   const [providerType, setProviderType] = useState<'compute' | 'model'>('compute');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Compute Form State
   const [computeName, setComputeName] = useState('Nebula Cluster (B200 NVL)');
@@ -33,11 +34,21 @@ export const ProviderRegisterModal: React.FC<ProviderRegisterModalProps> = ({
   const [costPer1kOutput, setCostPer1kOutput] = useState(0.00219);
   const [typicalTps, setTypicalTps] = useState(85);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && !loading) onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, loading, onClose]);
+
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
     try {
       if (providerType === 'compute') {
         const id = `custom_compute_${Date.now()}`;
@@ -71,38 +82,40 @@ export const ProviderRegisterModal: React.FC<ProviderRegisterModalProps> = ({
       onClose();
     } catch (err) {
       console.error('Registration failed', err);
+      setError('Registration failed. Check the values and confirm the API is available.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-grid-950/80 backdrop-blur-sm animate-fadeIn">
-      <div className="bg-grid-900 border border-grid-800 rounded-xl max-w-lg w-full p-6 space-y-5 shadow-2xl relative">
-        <div className="flex items-center justify-between border-b border-grid-800 pb-3">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fadeIn">
+      <div role="dialog" aria-modal="true" aria-labelledby="provider-register-title" className="bg-white border border-zinc-200 rounded-xl max-w-lg w-full p-6 space-y-5 shadow-xl relative">
+        <div className="flex items-center justify-between border-b border-zinc-200 pb-3">
           <div className="flex items-center space-x-2">
-            <span className="w-2 h-2 rounded-full bg-signal-amber" />
-            <h3 className="text-sm font-bold font-mono text-grid-100 uppercase tracking-wider">
+            <span className="w-2 h-2 rounded-full bg-amber-600" />
+             <h3 id="provider-register-title" className="text-sm font-bold font-mono text-zinc-950 uppercase tracking-wider">
               Register Provider on AgentGrid
             </h3>
           </div>
           <button
             onClick={onClose}
-            className="text-grid-400 hover:text-grid-200 p-1 rounded-md"
+            aria-label="Close provider registration dialog"
+            className="text-zinc-400 hover:text-zinc-900 p-1 rounded-md"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Type Toggle */}
-        <div className="grid grid-cols-2 gap-2 p-1 bg-grid-950 rounded-lg border border-grid-800 text-xs font-mono">
+        <div className="grid grid-cols-2 gap-2 p-1 bg-zinc-100 rounded-lg border border-zinc-200 text-xs font-mono">
           <button
             type="button"
             onClick={() => setProviderType('compute')}
             className={`py-2 px-3 rounded-md flex items-center justify-center space-x-2 transition-all ${
               providerType === 'compute'
-                ? 'bg-grid-850 text-signal-amber font-semibold border border-grid-700'
-                : 'text-grid-400'
+                ? 'bg-white text-amber-600 font-semibold border border-zinc-200 shadow-sm'
+                : 'text-zinc-500 hover:text-zinc-700'
             }`}
           >
             <Server className="w-3.5 h-3.5" />
@@ -114,8 +127,8 @@ export const ProviderRegisterModal: React.FC<ProviderRegisterModalProps> = ({
             onClick={() => setProviderType('model')}
             className={`py-2 px-3 rounded-md flex items-center justify-center space-x-2 transition-all ${
               providerType === 'model'
-                ? 'bg-grid-850 text-signal-cyan font-semibold border border-grid-700'
-                : 'text-grid-400'
+                ? 'bg-white text-emerald-600 font-semibold border border-zinc-200 shadow-sm'
+                : 'text-zinc-500 hover:text-zinc-700'
             }`}
           >
             <Cpu className="w-3.5 h-3.5" />
@@ -127,34 +140,34 @@ export const ProviderRegisterModal: React.FC<ProviderRegisterModalProps> = ({
           {providerType === 'compute' ? (
             <>
               <div>
-                <label className="text-grid-400 block mb-1">Provider Node Label</label>
+                <label htmlFor="compute-name" className="text-zinc-500 block mb-1">Provider Node Label</label>
                 <input
-                  type="text"
+                  id="compute-name" type="text"
                   value={computeName}
                   onChange={(e) => setComputeName(e.target.value)}
-                  className="w-full bg-grid-950 border border-grid-750 rounded p-2 text-grid-100 focus:outline-none focus:border-signal-amber"
+                  className="input-light"
                   required
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-grid-400 block mb-1">GPU Architecture</label>
+                    <label htmlFor="gpu-type" className="text-zinc-500 block mb-1">GPU Architecture</label>
                   <input
-                    type="text"
+                      id="gpu-type" type="text"
                     value={gpuType}
                     onChange={(e) => setGpuType(e.target.value)}
-                    className="w-full bg-grid-950 border border-grid-750 rounded p-2 text-grid-100 focus:outline-none focus:border-signal-amber"
+                    className="input-light"
                     required
                   />
                 </div>
                 <div>
-                  <label className="text-grid-400 block mb-1">VRAM (GB)</label>
+                    <label htmlFor="vram-gb" className="text-zinc-500 block mb-1">VRAM (GB)</label>
                   <input
-                    type="number"
+                      id="vram-gb" type="number" min="1"
                     value={vramGb}
                     onChange={(e) => setVramGb(parseInt(e.target.value, 10))}
-                    className="w-full bg-grid-950 border border-grid-750 rounded p-2 text-grid-100 focus:outline-none focus:border-signal-amber"
+                    className="input-light"
                     required
                   />
                 </div>
@@ -162,42 +175,43 @@ export const ProviderRegisterModal: React.FC<ProviderRegisterModalProps> = ({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-grid-400 block mb-1">Spot Rate ($/hr)</label>
+                    <label htmlFor="compute-rate" className="text-zinc-500 block mb-1">Spot Rate ($/hr)</label>
                   <input
-                    type="number"
-                    step="0.01"
+                    id="compute-rate" type="number" min="0" step="0.01"
                     value={costPerHourUsd}
                     onChange={(e) => setCostPerHourUsd(parseFloat(e.target.value))}
-                    className="w-full bg-grid-950 border border-grid-750 rounded p-2 text-grid-100 focus:outline-none focus:border-signal-amber"
+                    className="input-light"
                     required
                   />
                 </div>
                 <div>
-                  <label className="text-grid-400 block mb-1">Ping Latency (ms)</label>
+                    <label htmlFor="compute-latency" className="text-zinc-500 block mb-1">Ping Latency (ms)</label>
                   <input
-                    type="number"
+                    id="compute-latency" type="number" min="0"
                     value={latencyBaseMs}
                     onChange={(e) => setLatencyBaseMs(parseInt(e.target.value, 10))}
-                    className="w-full bg-grid-950 border border-grid-750 rounded p-2 text-grid-100 focus:outline-none focus:border-signal-amber"
+                    className="input-light"
                     required
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-grid-400 block mb-1">Region & Interconnect</label>
+                <label className="text-zinc-500 block mb-1">Region & Interconnect</label>
                 <div className="grid grid-cols-2 gap-3">
                   <input
                     type="text"
                     value={region}
                     onChange={(e) => setRegion(e.target.value)}
-                    className="w-full bg-grid-950 border border-grid-750 rounded p-2 text-grid-100 focus:outline-none focus:border-signal-amber"
+                    className="input-light"
+                    placeholder="e.g. US-West (Oregon)"
                   />
                   <input
                     type="text"
                     value={interconnect}
                     onChange={(e) => setInterconnect(e.target.value)}
-                    className="w-full bg-grid-950 border border-grid-750 rounded p-2 text-grid-100 focus:outline-none focus:border-signal-amber"
+                    className="input-light"
+                    placeholder="e.g. NVLink 1.8 TB/s"
                   />
                 </div>
               </div>
@@ -205,35 +219,40 @@ export const ProviderRegisterModal: React.FC<ProviderRegisterModalProps> = ({
           ) : (
             <>
               <div>
-                <label className="text-grid-400 block mb-1">Model Name</label>
+                <label htmlFor="model-name" className="text-zinc-500 block mb-1">Model Name</label>
                 <input
+                  id="model-name"
                   type="text"
                   value={modelName}
                   onChange={(e) => setModelName(e.target.value)}
-                  className="w-full bg-grid-950 border border-grid-750 rounded p-2 text-grid-100 focus:outline-none focus:border-signal-cyan"
+                  className="input-light"
                   required
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-grid-400 block mb-1">Provider Org</label>
+                  <label htmlFor="provider-org" className="text-zinc-500 block mb-1">Provider Org</label>
                   <input
+                    id="provider-org"
                     type="text"
                     value={providerOrg}
                     onChange={(e) => setProviderOrg(e.target.value)}
-                    className="w-full bg-grid-950 border border-grid-750 rounded p-2 text-grid-100 focus:outline-none focus:border-signal-cyan"
+                    className="input-light"
                     required
                   />
                 </div>
                 <div>
-                  <label className="text-grid-400 block mb-1">Benchmark (0-100)</label>
+                  <label htmlFor="quality-benchmark" className="text-zinc-500 block mb-1">Benchmark (0-100)</label>
                   <input
+                    id="quality-benchmark"
                     type="number"
                     step="0.1"
+                    min="0"
+                    max="100"
                     value={qualityBenchmark}
                     onChange={(e) => setQualityBenchmark(parseFloat(e.target.value))}
-                    className="w-full bg-grid-950 border border-grid-750 rounded p-2 text-grid-100 focus:outline-none focus:border-signal-cyan"
+                    className="input-light"
                     required
                   />
                 </div>
@@ -241,24 +260,43 @@ export const ProviderRegisterModal: React.FC<ProviderRegisterModalProps> = ({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-grid-400 block mb-1">Input / 1k Tokens ($)</label>
+                  <label htmlFor="cost-input" className="text-zinc-500 block mb-1">Input / 1k Tokens ($)</label>
                   <input
+                    id="cost-input"
                     type="number"
                     step="0.00001"
+                    min="0"
                     value={costPer1kInput}
                     onChange={(e) => setCostPer1kInput(parseFloat(e.target.value))}
-                    className="w-full bg-grid-950 border border-grid-750 rounded p-2 text-grid-100 focus:outline-none focus:border-signal-cyan"
+                    className="input-light"
                     required
                   />
                 </div>
                 <div>
-                  <label className="text-grid-400 block mb-1">Output / 1k Tokens ($)</label>
+                  <label htmlFor="cost-output" className="text-zinc-500 block mb-1">Output / 1k Tokens ($)</label>
                   <input
+                    id="cost-output"
                     type="number"
                     step="0.00001"
+                    min="0"
                     value={costPer1kOutput}
                     onChange={(e) => setCostPer1kOutput(parseFloat(e.target.value))}
-                    className="w-full bg-grid-950 border border-grid-750 rounded p-2 text-grid-100 focus:outline-none focus:border-signal-cyan"
+                    className="input-light"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="typical-tps" className="text-zinc-500 block mb-1">Typical TPS</label>
+                  <input
+                    id="typical-tps"
+                    type="number"
+                    min="1"
+                    value={typicalTps}
+                    onChange={(e) => setTypicalTps(parseInt(e.target.value, 10))}
+                    className="input-light"
                     required
                   />
                 </div>
@@ -266,21 +304,22 @@ export const ProviderRegisterModal: React.FC<ProviderRegisterModalProps> = ({
             </>
           )}
 
-          <div className="pt-3 border-t border-grid-800 flex items-center justify-end space-x-3">
+            {error && <div role="alert" className="p-2 bg-red-50 border border-red-200 rounded-lg text-red-600 text-xs">{error}</div>}
+            <div className="pt-3 border-t border-zinc-200 flex items-center justify-end space-x-3">
             <button
               type="button"
               onClick={onClose}
-              className="px-3 py-2 rounded text-grid-400 hover:text-grid-200"
+              className="btn-secondary"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-4 py-2 rounded bg-signal-amber text-grid-950 font-bold uppercase tracking-wider flex items-center space-x-1.5 shadow-glow-amber disabled:opacity-40"
+              className="btn-primary flex items-center gap-1.5"
             >
               <Plus className="w-4 h-4" />
-              <span>Register Node</span>
+              <span>{loading ? 'Registering...' : 'Register Node'}</span>
             </button>
           </div>
         </form>
@@ -288,3 +327,5 @@ export const ProviderRegisterModal: React.FC<ProviderRegisterModalProps> = ({
     </div>
   );
 };
+
+export default ProviderRegisterModal;

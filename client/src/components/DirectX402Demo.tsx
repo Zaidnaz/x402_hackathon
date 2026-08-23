@@ -27,10 +27,12 @@ export const DirectX402Demo: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [peraTxInfo, setPeraTxInfo] = useState<{ txId: string; round: number; explorerUrl: string; loraUrl: string } | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   // Step 1: Send unauthenticated request (gets 402)
   const handleSendUnauthenticated = async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await testDirectX402();
       setResponseStatus(res.status);
@@ -39,6 +41,7 @@ export const DirectX402Demo: React.FC = () => {
       setStep(2);
     } catch (err) {
       console.error(err);
+      setError('Could not fetch the x402 challenge. Check that the API is running and try again.');
     } finally {
       setLoading(false);
     }
@@ -47,6 +50,7 @@ export const DirectX402Demo: React.FC = () => {
   // Step 2: Settle on Algorand & Generate Token (via Pera Wallet or Autonomous Session)
   const handleSettleAndGenerateToken = async () => {
     setLoading(true);
+    setError(null);
     try {
       const challengeAddress = responseHeaders['x-402-payment-address'] || 'A3R6WQFOLES2CTKEHALIEXFNEZ75R4KYJJ4VPWMZ63X57IZ7MIRJ7Q6HVQ';
       const amountAlgo = 0.15;
@@ -62,7 +66,7 @@ export const DirectX402Demo: React.FC = () => {
         const token = `x402_tok_PERA_${txResult.txId.substring(0, 16)}_${Date.now()}`;
         setPaymentToken(token);
       } else {
-        // Autonomous Agent Session Settlement
+        // This branch demonstrates the UI flow without claiming a blockchain payment.
         await new Promise(r => setTimeout(r, 600));
         const token = `x402_tok_ALGO_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
         setPaymentToken(token);
@@ -70,6 +74,7 @@ export const DirectX402Demo: React.FC = () => {
       setStep(3);
     } catch (err) {
       console.error('Settlement error:', err);
+      setError(isConnected ? 'Wallet payment was not completed.' : 'Simulation could not be started.');
     } finally {
       setLoading(false);
     }
@@ -78,6 +83,7 @@ export const DirectX402Demo: React.FC = () => {
   // Step 3: Re-send with Token (gets 200)
   const handleSendWithToken = async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await testDirectX402(paymentToken);
       setResponseStatus(res.status);
@@ -85,6 +91,7 @@ export const DirectX402Demo: React.FC = () => {
       setResponseBody(res.body);
     } catch (err) {
       console.error(err);
+      setError('The payment token was rejected by the endpoint. Reset the session and try again.');
     } finally {
       setLoading(false);
     }
@@ -96,23 +103,24 @@ export const DirectX402Demo: React.FC = () => {
     setResponseBody(null);
     setPaymentToken('');
     setPeraTxInfo(null);
+    setError(null);
     setStep(1);
   };
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-black/75 border border-white/[0.08] rounded-xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 backdrop-blur-md shadow-sm">
+      <div className="card-light p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center space-x-2 mb-1">
-            <span className="w-2 h-2 rounded-full bg-brand-emerald animate-pulse" />
-            <span className="text-xs font-mono uppercase tracking-widest text-brand-emerald font-semibold">Standardized RFC 7235 / x402 Engine</span>
+            <span className="w-2 h-2 rounded-full bg-emerald-600" />
+            <span className="text-xs font-mono uppercase tracking-widest text-emerald-600 font-semibold">Standardized RFC 7235 / x402 Engine</span>
           </div>
-          <h2 className="text-xl font-bold font-mono text-white">
+          <h2 className="text-xl font-bold font-mono text-zinc-950">
             Direct x402 HTTP Paywall Interactive Testbed
           </h2>
-          <p className="text-xs font-mono text-grid-300 mt-1 max-w-2xl">
-            Test how an autonomous agent or user wallet interacts with a paid HTTP inference endpoint over the raw <span className="text-white font-semibold">x402 protocol</span> with GoPlausible facilitator settlement on Algorand TestNet.
+          <p className="text-xs font-mono text-zinc-500 mt-1 max-w-2xl">
+            Test how an autonomous agent or user wallet interacts with a paid HTTP inference endpoint over the raw <span className="text-zinc-900 font-semibold">x402 protocol</span> with GoPlausible facilitator settlement on Algorand TestNet.
           </p>
         </div>
 
@@ -151,7 +159,7 @@ export const DirectX402Demo: React.FC = () => {
 
           <button
             onClick={handleReset}
-            className="p-2.5 rounded-lg bg-black/60 border border-white/[0.08] hover:border-white/[0.2] text-grid-300 hover:text-white text-xs font-mono flex items-center space-x-1.5 transition-all"
+            className="p-2.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-600 hover:text-zinc-900 text-xs font-mono flex items-center space-x-1.5 transition-colors border border-zinc-200"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             <span>Reset Session</span>
@@ -163,20 +171,20 @@ export const DirectX402Demo: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs">
         {/* Step 1 */}
         <div data-tour="x402-phase-1" className={`p-4 rounded-xl border transition-all ${
-          step === 1 ? 'bg-black/80 border-brand-emerald shadow-glow-emerald' : 'bg-black/40 border-white/[0.08] opacity-80'
+          step === 1 ? 'bg-emerald-50 border-emerald-200 shadow-sm' : 'bg-zinc-50 border-zinc-200 opacity-80'
         }`}>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] text-grid-500 font-semibold">PHASE 1</span>
-            <ShieldAlert className="w-4 h-4 text-brand-emerald" />
+            <span className="text-[10px] text-zinc-500 font-semibold">PHASE 1</span>
+            <ShieldAlert className="w-4 h-4 text-emerald-600" />
           </div>
-          <div className="font-bold text-white">1. Request Protected Resource</div>
-          <p className="text-[11px] text-grid-400 mt-1">
+          <div className="font-bold text-zinc-950">1. Request Protected Resource</div>
+          <p className="text-[11px] text-zinc-500 mt-1">
             Send raw HTTP request without authorization headers to trigger standard 402 challenge.
           </p>
           <button
             onClick={handleSendUnauthenticated}
             disabled={loading || step !== 1}
-            className="mt-3 w-full py-2.5 px-3 rounded-lg bg-brand-emerald hover:bg-brand-emerald/90 text-black font-bold uppercase tracking-wider text-[11px] flex items-center justify-center space-x-1.5 disabled:opacity-40 shadow-glow-emerald"
+            className="mt-3 w-full py-2.5 px-3 rounded-lg bg-zinc-950 hover:bg-zinc-900 text-white font-bold uppercase tracking-wider text-[11px] flex items-center justify-center space-x-1.5 disabled:opacity-40 transition-colors"
           >
             <Send className="w-3.5 h-3.5" />
             <span>Send GET Request</span>
@@ -185,42 +193,42 @@ export const DirectX402Demo: React.FC = () => {
 
         {/* Step 2 */}
         <div data-tour="x402-phase-2" className={`p-4 rounded-xl border transition-all ${
-          step === 2 ? 'bg-black/80 border-brand-emerald shadow-glow-emerald' : 'bg-black/40 border-white/[0.08] opacity-80'
+          step === 2 ? 'bg-emerald-50 border-emerald-200 shadow-sm' : 'bg-zinc-50 border-zinc-200 opacity-80'
         }`}>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] text-grid-500 font-semibold">PHASE 2</span>
-            <Coins className="w-4 h-4 text-brand-emerald" />
+            <span className="text-[10px] text-zinc-500 font-semibold">PHASE 2</span>
+            <Coins className="w-4 h-4 text-emerald-600" />
           </div>
-          <div className="font-bold text-white">2. Algorand Micro-Settlement</div>
-          <p className="text-[11px] text-grid-400 mt-1">
-            {isConnected ? 'Sign 0.15 ALGO payment via connected Pera Wallet onto Algorand TestNet.' : 'Settle 0.15 ALGO on TestNet and extract x402 payment token.'}
-          </p>
+          <div className="font-bold text-zinc-950">2. Algorand Micro-Settlement</div>
+            <p className="text-[11px] text-zinc-500 mt-1">
+             {isConnected ? 'Sign 0.15 ALGO payment via connected Pera Wallet onto Algorand TestNet.' : 'Run a clearly labeled local simulation, or connect Pera for a real TestNet payment.'}
+           </p>
           <button
             onClick={handleSettleAndGenerateToken}
             disabled={loading || step !== 2}
-            className="mt-3 w-full py-2.5 px-3 rounded-lg bg-brand-emerald hover:bg-brand-emerald/90 text-black font-bold uppercase tracking-wider text-[11px] flex items-center justify-center space-x-1.5 disabled:opacity-40 shadow-glow-emerald"
+            className="mt-3 w-full py-2.5 px-3 rounded-lg bg-zinc-950 hover:bg-zinc-900 text-white font-bold uppercase tracking-wider text-[11px] flex items-center justify-center space-x-1.5 disabled:opacity-40 transition-colors"
           >
             <Coins className="w-3.5 h-3.5" />
-            <span>{loading ? 'Signing on TestNet...' : isConnected ? 'Sign via Pera Wallet (0.15 ALGO)' : 'Settle on TestNet'}</span>
+            <span>{loading ? 'Processing...' : isConnected ? 'Sign via Pera Wallet (0.15 ALGO)' : 'Simulate Payment Flow'}</span>
           </button>
         </div>
 
         {/* Step 3 */}
         <div data-tour="x402-phase-3" className={`p-4 rounded-xl border transition-all ${
-          step === 3 ? 'bg-black/80 border-brand-emerald shadow-glow-emerald' : 'bg-black/40 border-white/[0.08] opacity-80'
+          step === 3 ? 'bg-emerald-50 border-emerald-200 shadow-sm' : 'bg-zinc-50 border-zinc-200 opacity-80'
         }`}>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] text-grid-500 font-semibold">PHASE 3</span>
-            <ShieldCheck className="w-4 h-4 text-brand-emerald" />
+            <span className="text-[10px] text-zinc-500 font-semibold">PHASE 3</span>
+            <ShieldCheck className="w-4 h-4 text-emerald-600" />
           </div>
-          <div className="font-bold text-white">3. Execute Authorized Payload</div>
-          <p className="text-[11px] text-grid-400 mt-1">
-            Pass <code className="text-brand-emerald">Authorization: x402 &lt;token&gt;</code> to receive 200 OK inference.
+          <div className="font-bold text-zinc-950">3. Execute Authorized Payload</div>
+          <p className="text-[11px] text-zinc-500 mt-1">
+            Pass <code className="text-emerald-600">{'Authorization: x402 <token>'}</code> to receive 200 OK inference.
           </p>
           <button
             onClick={handleSendWithToken}
             disabled={loading || step !== 3}
-            className="mt-3 w-full py-2.5 px-3 rounded-lg bg-brand-emerald hover:bg-brand-emerald/90 text-black font-bold uppercase tracking-wider text-[11px] flex items-center justify-center space-x-1.5 disabled:opacity-40 shadow-glow-emerald"
+            className="mt-3 w-full py-2.5 px-3 rounded-lg bg-zinc-950 hover:bg-zinc-900 text-white font-bold uppercase tracking-wider text-[11px] flex items-center justify-center space-x-1.5 disabled:opacity-40 transition-colors"
           >
             <CheckCircle2 className="w-3.5 h-3.5" />
             <span>Fetch with x402 Token</span>
@@ -230,9 +238,9 @@ export const DirectX402Demo: React.FC = () => {
 
       {/* Pera On-Chain Confirmation Pill with Lora Link */}
       {peraTxInfo && (
-        <div className="p-4 bg-brand-emerald/10 border border-brand-emerald/40 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs font-mono text-brand-emerald animate-fadeIn shadow-sm">
+        <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs font-mono text-emerald-700 animate-fadeIn shadow-sm">
           <div className="flex items-center space-x-2">
-            <CheckCircle2 className="w-4 h-4 text-brand-emerald shrink-0" />
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
             <span>Real Algorand TestNet Tx Confirmed in Round #{peraTxInfo.round}!</span>
           </div>
           <div className="flex items-center space-x-3">
@@ -240,7 +248,7 @@ export const DirectX402Demo: React.FC = () => {
               href={peraTxInfo.loraUrl || `https://lora.algokit.io/testnet/transaction/${peraTxInfo.txId}`}
               target="_blank"
               rel="noreferrer"
-              className="px-2.5 py-1 rounded bg-brand-emerald text-black font-bold text-[10px] uppercase flex items-center space-x-1 shadow-glow-emerald hover:bg-brand-emerald/90 transition-all"
+              className="px-2.5 py-1 rounded bg-emerald-600 text-white font-bold text-[10px] uppercase flex items-center space-x-1 shadow-sm hover:bg-emerald-700 transition-all"
             >
               <Search className="w-3 h-3" />
               <span>Inspect on Lora</span>
@@ -251,7 +259,7 @@ export const DirectX402Demo: React.FC = () => {
               href={peraTxInfo.explorerUrl}
               target="_blank"
               rel="noreferrer"
-              className="text-grid-300 hover:text-white underline text-[11px]"
+              className="text-zinc-500 hover:text-zinc-700 underline text-[11px]"
             >
               <span>Pera Explorer</span>
             </a>
@@ -259,20 +267,26 @@ export const DirectX402Demo: React.FC = () => {
         </div>
       )}
 
+      {error && (
+        <div role="alert" className="p-3 rounded-xl border border-red-200 bg-red-50 text-sm text-red-600">
+          {error}
+        </div>
+      )}
+
       {/* Raw HTTP Request / Response Inspector */}
-      <div data-tour="http-network-inspector" className="bg-black/75 border border-white/[0.08] rounded-xl overflow-hidden font-mono text-xs shadow-sm">
-        <div className="p-4 bg-black border-b border-white/[0.08] flex items-center justify-between">
-          <div className="text-xs font-semibold uppercase tracking-wider text-white flex items-center space-x-2">
-            <Terminal className="w-3.5 h-3.5 text-brand-emerald" />
+      <div data-tour="http-network-inspector" className="card-light overflow-hidden font-mono text-xs shadow-sm">
+        <div className="p-4 bg-zinc-50 border-b border-zinc-200 flex items-center justify-between">
+          <div className="text-xs font-semibold uppercase tracking-wider text-zinc-700 flex items-center space-x-2">
+            <Terminal className="w-3.5 h-3.5 text-emerald-600" />
             <span>Raw HTTP Network Transaction Inspector</span>
           </div>
           {responseStatus && (
             <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
               responseStatus === 402
-                ? 'bg-brand-emerald/15 text-brand-emerald border border-brand-emerald/40'
+                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                 : responseStatus === 200
-                ? 'bg-brand-emerald/15 text-brand-emerald border border-brand-emerald/40'
-                : 'bg-black text-grid-300'
+                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                : 'bg-zinc-100 text-zinc-600 border border-zinc-200'
             }`}>
               HTTP {responseStatus} {responseStatus === 402 ? 'PAYMENT REQUIRED' : responseStatus === 200 ? 'OK' : ''}
             </span>
@@ -282,11 +296,11 @@ export const DirectX402Demo: React.FC = () => {
         <div className="p-5 space-y-4">
           {/* Request Info */}
           <div>
-            <div className="text-[10px] text-grid-400 uppercase tracking-wide mb-1">Target Endpoint</div>
-            <div className="p-2.5 bg-black rounded border border-white/[0.08] text-white flex items-center justify-between">
+            <div className="text-[10px] text-zinc-500 uppercase tracking-wide mb-1">Target Endpoint</div>
+            <div className="p-2.5 bg-zinc-50 rounded border border-zinc-200 text-zinc-900 flex items-center justify-between">
               <span>GET /api/x402/inference/direct-endpoint</span>
               {paymentToken && (
-                <span className="text-[10px] text-brand-emerald font-semibold">Header: Authorization: x402 {paymentToken.substring(0, 16)}...</span>
+                <span className="text-[10px] text-emerald-600 font-semibold">Header: Authorization: x402 {paymentToken.substring(0, 16)}...</span>
               )}
             </div>
           </div>
@@ -294,8 +308,8 @@ export const DirectX402Demo: React.FC = () => {
           {/* Response Headers */}
           {Object.keys(responseHeaders).length > 0 && (
             <div>
-              <div className="text-[10px] text-grid-400 uppercase tracking-wide mb-1">Received Response Headers</div>
-              <pre className="p-3 bg-black rounded border border-white/[0.08] text-[11px] text-grid-200 overflow-x-auto">
+              <div className="text-[10px] text-zinc-500 uppercase tracking-wide mb-1">Received Response Headers</div>
+              <pre className="p-3 bg-zinc-50 rounded border border-zinc-200 text-[11px] text-zinc-700 overflow-x-auto">
 {Object.entries(responseHeaders)
   .filter(([k]) => ['www-authenticate', 'x-402-payment-address', 'x-402-amount', 'x-402-currency', 'x-402-network', 'x-402-facilitator', 'x-402-scheme', 'content-type'].includes(k.toLowerCase()))
   .map(([k, v]) => `${k}: ${v}`)
@@ -307,40 +321,40 @@ export const DirectX402Demo: React.FC = () => {
           {/* Response Body */}
           {responseBody && (
             <div>
-              <div className="text-[10px] text-grid-400 uppercase tracking-wide mb-1">Response Payload (JSON)</div>
-              <pre className="p-3 bg-black rounded border border-white/[0.08] text-[11px] text-brand-emerald overflow-x-auto">
+              <div className="text-[10px] text-zinc-500 uppercase tracking-wide mb-1">Response Payload (JSON)</div>
+              <pre className="p-3 bg-zinc-50 rounded border border-zinc-200 text-[11px] text-emerald-600 overflow-x-auto">
                 {JSON.stringify(responseBody, null, 2)}
               </pre>
             </div>
           )}
 
           {!responseBody && (
-            <div className="py-8 text-center text-grid-500">
-              Click &quot;Send GET Request&quot; in Phase 1 above to initiate the x402 challenge flow.
+            <div className="py-8 text-center text-zinc-500">
+              Click "Send GET Request" in Phase 1 above to initiate the x402 challenge flow.
             </div>
           )}
         </div>
       </div>
 
       {/* Developer Integration Code Snippets Panel */}
-      <div data-tour="developer-code-snippets" className="bg-black/75 border border-white/[0.08] rounded-xl p-5 space-y-3 font-mono text-xs shadow-sm">
+      <div data-tour="developer-code-snippets" className="card-light p-5 space-y-3 font-mono text-xs shadow-sm">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2 text-white font-semibold uppercase tracking-wider">
-            <Layers className="w-4 h-4 text-brand-emerald" />
+          <div className="flex items-center space-x-2 text-zinc-950 font-semibold uppercase tracking-wider">
+            <Layers className="w-4 h-4 text-emerald-600" />
             <span>Developer Integration: How Other Autonomous Agents Call This Endpoint</span>
           </div>
-          <span className="text-[10px] text-brand-emerald bg-brand-emerald/15 px-2 py-0.5 rounded border border-brand-emerald/30 font-bold">
+          <span className="text-[10px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 font-bold">
             @x402/fetch & cURL
           </span>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pt-1">
           {/* TypeScript @x402/fetch */}
-          <div className="bg-black rounded-lg border border-white/[0.08] p-3.5 space-y-2">
-            <div className="flex items-center justify-between text-grid-400 text-[11px]">
+          <div className="card-light border-zinc-200 p-3.5 space-y-2">
+            <div className="flex items-center justify-between text-zinc-500 text-[11px]">
               <span>TypeScript (using @x402/fetch & @x402/avm)</span>
             </div>
-            <pre className="text-[11px] text-brand-emerald overflow-x-auto leading-relaxed">
+            <pre className="text-[11px] text-emerald-600 overflow-x-auto leading-relaxed">
 {`import { wrapFetchWithX402 } from '@x402/fetch';
 import { AlgorandSigner } from '@x402/avm';
 
@@ -355,11 +369,11 @@ const data = await res.json();`}
           </div>
 
           {/* Raw cURL */}
-          <div className="bg-black rounded-lg border border-white/[0.08] p-3.5 space-y-2">
-            <div className="flex items-center justify-between text-grid-400 text-[11px]">
+          <div className="card-light border-zinc-200 p-3.5 space-y-2">
+            <div className="flex items-center justify-between text-zinc-500 text-[11px]">
               <span>Raw CLI / cURL</span>
             </div>
-            <pre className="text-[11px] text-grid-300 overflow-x-auto leading-relaxed">
+            <pre className="text-[11px] text-zinc-600 overflow-x-auto leading-relaxed">
 {`# 1. Trigger HTTP 402 Challenge
 curl -i http://localhost:3001/api/x402/inference/direct-endpoint
 
