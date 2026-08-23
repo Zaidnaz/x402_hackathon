@@ -165,6 +165,8 @@ app.get('/', (c) => {
   });
 });
 
+import { serveStatic } from '@hono/node-server/serve-static';
+
 // Mount modular sub-routers
 app.route('/api/tasks', tasksRouter);
 app.route('/api/marketplace', marketplaceRouter);
@@ -172,6 +174,10 @@ app.route('/api/warehouse', warehouseRouter);
 app.route('/api/merchant', merchantRouter);
 app.route('/api/ledger', ledgerRouter);
 app.route('/api/x402', x402DemoRouter);
+
+// Serve frontend static assets in production Docker/Node container
+app.use('/*', serveStatic({ root: './client/dist' }));
+app.get('*', serveStatic({ path: './client/dist/index.html' }));
 
 const PORT = Number(process.env.PORT) || 3001;
 
