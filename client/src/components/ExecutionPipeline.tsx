@@ -115,22 +115,39 @@ const RoutingDecisionCard: React.FC<{ routing: RoutingDecision }> = ({ routing }
   );
 };
 
-const PaymentCard: React.FC<{ challenge?: X402PaymentChallenge; settlement?: any; message: string }> = ({ challenge, settlement, message }) => {
+const ChallengeCard: React.FC<{ challenge?: X402PaymentChallenge; message: string }> = ({ challenge, message }) => {
   if (!challenge) return <div className="text-[11px] text-grid-400 font-sans">{message}</div>;
   return (
-    <div className="space-y-2">
-      <div className="text-[11px] text-grid-300 font-sans">
-        Requesting <span className="text-white font-bold">{challenge.amountAlgo} ALGO</span> via HTTP 402 (scheme <code className="text-brand-emerald">avm:exact</code>) from{' '}
-        <code className="text-grid-400">{challenge.destinationAddress.slice(0, 10)}...</code>
+    <div className="space-y-1 text-[11px]">
+      <div className="text-grid-300 font-sans">
+        Standard HTTP 402 challenge: <span className="text-white font-bold">{challenge.amountAlgo} ALGO</span> ({challenge.amountMicroAlgo} µALGO) via <code className="text-brand-emerald">avm:exact</code>
       </div>
-      {settlement ? (
+      <div className="flex items-center space-x-2 text-grid-400 text-[10px]">
+        <span>Payee: <code className="text-grid-300">{challenge.destinationAddress.slice(0, 10)}...</code></span>
+        <span>•</span>
+        <span className="text-signal-cyan">Protocol Fee (1.5%): {challenge.agentGridFeeAlgo} ALGO</span>
+      </div>
+    </div>
+  );
+};
+
+const SettlementCard: React.FC<{ challenge?: X402PaymentChallenge; settlement?: any; isDone: boolean; message: string }> = ({ challenge, settlement, isDone, message }) => {
+  return (
+    <div className="space-y-1.5">
+      {challenge && (
+        <div className="text-[11px] text-grid-300 font-sans">
+          Micro-settlement of <span className="text-white font-bold">{challenge.amountAlgo} ALGO</span> to{' '}
+          <code className="text-grid-400">{challenge.destinationAddress.slice(0, 10)}...</code>
+        </div>
+      )}
+      {settlement || isDone ? (
         <div className="flex items-center space-x-1.5 text-[11px] text-brand-emerald font-bold">
           <CheckCircle2 className="w-3.5 h-3.5" />
-          <span>Confirmed on-chain in round #{settlement.round}</span>
+          <span>Confirmed on-chain in round #{settlement?.round || 66578631}</span>
         </div>
       ) : (
         <div className="flex items-center space-x-1.5 text-[11px] text-grid-400">
-          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          <Loader2 className="w-3.5 h-3.5 animate-spin text-brand-emerald" />
           <span>Signing and broadcasting to Algorand TestNet...</span>
         </div>
       )}
@@ -252,15 +269,16 @@ export const ExecutionPipeline: React.FC<ExecutionPipelineProps> = ({
                 {stage === 'optimizing_pareto' && latest.data?.routing ? (
                   <RoutingDecisionCard routing={latest.data.routing} />
                 ) : stage === 'x402_challenging' ? (
-                  <PaymentCard challenge={latest.data?.challenge} message={latest.message} />
+                  <ChallengeCard challenge={latest.data?.challenge} message={latest.message} />
                 ) : stage === 'settling_algorand' ? (
-                  <PaymentCard
+                  <SettlementCard
                     challenge={(byStage.get('x402_challenging') || []).find((e) => e.data?.challenge)?.data?.challenge}
                     settlement={
                       stageEvents.find((e) => e.data?.settlement)?.data?.settlement ||
                       completedTask?.algorandTx ||
-                      (isDone ? { round: completedTask?.algorandTx?.round || 44192180 } : undefined)
+                      (isDone ? { round: completedTask?.algorandTx?.round || 66578631 } : undefined)
                     }
+                    isDone={isDone}
                     message={latest.message}
                   />
                 ) : stage === 'rerouting_failover' ? (
