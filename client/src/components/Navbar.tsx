@@ -19,14 +19,13 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navLinks = [
-    { id: 'landing', label: 'About' },
-    { id: 'command', label: 'Agent' },
+    { id: 'command', label: 'Tasks', isPrimary: true },
     { id: 'grid', label: 'Marketplace' },
     { id: 'routing', label: 'Routing' },
     { id: 'ledger', label: 'Ledger' },
     { id: 'analytics', label: 'Analytics' },
     { id: 'x402-demo', label: 'x402 Testbed' },
-    { id: 'merchant-demo', label: 'Merchant x402' }
+    { id: 'landing', label: 'About' }
   ];
 
   useEffect(() => {

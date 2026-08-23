@@ -64,69 +64,126 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp, onNavigate
           </p>
         </div>
 
-      {/* Enter App CTA */}
-      <div className="space-y-4 pt-2">
-        <button
-          onClick={onEnterApp}
-          className="px-8 py-4 rounded-xl bg-zinc-950 hover:bg-zinc-900 text-white font-mono font-bold text-sm sm:text-base uppercase tracking-wider inline-flex items-center space-x-3 transition-colors cursor-pointer active:scale-95 shadow-sm"
-        >
-          <Terminal className="w-5 h-5" />
-          <span>Launch Agent Console</span>
-          <ArrowRight className="w-5 h-5" />
-        </button>
+        {/* Enter App CTA */}
+        <div className="space-y-4 pt-2">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <button
+              onClick={onEnterApp}
+              className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-zinc-950 hover:bg-zinc-900 text-white font-mono font-bold text-sm sm:text-base uppercase tracking-wider inline-flex items-center justify-center space-x-3 transition-colors cursor-pointer active:scale-95 shadow-sm"
+            >
+              <Terminal className="w-5 h-5 text-emerald-400" />
+              <span>Start a task</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => onNavigateTab('grid')}
+              className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-white hover:bg-zinc-50 border border-zinc-200 text-zinc-900 font-mono font-semibold text-sm sm:text-base inline-flex items-center justify-center space-x-2 transition-colors cursor-pointer shadow-sm"
+            >
+              <Cpu className="w-4 h-4 text-zinc-500" />
+              <span>Browse providers</span>
+            </button>
+          </div>
 
-        <div className="flex items-center justify-center space-x-6 text-xs font-mono text-zinc-500">
-          <button
-            onClick={() => onNavigateTab('grid')}
-            className="hover:text-zinc-900 transition-colors cursor-pointer flex items-center gap-1.5"
-          >
-            <span>Browse Marketplace</span>
-            <span className="text-zinc-400">→</span>
-          </button>
-          <span className="text-zinc-300">•</span>
-          <button
-            onClick={() => onNavigateTab('x402-demo')}
-            className="hover:text-zinc-900 transition-colors cursor-pointer flex items-center gap-1.5"
-          >
-            <span>Test x402 Paywall</span>
-            <span className="text-zinc-400">→</span>
-          </button>
+          <div className="flex items-center justify-center space-x-6 text-xs font-mono text-zinc-500">
+            <button
+              onClick={() => onNavigateTab('routing')}
+              className="hover:text-zinc-900 transition-colors cursor-pointer flex items-center gap-1"
+            >
+              <span>Inspect Pareto Matrix</span>
+              <span className="text-zinc-400">→</span>
+            </button>
+            <span className="text-zinc-300">•</span>
+            <button
+              onClick={() => onNavigateTab('x402-demo')}
+              className="hover:text-zinc-900 transition-colors cursor-pointer flex items-center gap-1"
+            >
+              <span>Test x402 Paywall</span>
+              <span className="text-zinc-400">→</span>
+            </button>
+          </div>
+        </div>
+
+        {/* 4-Step Operational Flow */}
+        <div className="card-light p-4 text-left border-zinc-200 bg-white">
+          <div className="text-[11px] font-mono uppercase tracking-wider text-zinc-500 font-semibold mb-3">
+            Autonomous Task Execution Pipeline
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs font-mono">
+            <div className="p-3 bg-zinc-50 rounded-lg border border-zinc-200/80 space-y-1">
+              <div className="flex items-center space-x-1.5 text-zinc-950 font-bold">
+                <span className="text-emerald-600 font-mono">01.</span>
+                <span>Understand</span>
+              </div>
+              <p className="text-[11px] text-zinc-600 font-sans leading-tight">
+                Parses intent, token requirements, and SLA bounds.
+              </p>
+            </div>
+
+            <div className="p-3 bg-zinc-50 rounded-lg border border-zinc-200/80 space-y-1">
+              <div className="flex items-center space-x-1.5 text-zinc-950 font-bold">
+                <span className="text-emerald-600 font-mono">02.</span>
+                <span>Smart Route</span>
+              </div>
+              <p className="text-[11px] text-zinc-600 font-sans leading-tight">
+                Pareto optimizer selects optimal Model & GPU cluster.
+              </p>
+            </div>
+
+            <div className="p-3 bg-zinc-50 rounded-lg border border-zinc-200/80 space-y-1">
+              <div className="flex items-center space-x-1.5 text-zinc-950 font-bold">
+                <span className="text-emerald-600 font-mono">03.</span>
+                <span>Settle x402</span>
+              </div>
+              <p className="text-[11px] text-zinc-600 font-sans leading-tight">
+                Locks micro-escrow & pays on Algorand TestNet in {'<2.8s'}.
+              </p>
+            </div>
+
+            <div className="p-3 bg-zinc-50 rounded-lg border border-zinc-200/80 space-y-1">
+              <div className="flex items-center space-x-1.5 text-zinc-950 font-bold">
+                <span className="text-emerald-600 font-mono">04.</span>
+                <span>Stream & Verify</span>
+              </div>
+              <p className="text-[11px] text-zinc-600 font-sans leading-tight">
+                Streams output with zero-drop failover and verifiable receipts.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* 3 Capability Signals */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-left font-mono text-xs">
+          <div className="card-light p-4 space-y-1.5 hover:border-zinc-300 transition-colors">
+            <div className="text-emerald-700 font-bold flex items-center space-x-2 text-xs">
+              <Zap className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Inspectable Routing</span>
+            </div>
+            <p className="text-zinc-600 font-sans text-xs leading-relaxed">
+              Live multi-objective Pareto optimization across 25+ model & GPU node combinations.
+            </p>
+          </div>
+
+          <div className="card-light p-4 space-y-1.5 hover:border-zinc-300 transition-colors">
+            <div className="text-zinc-950 font-bold flex items-center space-x-2 text-xs">
+              <CoinsIcon className="w-3.5 h-3.5 text-emerald-600" />
+              <span>On-Chain Receipts</span>
+            </div>
+            <p className="text-zinc-600 font-sans text-xs leading-relaxed">
+              Every inference request settles with a cryptographic receipt on Algorand TestNet.
+            </p>
+          </div>
+
+          <div className="card-light p-4 space-y-1.5 hover:border-zinc-300 transition-colors">
+            <div className="text-emerald-700 font-bold flex items-center space-x-2 text-xs">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Failure-Aware Failover</span>
+            </div>
+            <p className="text-zinc-600 font-sans text-xs leading-relaxed">
+              Autonomous in-flight rerouting ensures zero dropped tokens if a compute node degrades.
+            </p>
+          </div>
         </div>
       </div>
-
-      {/* 3 Simple Value Props */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 text-left font-mono text-xs">
-        <div className="card-light p-5 space-y-2 hover:shadow-panel transition-shadow">
-          <div className="text-emerald-600 font-bold flex items-center space-x-2 text-sm">
-            <Zap className="w-4 h-4 text-emerald-600" />
-            <span>Smart Pareto Routing</span>
-          </div>
-          <p className="text-zinc-600 font-sans text-xs leading-relaxed">
-            Optimizes Cost vs Speed vs Quality for every single prompt across Models & GPUs.
-          </p>
-        </div>
-
-        <div className="card-light p-5 space-y-2 hover:shadow-panel transition-shadow">
-          <div className="text-zinc-950 font-bold flex items-center space-x-2 text-sm">
-            <CoinsIcon className="w-4 h-4 text-emerald-600" />
-            <span>x402 on Algorand</span>
-          </div>
-          <p className="text-zinc-600 font-sans text-xs leading-relaxed">
-            Machine-to-machine HTTP 402 paywalls settled in {'<2.8s'} on Algorand TestNet.
-          </p>
-        </div>
-
-        <div className="card-light p-5 space-y-2 hover:shadow-panel transition-shadow">
-          <div className="text-emerald-600 font-bold flex items-center space-x-2 text-sm">
-            <ShieldCheck className="w-4 h-4 text-emerald-600" />
-            <span>Zero-Downtime Failover</span>
-          </div>
-          <p className="text-zinc-600 font-sans text-xs leading-relaxed">
-            Auto-reroutes in-flight if a GPU node drops or throttles with 0 dropped tokens.
-          </p>
-        </div>
-      </div>
-    </div>
     </>
   );
 };
