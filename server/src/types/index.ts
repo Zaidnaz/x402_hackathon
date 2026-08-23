@@ -157,8 +157,9 @@ export interface AlgorandTransactionRecord {
   note: string;
 }
 
-export type ExecutionStage = 
+export type ExecutionStage =
   | 'idle'
+  | 'planning'
   | 'analyzing_intent'
   | 'discovering_grid'
   | 'optimizing_pareto'
@@ -168,13 +169,61 @@ export type ExecutionStage =
   | 'verifying_telemetry'
   | 'rerouting_failover'
   | 'completed'
+  | 'plan_completed'
+  | 'awaiting_approval'
   | 'failed';
+
+export interface SpendingPolicy {
+  /** Hard cap — a task that would push today's total spend past this is rejected outright, not held. */
+  dailyBudgetAlgo: number;
+  /** A task costing at or above this needs explicit human sign-off before it pays. */
+  autoApproveThresholdAlgo: number;
+}
+
+export interface ApprovalRequiredInfo {
+  estimatedCostAlgo: number;
+  thresholdAlgo: number;
+  modelName: string;
+  computeName: string;
+  prompt: string;
+}
+
+export interface EventStepContext {
+  index: number;
+  total: number;
+  title: string;
+}
 
 export interface ExecutionEvent {
   stage: ExecutionStage;
   message: string;
   timestamp: number;
   data?: any;
+  /** Present when this event belongs to one step of a decomposed multi-step plan. */
+  step?: EventStepContext;
+}
+
+export interface PlanStep {
+  title: string;
+  prompt: string;
+}
+
+export interface TaskPlan {
+  steps: PlanStep[];
+  reasoning: string;
+  /** True when a real LLM decomposed the prompt; false when it fell back to a single step. */
+  planned: boolean;
+}
+
+export interface CompletedPlan {
+  id: string;
+  prompt: string;
+  plan: TaskPlan;
+  steps: CompletedTask[];
+  totalCostAlgo: number;
+  totalDurationMs: number;
+  status: 'completed' | 'failed';
+  completedAt: number;
 }
 
 export interface CompletedTask {

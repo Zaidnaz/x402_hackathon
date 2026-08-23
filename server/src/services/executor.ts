@@ -2,21 +2,28 @@ import {
   TaskRequirement,
   RoutingDecision,
   CompletedTask,
-  ExecutionEvent
+  CompletedPlan,
+  ExecutionEvent,
+  EventStepContext
 } from '../types/index.js';
 import { AIAnalyzer } from './aiAnalyzer.js';
 import { RouterEngine } from './routerEngine.js';
 import { x402Protocol } from './x402Protocol.js';
 import { algorandService } from './algorandService.js';
 import { storage } from '../db/storage.js';
+import { TaskPlanner } from './taskPlanner.js';
+import { spendingPolicy, DailyBudgetExceededError, ApprovalRequiredError } from './spendingPolicy.js';
 import { GoogleGenAI } from '@google/genai';
+import crypto from 'crypto';
 
 export interface ExecuteOptions {
   prompt: string;
   overrides?: Partial<TaskRequirement>;
   simulateFailover?: boolean;
+  /** Set once a human has explicitly signed off on a task that tripped the approval threshold. */
+  humanApproved?: boolean;
   onEvent?: (event: ExecutionEvent) => void | Promise<void>;
-  onTokenChunk?: (chunk: string) => void | Promise<void>;
+  onTokenChunk?: (chunk: string, step?: EventStepContext) => void | Promise<void>;
 }
 
 export class WorkloadExecutor {
@@ -59,6 +66,35 @@ export class WorkloadExecutor {
     let activeCandidate = routing.selectedCandidate;
     let failoverOccurred = false;
     let failoverDetails: CompletedTask['failoverDetails'] | undefined = undefined;
+
+    // Spending governance — gates real money leaving the agent wallet, not
+    // just a UI warning. A hard daily cap rejects the task outright; a
+    // per-task threshold pauses it for explicit human sign-off. Both run
+    // *before* any x402 challenge or on-chain settlement.
+    const policy = spendingPolicy.get();
+    const todaySpendAlgo = await spendingPolicy.getTodaySpendAlgo();
+    if (todaySpendAlgo + activeCandidate.estimatedCostAlgo > policy.dailyBudgetAlgo) {
+      const err = new DailyBudgetExceededError(todaySpendAlgo, activeCandidate.estimatedCostAlgo, policy.dailyBudgetAlgo);
+      await emit('failed', err.message, { policy, todaySpendAlgo });
+      throw err;
+    }
+    if (!options.humanApproved && activeCandidate.estimatedCostAlgo >= policy.autoApproveThresholdAlgo) {
+      const err = new ApprovalRequiredError(
+        activeCandidate.estimatedCostAlgo,
+        policy.autoApproveThresholdAlgo,
+        activeCandidate.modelName,
+        activeCandidate.computeName,
+        options.prompt
+      );
+      await emit('awaiting_approval', err.message, {
+        estimatedCostAlgo: err.estimatedCostAlgo,
+        thresholdAlgo: err.thresholdAlgo,
+        modelName: err.modelName,
+        computeName: err.computeName,
+        prompt: err.prompt
+      });
+      throw err;
+    }
 
     // Stage 4: x402 Challenge Generation
     await delay(200);
@@ -207,6 +243,83 @@ export class WorkloadExecutor {
     await emit('completed', `Task execution successfully finished in ${actualDurationMs}ms. Ledger settled via GoPlausible Facilitator.`, { task: completedTask });
 
     return completedTask;
+  }
+
+  /**
+   * Decomposes a prompt into one or more independent deliverables (via
+   * TaskPlanner) and runs the full route→pay→execute pipeline separately
+   * for each — so a single request can result in several genuinely
+   * distinct on-chain micro-payments, each to whichever model/compute
+   * combination is optimal for that specific subtask. A prompt that isn't
+   * genuinely multi-part degrades to exactly one step, which behaves
+   * identically to calling execute() directly.
+   */
+  public static async executePlan(options: ExecuteOptions): Promise<CompletedPlan> {
+    const startTime = Date.now();
+    const emit = async (stage: ExecutionEvent['stage'], message: string, data?: any): Promise<void> => {
+      if (options.onEvent) {
+        await options.onEvent({ stage, message, timestamp: Date.now(), data });
+      }
+    };
+
+    await emit('planning', 'Deciding whether this needs one purchase or several...');
+    const plan = await TaskPlanner.planTask(options.prompt);
+    await emit(
+      'planning',
+      plan.planned
+        ? `Plan ready: ${plan.steps.length} independent deliverables, each routed and paid for separately.`
+        : 'Single deliverable — one purchase.',
+      { plan }
+    );
+
+    const steps: CompletedTask[] = [];
+
+    for (let i = 0; i < plan.steps.length; i++) {
+      const planStep = plan.steps[i];
+      const stepContext: EventStepContext = { index: i, total: plan.steps.length, title: planStep.title };
+
+      const stepOptions: ExecuteOptions = {
+        prompt: planStep.prompt,
+        overrides: options.overrides,
+        simulateFailover: options.simulateFailover && i === plan.steps.length - 1,
+        humanApproved: options.humanApproved,
+        onEvent: options.onEvent
+          ? async (ev) => {
+              await options.onEvent!({ ...ev, step: stepContext });
+            }
+          : undefined,
+        onTokenChunk: options.onTokenChunk
+          ? async (chunk) => {
+              await options.onTokenChunk!(chunk, stepContext);
+            }
+          : undefined
+      };
+
+      const result = await WorkloadExecutor.execute(stepOptions);
+      steps.push(result);
+    }
+
+    const totalCostAlgo = Number(steps.reduce((sum, s) => sum + s.actualCostAlgo, 0).toFixed(6));
+    const totalDurationMs = Date.now() - startTime;
+
+    const completedPlan: CompletedPlan = {
+      id: `plan_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`,
+      prompt: options.prompt,
+      plan,
+      steps,
+      totalCostAlgo,
+      totalDurationMs,
+      status: steps.every((s) => s.status !== 'failed') ? 'completed' : 'failed',
+      completedAt: Date.now()
+    };
+
+    await emit(
+      'plan_completed',
+      `All ${plan.steps.length} step(s) complete. Total spent: ${totalCostAlgo} ALGO across ${plan.steps.length} on-chain settlement(s).`,
+      { completedPlan }
+    );
+
+    return completedPlan;
   }
 }
 

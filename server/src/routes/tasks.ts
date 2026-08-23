@@ -3,6 +3,7 @@ import { streamSSE } from 'hono/streaming';
 import { AIAnalyzer } from '../services/aiAnalyzer.js';
 import { RouterEngine } from '../services/routerEngine.js';
 import { WorkloadExecutor } from '../services/executor.js';
+import { ApprovalRequiredError } from '../services/spendingPolicy.js';
 import { storage } from '../db/storage.js';
 import {
   executeTaskBodySchema,
@@ -50,10 +51,19 @@ tasksRouter.post('/execute', async (c) => {
     const task = await WorkloadExecutor.execute({
       prompt: parsed.data.prompt,
       overrides: parsed.data.overrides,
-      simulateFailover: Boolean(parsed.data.simulateFailover)
+      simulateFailover: Boolean(parsed.data.simulateFailover),
+      humanApproved: Boolean(parsed.data.humanApproved)
     });
     return c.json({ success: true, task });
   } catch (err: any) {
+    if (err instanceof ApprovalRequiredError) {
+      return c.json({ success: false, awaitingApproval: true, error: err.message, details: {
+        estimatedCostAlgo: err.estimatedCostAlgo,
+        thresholdAlgo: err.thresholdAlgo,
+        modelName: err.modelName,
+        computeName: err.computeName
+      } }, 402);
+    }
     return c.json({ success: false, error: err.message }, 500);
   }
 });
@@ -78,6 +88,7 @@ tasksRouter.get('/stream', async (c) => {
 
   const prompt = promptCheck.data;
   const simulateFailover = c.req.query('simulateFailover') === 'true';
+  const humanApproved = c.req.query('humanApproved') === 'true';
 
   return streamSSE(c, async (stream) => {
     // Real Algorand confirmation (and Gemini calls) can go several seconds
@@ -93,24 +104,92 @@ tasksRouter.get('/stream', async (c) => {
         prompt,
         overrides: overridesCheck.data,
         simulateFailover,
+        humanApproved,
         onEvent: async (event) => {
           await stream.writeSSE({
             event: 'pipeline_event',
             data: JSON.stringify(event)
           });
         },
-        onTokenChunk: async (chunk) => {
+        onTokenChunk: async (chunk, step) => {
           await stream.writeSSE({
             event: 'token_chunk',
-            data: JSON.stringify({ chunk })
+            data: JSON.stringify({ chunk, step })
           });
         }
       });
     } catch (err: any) {
-      await stream.writeSSE({
-        event: 'error',
-        data: JSON.stringify({ error: err.message })
+      // ApprovalRequiredError already emitted its own 'awaiting_approval'
+      // pipeline_event with full detail before throwing — sending a generic
+      // 'error' on top would make the client show a false failure banner
+      // for what is actually just "waiting on a human".
+      if (!(err instanceof ApprovalRequiredError)) {
+        await stream.writeSSE({
+          event: 'error',
+          data: JSON.stringify({ error: err.message })
+        });
+      }
+    } finally {
+      clearInterval(heartbeat);
+    }
+  });
+});
+
+// SSE Streaming Execution Endpoint — the agent first decides whether the
+// prompt is one deliverable or several, then runs the full route→pay→
+// execute pipeline independently for each one.
+tasksRouter.get('/plan-stream', async (c) => {
+  const rawPrompt = c.req.query('prompt') || '';
+  const promptCheck = promptSchema.safeParse(rawPrompt);
+  if (!promptCheck.success) {
+    return c.json({ success: false, error: formatZodError(promptCheck.error) }, 400);
+  }
+
+  const overridesCheck = requirementOverridesSchema.safeParse({
+    priority: c.req.query('priority') || undefined,
+    maxBudgetAlgo: c.req.query('maxBudgetAlgo') ? parseFloat(c.req.query('maxBudgetAlgo')!) : undefined,
+    deadlineMs: c.req.query('deadlineMs') ? parseInt(c.req.query('deadlineMs')!, 10) : undefined,
+    minQualityScore: c.req.query('minQualityScore') ? parseInt(c.req.query('minQualityScore')!, 10) : undefined
+  });
+  if (!overridesCheck.success) {
+    return c.json({ success: false, error: formatZodError(overridesCheck.error) }, 400);
+  }
+
+  const prompt = promptCheck.data;
+  const simulateFailover = c.req.query('simulateFailover') === 'true';
+  const humanApproved = c.req.query('humanApproved') === 'true';
+
+  return streamSSE(c, async (stream) => {
+    const heartbeat = setInterval(() => {
+      stream.writeSSE({ event: 'heartbeat', data: String(Date.now()) }).catch(() => {});
+    }, 3000);
+
+    try {
+      await WorkloadExecutor.executePlan({
+        prompt,
+        overrides: overridesCheck.data,
+        simulateFailover,
+        humanApproved,
+        onEvent: async (event) => {
+          await stream.writeSSE({
+            event: 'pipeline_event',
+            data: JSON.stringify(event)
+          });
+        },
+        onTokenChunk: async (chunk, step) => {
+          await stream.writeSSE({
+            event: 'token_chunk',
+            data: JSON.stringify({ chunk, step })
+          });
+        }
       });
+    } catch (err: any) {
+      if (!(err instanceof ApprovalRequiredError)) {
+        await stream.writeSSE({
+          event: 'error',
+          data: JSON.stringify({ error: err.message })
+        });
+      }
     } finally {
       clearInterval(heartbeat);
     }

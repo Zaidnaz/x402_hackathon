@@ -1,14 +1,18 @@
-import { 
-  TaskRequirement, 
-  RoutingDecision, 
+import {
+  TaskRequirement,
+  RoutingDecision,
   CandidateEvaluation,
-  CompletedTask, 
-  ExecutionEvent, 
-  ModelProvider, 
-  ComputeProvider, 
-  AlgorandAccountInfo, 
-  AlgorandTransactionRecord, 
-  GlobalStats 
+  CompletedTask,
+  CompletedPlan,
+  ExecutionEvent,
+  EventStepContext,
+  SpendingPolicy,
+  ApprovalRequiredInfo,
+  ModelProvider,
+  ComputeProvider,
+  AlgorandAccountInfo,
+  AlgorandTransactionRecord,
+  GlobalStats
 } from '../types';
 
 const API_BASE = ((import.meta as any).env?.VITE_API_BASE as string) || '/api';
@@ -615,6 +619,35 @@ export async function fetchFundingStatus(): Promise<{ isFunded: boolean; balance
   }
 }
 
+export async function fetchPolicy(): Promise<{ policy: SpendingPolicy; todaySpendAlgo: number; remainingTodayAlgo: number } | null> {
+  try {
+    const res = await fetch(`${API_BASE}/policy`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    if (!data?.success) return null;
+    return { policy: data.policy, todaySpendAlgo: data.todaySpendAlgo, remainingTodayAlgo: data.remainingTodayAlgo };
+  } catch (err) {
+    console.warn('Could not fetch spending policy:', err);
+    return null;
+  }
+}
+
+export async function updatePolicy(patch: Partial<SpendingPolicy>): Promise<SpendingPolicy | null> {
+  try {
+    const res = await fetch(`${API_BASE}/policy`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(patch)
+    });
+    const data = await res.json();
+    if (!data?.success) throw new Error(data?.error || `HTTP ${res.status}`);
+    return data.policy;
+  } catch (err) {
+    console.warn('Could not update spending policy:', err);
+    return null;
+  }
+}
+
 export async function fetchTaskHistory(): Promise<CompletedTask[]> {
   const res = await fetch(`${API_BASE}/tasks/history`);
   const data = await res.json();
@@ -714,6 +747,90 @@ export function subscribeTaskStream(
     try {
       const data = JSON.parse(e.data);
       onTokenChunk(data.chunk);
+    } catch (err) {
+      console.error('SSE token parse error', err);
+    }
+  });
+
+  eventSource.addEventListener('error', (e: any) => {
+    if (finished || eventSource.readyState === EventSource.CLOSED) return;
+    finished = true;
+    try {
+      const parsed = JSON.parse(e.data || '{}');
+      onError(parsed.error || 'Connection closed');
+    } catch {
+      onError('Stream disconnected');
+    }
+    eventSource.close();
+  });
+
+  return () => {
+    finished = true;
+    eventSource.close();
+  };
+}
+
+/**
+ * Same real-time contract as subscribeTaskStream, but the agent first
+ * decides whether the prompt is one deliverable or several genuinely
+ * distinct ones — each step then runs the full route→pay→execute pipeline
+ * independently, so a single prompt can produce multiple real on-chain
+ * settlements. A prompt that isn't multi-part behaves identically to a
+ * single subscribeTaskStream call.
+ */
+export function subscribeTaskPlanStream(
+  prompt: string,
+  overrides: Partial<TaskRequirement>,
+  simulateFailover: boolean,
+  humanApproved: boolean,
+  onEvent: (event: ExecutionEvent) => void,
+  onTokenChunk: (chunk: string, step?: EventStepContext) => void,
+  onComplete: (plan: CompletedPlan) => void,
+  onError: (error: string) => void,
+  onApprovalRequired: (info: ApprovalRequiredInfo) => void
+): () => void {
+  const params = new URLSearchParams({
+    prompt,
+    simulateFailover: String(simulateFailover),
+    humanApproved: String(humanApproved)
+  });
+
+  if (overrides.priority) params.append('priority', overrides.priority);
+  if (overrides.maxBudgetAlgo) params.append('maxBudgetAlgo', String(overrides.maxBudgetAlgo));
+  if (overrides.deadlineMs) params.append('deadlineMs', String(overrides.deadlineMs));
+  if (overrides.minQualityScore) params.append('minQualityScore', String(overrides.minQualityScore));
+
+  const eventSource = new EventSource(`${API_BASE}/tasks/plan-stream?${params.toString()}`);
+  let finished = false;
+
+  eventSource.addEventListener('pipeline_event', (e) => {
+    try {
+      const event: ExecutionEvent = JSON.parse(e.data);
+      onEvent(event);
+      if (event.stage === 'plan_completed' && event.data?.completedPlan) {
+        finished = true;
+        onComplete(event.data.completedPlan);
+        eventSource.close();
+      } else if (event.stage === 'awaiting_approval') {
+        finished = true;
+        onApprovalRequired({
+          estimatedCostAlgo: event.data?.estimatedCostAlgo,
+          thresholdAlgo: event.data?.thresholdAlgo,
+          modelName: event.data?.modelName,
+          computeName: event.data?.computeName,
+          prompt: event.data?.prompt ?? prompt
+        });
+        eventSource.close();
+      }
+    } catch (err) {
+      console.error('SSE parse error', err);
+    }
+  });
+
+  eventSource.addEventListener('token_chunk', (e) => {
+    try {
+      const data = JSON.parse(e.data);
+      onTokenChunk(data.chunk, data.step);
     } catch (err) {
       console.error('SSE token parse error', err);
     }

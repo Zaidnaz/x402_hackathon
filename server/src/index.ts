@@ -59,6 +59,7 @@ import { tasksRouter } from './routes/tasks.js';
 import { marketplaceRouter } from './routes/marketplace.js';
 import { ledgerRouter } from './routes/ledger.js';
 import { x402DemoRouter } from './routes/x402Demo.js';
+import { policyRouter } from './routes/policy.js';
 import { providerRegistry } from './services/providerRegistry.js';
 
 const app = new Hono();
@@ -156,6 +157,7 @@ app.route('/api/tasks', tasksRouter);
 app.route('/api/marketplace', marketplaceRouter);
 app.route('/api/ledger', ledgerRouter);
 app.route('/api/x402', x402DemoRouter);
+app.route('/api/policy', policyRouter);
 
 const PORT = Number(process.env.PORT) || 3001;
 

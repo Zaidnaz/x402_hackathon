@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowUp, ChevronDown, Loader2, AlertTriangle } from 'lucide-react';
-import { TaskRequirement } from '../types';
-import { fetchFundingStatus } from '../utils/api';
+import { ArrowUp, ChevronDown, Loader2, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { TaskRequirement, SpendingPolicy } from '../types';
+import { fetchFundingStatus, fetchPolicy, updatePolicy } from '../utils/api';
 
 interface CommandCenterProps {
   onDispatchTask: (
@@ -27,11 +27,36 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
   const [priority, setPriority] = useState<'balanced' | 'cost' | 'speed' | 'quality'>('balanced');
   const [simulateFailover, setSimulateFailover] = useState(false);
   const [funding, setFunding] = useState<{ isFunded: boolean; balanceAlgo: number; fundUrl: string; agentAddress: string } | null>(null);
+  const [policy, setPolicy] = useState<SpendingPolicy | null>(null);
+  const [todaySpendAlgo, setTodaySpendAlgo] = useState(0);
+  const [policyDraft, setPolicyDraft] = useState<{ dailyBudgetAlgo: string; autoApproveThresholdAlgo: string } | null>(null);
+  const [savingPolicy, setSavingPolicy] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     fetchFundingStatus().then(setFunding).catch(() => setFunding(null));
+    fetchPolicy().then((res) => {
+      if (!res) return;
+      setPolicy(res.policy);
+      setTodaySpendAlgo(res.todaySpendAlgo);
+      setPolicyDraft({
+        dailyBudgetAlgo: String(res.policy.dailyBudgetAlgo),
+        autoApproveThresholdAlgo: String(res.policy.autoApproveThresholdAlgo)
+      });
+    });
   }, []);
+
+  const handleSavePolicy = async () => {
+    if (!policyDraft) return;
+    const dailyBudgetAlgo = parseFloat(policyDraft.dailyBudgetAlgo);
+    const autoApproveThresholdAlgo = parseFloat(policyDraft.autoApproveThresholdAlgo);
+    if (!(dailyBudgetAlgo > 0) || !(autoApproveThresholdAlgo >= 0)) return;
+
+    setSavingPolicy(true);
+    const updated = await updatePolicy({ dailyBudgetAlgo, autoApproveThresholdAlgo });
+    if (updated) setPolicy(updated);
+    setSavingPolicy(false);
+  };
 
   useEffect(() => {
     textareaRef.current?.focus();
@@ -72,7 +97,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
           href={funding.fundUrl}
           target="_blank"
           rel="noreferrer"
-          className="flex items-center space-x-2 text-[13px] text-signal-amber bg-signal-amber/10 border border-signal-amber/25 rounded-xl px-3.5 py-2.5"
+          className="flex items-center space-x-2 text-[13px] text-yellow-400 bg-yellow-400/10 border border-yellow-400/25 rounded-xl px-3.5 py-2.5"
         >
           <AlertTriangle className="w-4 h-4 shrink-0" />
           <span>Agent wallet has no TestNet ALGO — tasks will fail to settle. Tap to fund it.</span>
@@ -141,6 +166,56 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
               />
               <span>Simulate a mid-task provider failure</span>
             </label>
+
+            {policyDraft && (
+              <div className="space-y-2 pt-2 border-t border-white/[0.06]">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-1.5 text-[11px] text-grid-500 uppercase tracking-wide">
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    <span>Spending governance</span>
+                  </div>
+                  {policy && (
+                    <span className="text-[11px] text-grid-500 font-mono">
+                      Today: {todaySpendAlgo.toFixed(3)} / {policy.dailyBudgetAlgo} ALGO
+                    </span>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <label className="space-y-1">
+                    <span className="text-[11px] text-grid-500">Daily budget cap (ALGO)</span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={policyDraft.dailyBudgetAlgo}
+                      onChange={(e) => setPolicyDraft((d) => (d ? { ...d, dailyBudgetAlgo: e.target.value } : d))}
+                      className="w-full bg-black/50 border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-[13px] text-white focus:outline-none focus:border-brand-emerald/40"
+                    />
+                  </label>
+                  <label className="space-y-1">
+                    <span className="text-[11px] text-grid-500">Auto-approve under (ALGO)</span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.001"
+                      value={policyDraft.autoApproveThresholdAlgo}
+                      onChange={(e) => setPolicyDraft((d) => (d ? { ...d, autoApproveThresholdAlgo: e.target.value } : d))}
+                      className="w-full bg-black/50 border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-[13px] text-white focus:outline-none focus:border-brand-emerald/40"
+                    />
+                  </label>
+                </div>
+                <p className="text-[11px] text-grid-500 leading-relaxed">
+                  Tasks above the auto-approve threshold pause for your sign-off before paying. Any task that would push today's spend past the daily cap is rejected outright.
+                </p>
+                <button
+                  onClick={handleSavePolicy}
+                  disabled={savingPolicy}
+                  className="text-[12px] px-3 py-1.5 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.08] text-grid-300 hover:text-white transition-all disabled:opacity-50 cursor-pointer"
+                >
+                  {savingPolicy ? 'Saving...' : 'Save policy'}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

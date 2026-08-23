@@ -24,8 +24,18 @@ export const promptSchema = z
 export const executeTaskBodySchema = z.object({
   prompt: promptSchema,
   overrides: requirementOverridesSchema.optional(),
-  simulateFailover: z.boolean().optional()
+  simulateFailover: z.boolean().optional(),
+  humanApproved: z.boolean().optional()
 });
+
+export const updatePolicyBodySchema = z
+  .object({
+    dailyBudgetAlgo: z.number().positive().max(100_000).optional(),
+    autoApproveThresholdAlgo: z.number().nonnegative().max(100_000).optional()
+  })
+  .refine((v) => v.dailyBudgetAlgo !== undefined || v.autoApproveThresholdAlgo !== undefined, {
+    message: 'Provide at least one of dailyBudgetAlgo or autoApproveThresholdAlgo'
+  });
 
 export const analyzeBodySchema = z.object({
   prompt: promptSchema,

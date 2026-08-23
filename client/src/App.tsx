@@ -10,19 +10,20 @@ import { AlgorandLedger } from './components/AlgorandLedger';
 import { AnalyticsHUD } from './components/AnalyticsHUD';
 import { DirectX402Demo } from './components/DirectX402Demo';
 import { ProviderRegisterModal } from './components/ProviderRegisterModal';
-import { 
-  TaskRequirement, 
-  ExecutionEvent, 
-  CompletedTask, 
-  ExecutionStage, 
-  ModelProvider, 
-  ComputeProvider, 
-  AlgorandAccountInfo 
+import {
+  TaskRequirement,
+  ExecutionEvent,
+  CompletedPlan,
+  ExecutionStage,
+  ModelProvider,
+  ComputeProvider,
+  AlgorandAccountInfo,
+  ApprovalRequiredInfo
 } from './types';
-import { 
-  fetchCatalog, 
-  fetchAccounts, 
-  subscribeTaskStream,
+import {
+  fetchCatalog,
+  fetchAccounts,
+  subscribeTaskPlanStream,
   FALLBACK_MODELS,
   FALLBACK_COMPUTES
 } from './utils/api';
@@ -38,11 +39,16 @@ function MainLayout() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [currentStage, setCurrentStage] = useState<ExecutionStage>('idle');
   const [pipelineEvents, setPipelineEvents] = useState<ExecutionEvent[]>([]);
-  const [streamedOutput, setStreamedOutput] = useState('');
-  const [completedTask, setCompletedTask] = useState<CompletedTask | null>(null);
+  // Keyed by step index — a plan is always at least one step, even a
+  // "single deliverable" prompt, so this uniformly covers both cases.
+  const [streamedOutputByStep, setStreamedOutputByStep] = useState<Record<number, string>>({});
+  const [completedPlan, setCompletedPlan] = useState<CompletedPlan | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [pendingApproval, setPendingApproval] = useState<ApprovalRequiredInfo | null>(null);
 
   const [activeStreamUnsub, setActiveStreamUnsub] = useState<(() => void) | null>(null);
+  // Remembered so "Approve & Pay" can re-dispatch the exact same task.
+  const [lastDispatch, setLastDispatch] = useState<{ prompt: string; overrides: Partial<TaskRequirement>; simulateFailover: boolean } | null>(null);
 
   const loadInitialData = async () => {
     try {
@@ -63,49 +69,37 @@ function MainLayout() {
     prompt: string,
     overrides: Partial<TaskRequirement>,
     simulateFailover: boolean,
-    customPeraTx?: { txId: string; round: number; explorerUrl: string; loraUrl: string }
+    humanApproved: boolean = false
   ) => {
     if (activeStreamUnsub) {
       activeStreamUnsub();
     }
+    setLastDispatch({ prompt, overrides, simulateFailover });
     setIsStreaming(true);
-    setCurrentStage('analyzing_intent');
+    setCurrentStage('planning');
     setPipelineEvents([]);
-    setStreamedOutput('');
-    setCompletedTask(null);
+    setStreamedOutputByStep({});
+    setCompletedPlan(null);
     setErrorMessage(null);
+    setPendingApproval(null);
 
-    const unsub = subscribeTaskStream(
+    const unsub = subscribeTaskPlanStream(
       prompt,
       overrides,
       simulateFailover,
+      humanApproved,
       (event) => {
         setCurrentStage(event.stage);
         setPipelineEvents(prev => [...prev, event]);
       },
-      (chunk) => {
-        setStreamedOutput(prev => prev + chunk);
+      (chunk, step) => {
+        const idx = step?.index ?? 0;
+        setStreamedOutputByStep(prev => ({ ...prev, [idx]: (prev[idx] || '') + chunk }));
       },
-      (task) => {
-        const finalTask = customPeraTx ? {
-          ...task,
-          algorandTx: {
-            ...task.algorandTx,
-            txId: customPeraTx.txId,
-            round: customPeraTx.round,
-            explorerUrl: customPeraTx.explorerUrl,
-            loraUrl: customPeraTx.loraUrl
-          },
-          paymentProof: {
-            ...task.paymentProof,
-            txId: customPeraTx.txId,
-            round: customPeraTx.round
-          }
-        } : task;
-
-        setCompletedTask(finalTask);
+      (plan) => {
+        setCompletedPlan(plan);
         setIsStreaming(false);
-        setCurrentStage('completed');
+        setCurrentStage('plan_completed');
         fetchAccounts().then(setAccounts).catch(console.error);
       },
       (error) => {
@@ -113,10 +107,20 @@ function MainLayout() {
         setIsStreaming(false);
         setCurrentStage('failed');
         setErrorMessage(error || 'The agent lost connection to the server mid-task.');
+      },
+      (info) => {
+        setPendingApproval(info);
+        setIsStreaming(false);
+        setCurrentStage('awaiting_approval');
       }
     );
 
     setActiveStreamUnsub(() => unsub);
+  };
+
+  const handleApprove = () => {
+    if (!lastDispatch) return;
+    handleDispatchTask(lastDispatch.prompt, lastDispatch.overrides, lastDispatch.simulateFailover, true);
   };
 
   const handleResetPipeline = () => {
@@ -124,9 +128,10 @@ function MainLayout() {
     setIsStreaming(false);
     setCurrentStage('idle');
     setPipelineEvents([]);
-    setStreamedOutput('');
-    setCompletedTask(null);
+    setStreamedOutputByStep({});
+    setCompletedPlan(null);
     setErrorMessage(null);
+    setPendingApproval(null);
   };
 
   return (
@@ -154,15 +159,17 @@ function MainLayout() {
               isStreaming={isStreaming}
             />
 
-            {(currentStage !== 'idle' || completedTask) && (
+            {(currentStage !== 'idle' || completedPlan || pendingApproval) && (
               <div className="pt-6 border-t border-grid-800 animate-fadeIn">
                 <ExecutionPipeline
                   events={pipelineEvents}
                   currentStage={currentStage}
-                  streamedOutput={streamedOutput}
-                  completedTask={completedTask}
+                  streamedOutputByStep={streamedOutputByStep}
+                  completedPlan={completedPlan}
                   isStreaming={isStreaming}
                   errorMessage={errorMessage}
+                  pendingApproval={pendingApproval}
+                  onApprove={handleApprove}
                   onReset={handleResetPipeline}
                 />
               </div>
