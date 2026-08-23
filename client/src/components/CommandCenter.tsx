@@ -72,10 +72,18 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
           href={funding.fundUrl}
           target="_blank"
           rel="noreferrer"
-          className="flex items-center space-x-2 text-[13px] text-signal-amber bg-signal-amber/10 border border-signal-amber/25 rounded-xl px-3.5 py-2.5"
+          className="flex items-start space-x-2.5 text-[13px] text-signal-amber bg-signal-amber/10 border border-signal-amber/30 rounded-xl p-3.5 hover:bg-signal-amber/15 transition-all group"
         >
-          <AlertTriangle className="w-4 h-4 shrink-0" />
-          <span>Agent wallet has no TestNet ALGO — tasks will fail to settle. Tap to fund it.</span>
+          <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+          <div className="space-y-1 text-left">
+            <div className="font-semibold text-white flex items-center space-x-1.5">
+              <span>Fund Autonomous Agent Wallet on TestNet</span>
+              <span className="text-[11px] font-mono text-signal-amber underline group-hover:text-white">Tap to get free ALGO ›</span>
+            </div>
+            <p className="text-[12px] text-grid-300 leading-snug">
+              AgentGrid's autonomous backend agent signs and settles compute payments on-chain on your behalf. Please fund the <strong className="text-white">Agent Wallet</strong> (<code className="text-signal-amber font-mono text-[11px]">{funding.agentAddress.slice(0, 8)}...{funding.agentAddress.slice(-6)}</code>) via the AlgoKit dispenser, not just your personal connected wallet.
+            </p>
+          </div>
         </a>
       )}
 
