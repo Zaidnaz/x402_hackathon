@@ -29,8 +29,8 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full border-b border-white/[0.08] bg-black/85 backdrop-blur-2xl transition-all">
-        <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 h-15 sm:h-18 flex items-center justify-between gap-3 sm:gap-6">
+      <header className="sticky top-0 z-50 w-full border-b border-zinc-800 bg-zinc-950/95 transition-all">
+        <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-3 sm:gap-6">
           {/* Brand Logo & Tag */}
           <div className="flex items-center space-x-2 sm:space-x-3 shrink-0">
             <button
@@ -40,16 +40,16 @@ export const Navbar: React.FC<NavbarProps> = ({
               }}
               className="flex items-center space-x-2 sm:space-x-3 group focus:outline-none"
             >
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-brand-emerald flex items-center justify-center font-serif font-semibold text-black text-sm shadow-glow-emerald group-hover:scale-105 transition-transform">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-zinc-800 border border-zinc-700 flex items-center justify-center font-mono font-bold text-white text-xs">
                 AG
               </div>
               <div className="flex flex-col text-left">
                 <div className="flex items-center space-x-1.5 sm:space-x-2">
-                  <span className="font-serif font-medium tracking-tight text-white text-base sm:text-lg group-hover:text-brand-emerald transition-colors">
+                  <span className="font-mono font-semibold tracking-tight text-white text-sm sm:text-base">
                     AgentGrid
                   </span>
                 </div>
-                <span className="text-[10px] text-grid-500 tracking-wide">
+                <span className="text-[10px] text-zinc-500 tracking-wide">
                   Team LENA · x402 · Algorand
                 </span>
               </div>
@@ -57,17 +57,17 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center space-x-1 bg-white/[0.03] border border-white/[0.08] p-1 rounded-full">
+          <nav className="hidden lg:flex items-center space-x-1 bg-zinc-900 border border-zinc-800 p-1 rounded-lg">
             {navLinks.map((link) => {
               const isActive = activeTab === link.id;
               return (
                 <button
                   key={link.id}
                   onClick={() => setActiveTab(link.id)}
-                  className={`px-3.5 py-1.5 rounded-full text-xs font-mono transition-all duration-200 ${
+                  className={`px-3 py-1.5 rounded-md text-xs font-mono transition-all ${
                     isActive
-                      ? 'bg-brand-emerald text-black font-bold shadow-glow-emerald'
-                      : 'text-grid-300 hover:text-white hover:bg-white/[0.06]'
+                      ? 'bg-zinc-800 text-white font-medium'
+                      : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-850'
                   }`}
                 >
                   {link.label}
@@ -79,25 +79,22 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Right Action & Pera Wallet */}
           <div className="flex items-center space-x-2 sm:space-x-3 shrink-0">
             {isStreaming && (
-              <div className="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-brand-emerald/10 text-brand-emerald text-[11px] font-mono border border-brand-emerald/25 animate-pulse">
-                <Radio className="w-3 h-3 animate-spin text-brand-emerald" />
+              <div className="flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-zinc-900 text-zinc-300 text-[11px] font-mono border border-zinc-700">
+                <Radio className="w-3 h-3 text-emerald-400" />
                 <span className="hidden sm:inline">Streaming</span>
               </div>
             )}
 
-            {/* Pera Wallet is an optional, secondary "pay it yourself" demo path —
-                the agent pays autonomously with its own wallet by default, so
-                this stays small and out of the way unless already connected. */}
             {isConnected && walletAddress ? (
-              <div className="flex items-center space-x-1.5 bg-white/[0.04] border border-white/[0.12] rounded-full pl-2.5 sm:pl-3 pr-1.5 py-1 text-xs font-mono shadow-sm">
-                <span className="w-2 h-2 rounded-full bg-brand-emerald animate-pulse shrink-0" />
-                <span className="text-white font-bold text-[11px] sm:text-xs">
+              <div className="flex items-center space-x-1.5 bg-zinc-900 border border-zinc-800 rounded-lg pl-2.5 sm:pl-3 pr-1.5 py-1 text-xs font-mono">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                <span className="text-white font-medium text-[11px] sm:text-xs">
                   {liveBalanceAlgo !== null ? `${liveBalanceAlgo.toFixed(1)}A` : 'Connected'}
                 </span>
                 <button
                   onClick={disconnectWallet}
                   title="Disconnect Pera"
-                  className="p-1 rounded-full hover:bg-white/[0.1] text-grid-400 hover:text-signal-rose transition-colors"
+                  className="p-1 rounded hover:bg-zinc-800 text-zinc-400 hover:text-red-400 transition-colors cursor-pointer"
                 >
                   <LogOut className="w-3 h-3" />
                 </button>
@@ -107,7 +104,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 onClick={() => setIsGuideOpen(true)}
                 disabled={isConnecting}
                 title="Optional: pay a task's cost yourself with a personal Pera Wallet instead of the agent's own wallet"
-                className="hidden sm:flex items-center space-x-1 text-[11px] font-mono text-grid-500 hover:text-grid-300 transition-all"
+                className="hidden sm:flex items-center space-x-1 text-[11px] font-mono text-zinc-500 hover:text-zinc-300 transition-all cursor-pointer"
               >
                 <Wallet className="w-3 h-3 shrink-0" />
                 <span>{isConnecting ? 'Connecting...' : 'Pera Wallet'}</span>
@@ -118,7 +115,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <div className="flex lg:hidden items-center">
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="p-2 rounded-xl bg-white/[0.05] border border-white/[0.1] text-white hover:bg-white/[0.1] active:scale-95 transition-all"
+                className="p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-white hover:bg-zinc-800 transition-all"
                 aria-label="Toggle navigation menu"
               >
                 {isMobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
@@ -128,17 +125,17 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
 
         {/* Mobile Horizontal Scrollable Quick-Bar */}
-        <div className="lg:hidden flex items-center space-x-1.5 px-3 py-2 border-t border-white/[0.06] overflow-x-auto no-scrollbar bg-black/60">
+        <div className="lg:hidden flex items-center space-x-1.5 px-3 py-2 border-t border-zinc-800 overflow-x-auto no-scrollbar bg-zinc-950">
           {navLinks.map((link) => {
             const isActive = activeTab === link.id;
             return (
               <button
                 key={link.id}
                 onClick={() => setActiveTab(link.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-mono whitespace-nowrap transition-all shrink-0 ${
+                className={`px-3 py-1.5 rounded-md text-xs font-mono whitespace-nowrap transition-all shrink-0 ${
                   isActive
-                    ? 'bg-brand-emerald/20 text-brand-emerald border border-brand-emerald/40 font-bold shadow-sm'
-                    : 'text-grid-300 hover:text-white bg-white/[0.02] border border-white/[0.04]'
+                    ? 'bg-zinc-800 text-white font-medium border border-zinc-700'
+                    : 'text-zinc-400 hover:text-white bg-zinc-900/50'
                 }`}
               >
                 {link.label}
@@ -149,7 +146,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Mobile Expanded Menu Drawer */}
         {isMobileMenuOpen && (
-          <div className="lg:hidden border-t border-white/[0.08] bg-black/98 px-4 py-4 space-y-3 animate-fadeIn font-mono text-xs shadow-2xl">
+          <div className="lg:hidden border-t border-zinc-800 bg-zinc-950 px-4 py-4 space-y-3 font-mono text-xs shadow-xl">
             <div className="grid grid-cols-2 gap-2">
               {navLinks.map((link) => {
                 const isActive = activeTab === link.id;
@@ -160,10 +157,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                       setActiveTab(link.id);
                       setIsMobileMenuOpen(false);
                     }}
-                    className={`p-3 rounded-xl text-left transition-all ${
+                    className={`p-3 rounded-lg text-left transition-all ${
                       isActive
-                        ? 'bg-brand-emerald/20 text-brand-emerald border border-brand-emerald/40 font-bold'
-                        : 'bg-white/[0.03] border border-white/[0.06] text-grid-300 hover:text-white'
+                        ? 'bg-zinc-800 text-white font-medium border border-zinc-700'
+                        : 'bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white'
                     }`}
                   >
                     {link.label}

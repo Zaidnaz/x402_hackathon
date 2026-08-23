@@ -130,8 +130,8 @@ function MainLayout() {
   };
 
   return (
-    <div className="min-h-screen max-w-full overflow-x-hidden bg-grid-950 text-grid-100 flex flex-col font-sans grid-bg-pattern relative selection:bg-signal-amber/20 selection:text-signal-amber">
-      {/* Floating Modern Pill Navbar */}
+    <div className="min-h-screen max-w-full overflow-x-hidden bg-zinc-950 text-zinc-100 flex flex-col font-sans relative">
+      {/* Navbar */}
       <Navbar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -154,8 +154,8 @@ function MainLayout() {
               isStreaming={isStreaming}
             />
 
-            {(currentStage !== 'idle' || completedTask) && (
-              <div className="pt-6 border-t border-grid-800 animate-fadeIn">
+            {(isStreaming || pipelineEvents.length > 0 || completedTask || errorMessage) && (
+              <div className="animate-fadeIn">
                 <ExecutionPipeline
                   events={pipelineEvents}
                   currentStage={currentStage}
@@ -215,15 +215,15 @@ function MainLayout() {
       />
 
       {/* Minimal Clean Footer */}
-      <footer className="border-t border-grid-850 bg-grid-950/80 backdrop-blur-md py-6 mt-16 relative z-10">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between text-xs font-mono text-grid-500 gap-3">
+      <footer className="border-t border-zinc-800 bg-zinc-950 py-6 mt-16 relative z-10">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between text-xs font-mono text-zinc-500 gap-3">
           <div className="flex items-center space-x-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-signal-amber" />
-            <span className="text-grid-300 font-semibold">AgentGrid</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-zinc-500" />
+            <span className="text-zinc-300 font-semibold">AgentGrid</span>
             <span>— Autonomous Infrastructure Layer</span>
           </div>
           <div>
-            Settlement: <span className="text-grid-300">Algorand TestNet</span> • Standard: <span className="text-grid-300">RFC 7235 / x402</span>
+            Settlement: <span className="text-zinc-300">Algorand TestNet</span> • Standard: <span className="text-zinc-300">RFC 7235 / x402</span>
           </div>
         </div>
       </footer>
