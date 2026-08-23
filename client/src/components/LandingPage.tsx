@@ -7,6 +7,7 @@ import {
   Terminal
 } from 'lucide-react';
 import Shuffle from './Shuffle';
+import PixelSnow from './PixelSnow';
 
 interface LandingPageProps {
   onEnterApp: () => void;
@@ -15,7 +16,26 @@ interface LandingPageProps {
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp, onNavigateTab }) => {
   return (
-    <div className="min-h-[80vh] flex flex-col justify-center max-w-4xl mx-auto text-center space-y-10 py-12 px-4">
+    <>
+      {/* Full-Screen WebGL PixelSnow Background */}
+      <div className="fixed inset-0 w-screen h-screen pointer-events-none z-0 overflow-hidden opacity-30">
+        <PixelSnow 
+          color="#ffffff"
+          flakeSize={0.035}
+          minFlakeSize={1.8}
+          pixelResolution={200}
+          speed={1.0}
+          density={0.28}
+          direction={125}
+          brightness={1.0}
+          depthFade={8}
+          farPlane={20}
+          gamma={0.4545}
+          variant="square"
+        />
+      </div>
+
+      <div className="relative z-10 min-h-[80vh] flex flex-col justify-center max-w-4xl mx-auto text-center space-y-10 py-12 px-4">
       {/* Status Pill */}
       <div>
         <div className="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full bg-grid-900 border border-grid-800 text-xs font-mono text-grid-300">
@@ -113,6 +133,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp, onNavigate
         </div>
       </div>
     </div>
+    </>
   );
 };
 
