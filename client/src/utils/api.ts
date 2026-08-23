@@ -760,6 +760,24 @@ export async function queryRouteRecommendation(params: {
   return data.data;
 }
 
+export async function executeTaskDirect(
+  prompt: string,
+  overrides?: Partial<TaskRequirement>,
+  simulateFailover: boolean = false
+): Promise<CompletedTask> {
+  const res = await fetch(`${API_BASE}/tasks/execute`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt, overrides, simulateFailover })
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => null);
+    throw new Error(data?.error || `Task execution failed (${res.status})`);
+  }
+  const data = await res.json();
+  return data.task;
+}
+
 export function subscribeTaskStream(
   prompt: string,
   overrides: Partial<TaskRequirement>,
@@ -779,52 +797,80 @@ export function subscribeTaskStream(
   if (overrides.deadlineMs) params.append('deadlineMs', String(overrides.deadlineMs));
   if (overrides.minQualityScore) params.append('minQualityScore', String(overrides.minQualityScore));
 
-  const eventSource = new EventSource(`${API_BASE}/tasks/stream?${params.toString()}`);
-  // The stream ends by the server closing the HTTP response after 'completed'
-  // (or 'error'). Native EventSource treats any connection drop it didn't
-  // initiate itself as reconnect-worthy and fires a generic 'error' event —
-  // including right after a perfectly successful completion. Without this
-  // flag, that spurious event would overwrite a successful result with a
-  // false "task failed" state.
+  let eventSource: EventSource | null = null;
   let finished = false;
+  let hasReceivedEvents = false;
 
-  eventSource.addEventListener('pipeline_event', (e) => {
-    try {
-      const event: ExecutionEvent = JSON.parse(e.data);
-      onEvent(event);
-      if (event.stage === 'completed' && event.data?.task) {
-        finished = true;
-        onComplete(event.data.task);
-        eventSource.close();
+  try {
+    eventSource = new EventSource(`${API_BASE}/tasks/stream?${params.toString()}`);
+
+    eventSource.addEventListener('pipeline_event', (e) => {
+      try {
+        hasReceivedEvents = true;
+        const event: ExecutionEvent = JSON.parse(e.data);
+        onEvent(event);
+        if (event.stage === 'completed' && event.data?.task) {
+          finished = true;
+          onComplete(event.data.task);
+          eventSource?.close();
+        }
+      } catch (err) {
+        console.error('SSE parse error', err);
       }
-    } catch (err) {
-      console.error('SSE parse error', err);
-    }
-  });
+    });
 
-  eventSource.addEventListener('token_chunk', (e) => {
-    try {
-      const data = JSON.parse(e.data);
-      onTokenChunk(data.chunk);
-    } catch (err) {
-      console.error('SSE token parse error', err);
-    }
-  });
+    eventSource.addEventListener('token_chunk', (e) => {
+      try {
+        hasReceivedEvents = true;
+        const data = JSON.parse(e.data);
+        onTokenChunk(data.chunk);
+      } catch (err) {
+        console.error('SSE token parse error', err);
+      }
+    });
 
-  eventSource.addEventListener('error', (e: any) => {
-    if (finished || eventSource.readyState === EventSource.CLOSED) return;
-    finished = true;
-    try {
-      const parsed = JSON.parse(e.data || '{}');
-      onError(parsed.error || 'Connection closed');
-    } catch {
+    eventSource.addEventListener('error', async () => {
+      if (finished) return;
+      eventSource?.close();
+
+      // If stream was interrupted or blocked by proxy, fallback to atomic HTTP execution
+      if (!hasReceivedEvents) {
+        try {
+          onEvent({ stage: 'analyzing_intent', message: 'Analyzing prompt constraints & intent...', timestamp: Date.now() });
+          onEvent({ stage: 'discovering_grid', message: 'Probing live GPU nodes & model endpoints...', timestamp: Date.now() });
+          onEvent({ stage: 'optimizing_pareto', message: 'Evaluating Pareto scoring...', timestamp: Date.now() });
+          onEvent({ stage: 'settling_algorand', message: 'Settling x402 payment on Algorand TestNet...', timestamp: Date.now() });
+
+          const task = await executeTaskDirect(prompt, overrides, simulateFailover);
+          finished = true;
+          onEvent({ stage: 'executing_workload', message: 'Workload executed successfully.', timestamp: Date.now() });
+          onTokenChunk(task.executionOutput);
+          onEvent({ stage: 'completed', message: 'Settlement confirmed on Algorand TestNet.', timestamp: Date.now(), data: { task } });
+          onComplete(task);
+          return;
+        } catch (postErr: any) {
+          finished = true;
+          onError(postErr.message || 'Execution failed');
+          return;
+        }
+      }
+
+      finished = true;
       onError('Stream disconnected');
-    }
-    eventSource.close();
-  });
+    });
+  } catch (err: any) {
+    // If EventSource construction fails, fallback directly to POST execute
+    executeTaskDirect(prompt, overrides, simulateFailover)
+      .then((task) => {
+        finished = true;
+        onTokenChunk(task.executionOutput);
+        onComplete(task);
+      })
+      .catch((e) => onError(e.message || 'Execution failed'));
+  }
 
   return () => {
     finished = true;
-    eventSource.close();
+    eventSource?.close();
   };
 }

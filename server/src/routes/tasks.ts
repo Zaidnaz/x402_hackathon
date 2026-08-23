@@ -79,6 +79,10 @@ tasksRouter.get('/stream', async (c) => {
   const prompt = promptCheck.data;
   const simulateFailover = c.req.query('simulateFailover') === 'true';
 
+  c.header('X-Accel-Buffering', 'no');
+  c.header('Cache-Control', 'no-cache, no-transform');
+  c.header('Connection', 'keep-alive');
+
   return streamSSE(c, async (stream) => {
     // Real Algorand confirmation (and Gemini calls) can go several seconds
     // without emitting any pipeline event. A dev proxy (or any intermediary)
